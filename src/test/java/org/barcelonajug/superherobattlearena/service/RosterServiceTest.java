@@ -28,7 +28,7 @@ class RosterServiceTest {
     void shouldGetHeroById() {
         Optional<Hero> hero = rosterService.getHero(1);
         assertThat(hero).isPresent();
-        assertThat(hero.get().name()).isEqualTo("Iron Man");
+        assertThat(hero.get().name()).isEqualTo("A-Bomb");
     }
 
     @Test
