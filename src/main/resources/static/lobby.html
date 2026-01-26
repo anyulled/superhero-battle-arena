@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,78 +9,100 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="api.js"></script>
     <style>
-        body { background-color: #0f172a; color: #e2e8f0; }
-        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
+
 <body class="p-8">
 
-<div class="max-w-4xl mx-auto space-y-8">
-    <div class="text-center">
-        <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Superhero Battle Arena</h1>
-        <p class="text-slate-400 mt-2">Lobby & Registration</p>
-    </div>
+    <div class="max-w-4xl mx-auto space-y-8">
+        <div class="text-center">
+            <img src="images/hero-image.png" alt="Superhero Arena"
+                class="w-full h-48 object-cover rounded-2xl shadow-2xl mb-8 border border-slate-700">
+            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                Superhero Battle Arena</h1>
+            <p class="text-slate-400 mt-2">Lobby & Registration</p>
+        </div>
 
-    <!-- Registration -->
-    <div class="glass-panel p-6 rounded-2xl shadow-xl">
-        <h2 class="text-2xl font-semibold mb-4 text-blue-300">Register Team</h2>
-        <form id="registerForm" class="space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-slate-300">Team Name</label>
-                <input type="text" id="teamName" class="w-full mt-1 bg-slate-800 border-slate-700 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 text-white" placeholder="e.g. Avengers" required>
+        <!-- Registration -->
+        <div class="glass-panel p-6 rounded-2xl shadow-xl">
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Register Team</h2>
+            <form id="registerForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-300">Team Name</label>
+                    <input type="text" id="teamName"
+                        class="w-full mt-1 bg-slate-800 border-slate-700 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 text-white"
+                        placeholder="e.g. Avengers" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-300">Members (comma separated)</label>
+                    <input type="text" id="members"
+                        class="w-full mt-1 bg-slate-800 border-slate-700 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 text-white"
+                        placeholder="Tony, Steve" required>
+                </div>
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition-colors font-medium shadow-lg hover:shadow-blue-500/20">Register
+                    Team</button>
+            </form>
+        </div>
+
+        <!-- Teams List & Matchmaking -->
+        <div class="glass-panel p-6 rounded-2xl shadow-xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-purple-300">Registered Teams</h2>
+                <button id="refreshTeams" class="text-sm text-slate-400 hover:text-white">Refresh</button>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-slate-300">Members (comma separated)</label>
-                <input type="text" id="members" class="w-full mt-1 bg-slate-800 border-slate-700 rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 text-white" placeholder="Tony, Steve" required>
+            <div class="overflow-hidden rounded-lg border border-slate-700">
+                <table class="w-full text-left text-sm text-slate-400">
+                    <thead class="bg-slate-800 text-slate-200 uppercase">
+                        <tr>
+                            <th class="px-6 py-3">Select</th>
+                            <th class="px-6 py-3">Team Name</th>
+                            <th class="px-6 py-3">Members</th>
+                            <th class="px-6 py-3">ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teamsBody" class="divide-y divide-slate-700 bg-slate-900/50">
+                        <!-- Teams will be populated here -->
+                    </tbody>
+                </table>
             </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg transition-colors font-medium shadow-lg hover:shadow-blue-500/20">Register Team</button>
-        </form>
+
+            <div class="mt-6 flex justify-end space-x-4">
+                <button id="createMatchBtn"
+                    class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/20"
+                    disabled>
+                    Create Match from Selected
+                </button>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="bracket.html"
+                class="inline-block text-blue-400 hover:text-blue-300 underline underline-offset-4">Go to Tournament
+                Bracket -></a>
+        </div>
+
     </div>
 
-    <!-- Teams List & Matchmaking -->
-    <div class="glass-panel p-6 rounded-2xl shadow-xl">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-semibold text-purple-300">Registered Teams</h2>
-            <button id="refreshTeams" class="text-sm text-slate-400 hover:text-white">Refresh</button>
-        </div>
-        <div class="overflow-hidden rounded-lg border border-slate-700">
-            <table class="w-full text-left text-sm text-slate-400">
-                <thead class="bg-slate-800 text-slate-200 uppercase">
-                    <tr>
-                        <th class="px-6 py-3">Select</th>
-                        <th class="px-6 py-3">Team Name</th>
-                        <th class="px-6 py-3">Members</th>
-                        <th class="px-6 py-3">ID</th>
-                    </tr>
-                </thead>
-                <tbody id="teamsBody" class="divide-y divide-slate-700 bg-slate-900/50">
-                    <!-- Teams will be populated here -->
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="mt-6 flex justify-end space-x-4">
-            <button id="createMatchBtn" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/20" disabled>
-                Create Match from Selected
-            </button>
-        </div>
-    </div>
-    
-    <div class="text-center">
-         <a href="bracket.html" class="inline-block text-blue-400 hover:text-blue-300 underline underline-offset-4">Go to Tournament Bracket -></a>
-    </div>
-
-</div>
-
-<script>
-    $(document).ready(function() {
-        // Load Teams
-        function loadTeams() {
-            API.teams.list().done(function(teams) {
-                const tbody = $('#teamsBody');
-                tbody.empty();
-                teams.forEach(team => {
-                    tbody.append(`
+    <script>
+        $(document).ready(function () {
+            // Load Teams
+            function loadTeams() {
+                API.teams.list().done(function (teams) {
+                    const tbody = $('#teamsBody');
+                    tbody.empty();
+                    teams.forEach(team => {
+                        tbody.append(`
                         <tr class="hover:bg-slate-800/50">
                             <td class="px-6 py-4">
                                 <input type="checkbox" name="teamSelect" value="${team.teamId}" class="accent-purple-500 w-4 h-4 rounded border-slate-600 bg-slate-700">
@@ -89,70 +112,71 @@
                             <td class="px-6 py-4 font-mono text-xs text-slate-500">${team.teamId}</td>
                         </tr>
                     `);
+                    });
+                    updateCreateButton();
                 });
+            }
+
+            // Register Team
+            $('#registerForm').submit(function (e) {
+                e.preventDefault();
+                const name = $('#teamName').val();
+                const members = $('#members').val().split(',').map(s => s.trim());
+
+                API.teams.register(name, members).done(function () {
+                    alert('Team registered successfully!');
+                    $('#registerForm')[0].reset();
+                    loadTeams();
+                }).fail(xhr => alert('Failed to register team: ' + xhr.status));
+            });
+
+            // Team Selection Logic
+            $(document).on('change', 'input[name="teamSelect"]', function () {
+                const checked = $('input[name="teamSelect"]:checked').length;
+                if (checked > 2) {
+                    $(this).prop('checked', false);
+                    alert('Select only 2 teams for a match');
+                }
                 updateCreateButton();
             });
-        }
 
-        // Register Team
-        $('#registerForm').submit(function(e) {
-            e.preventDefault();
-            const name = $('#teamName').val();
-            const members = $('#members').val().split(',').map(s => s.trim());
-            
-            API.teams.register(name, members).done(function() {
-                alert('Team registered successfully!');
-                $('#registerForm')[0].reset();
-                loadTeams();
-            }).fail(xhr => alert('Failed to register team: ' + xhr.status));
-        });
-
-        // Team Selection Logic
-        $(document).on('change', 'input[name="teamSelect"]', function() {
-            const checked = $('input[name="teamSelect"]:checked').length;
-            if (checked > 2) {
-                $(this).prop('checked', false);
-                alert('Select only 2 teams for a match');
+            function updateCreateButton() {
+                const checked = $('input[name="teamSelect"]:checked').length;
+                $('#createMatchBtn').prop('disabled', checked !== 2);
             }
-            updateCreateButton();
-        });
 
-        function updateCreateButton() {
-            const checked = $('input[name="teamSelect"]:checked').length;
-            $('#createMatchBtn').prop('disabled', checked !== 2);
-        }
+            // Create Match
+            $('#createMatchBtn').click(function () {
+                const selected = $('input[name="teamSelect"]:checked').map(function () { return $(this).val(); }).get();
+                if (selected.length !== 2) return;
 
-        // Create Match
-        $('#createMatchBtn').click(function() {
-            const selected = $('input[name="teamSelect"]:checked').map(function() { return $(this).val(); }).get();
-            if (selected.length !== 2) return;
+                API.matches.create(selected[0], selected[1]).done(function (matchId) {
+                    // Auto-submit random rosters for demo purposes
+                    // We'll assume Round 1, and heroes 1-5 for now
+                    const draft = { heroIds: [1, 2, 3, 4, 5] };
 
-            API.matches.create(selected[0], selected[1]).done(function(matchId) {
-                // Auto-submit random rosters for demo purposes
-                // We'll assume Round 1, and heroes 1-5 for now
-                const draft = { heroIds: [1, 2, 3, 4, 5] };
-                
-                // Submit for both teams
-                $.when(
-                    API.rounds.submit(1, selected[0], draft),
-                    API.rounds.submit(1, selected[1], draft)
-                ).then(function() {
-                    // Start the match
-                    API.matches.run(matchId).done(function() {
-                        alert('Match created and started! Redirecting to Bracket...');
+                    // Submit for both teams
+                    $.when(
+                        API.rounds.submit(1, selected[0], draft),
+                        API.rounds.submit(1, selected[1], draft)
+                    ).then(function () {
+                        // Start the match
+                        API.matches.run(matchId).done(function () {
+                            alert('Match created and started! Redirecting to Bracket...');
+                            window.location.href = 'bracket.html';
+                        });
+                    }).fail(function () {
+                        // Even if submit fails (maybe manual submit needed?), redirect
+                        alert('Match created. Please submit rosters manually if needed.');
                         window.location.href = 'bracket.html';
                     });
-                }).fail(function() {
-                     // Even if submit fails (maybe manual submit needed?), redirect
-                     alert('Match created. Please submit rosters manually if needed.');
-                     window.location.href = 'bracket.html';
                 });
             });
-        });
 
-        $('#refreshTeams').click(loadTeams);
-        loadTeams();
-    });
-</script>
+            $('#refreshTeams').click(loadTeams);
+            loadTeams();
+        });
+    </script>
 </body>
+
 </html>

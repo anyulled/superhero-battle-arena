@@ -1,5 +1,7 @@
 # Superhero Battle Arena
 
+![Superhero Battle Arena Hero Image](src/main/resources/static/images/hero-image.png)
+
 A Spring Boot application built with Hexagonal Architecture that simulates battles between teams of superheroes.
 
 ## Features
@@ -38,9 +40,9 @@ graph TD
     User[User Browser]
     
     subgraph "Superhero Battle Arena"
-        Web[Web Adapter\n(Controllers)]
-        App[Application Layer\n(Services/Use Cases)]
-        Domain[Domain Layer\n(Entities/Logic)]
+        Web["Web Adapter\n(Controllers)"]
+        App["Application Layer\n(Services/Use Cases)"]
+        Domain["Domain Layer\n(Entities/Logic)"]
         Persist[Persistence Adapter]
     end
     
