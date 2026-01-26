@@ -1,9 +1,14 @@
 package org.barcelonajug.superherobattlearena.domain.json;
 
+import java.util.List;
+import java.util.Map;
+
 public record RoundSpec(
-        String description,
-        int maxHeroes,
-        String mapType
-// Add other fields as needed
-) {
+                String description,
+                int teamSize,
+                int budgetCap,
+                Map<String, Integer> requiredRoles, // Role -> Min Count
+                Map<String, Integer> maxSameRole, // Role -> Max Count
+                List<String> bannedTags,
+                String mapType) {
 }

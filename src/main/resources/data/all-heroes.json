@@ -1,0 +1,83 @@
+[
+    {
+        "id": 1,
+        "name": "Iron Man",
+        "powerstats": {
+            "hp": 100,
+            "atk": 85,
+            "def": 70,
+            "spd": 60
+        },
+        "role": "Blaster",
+        "cost": 50,
+        "tags": [
+            "Tech",
+            "Flyer"
+        ]
+    },
+    {
+        "id": 2,
+        "name": "Hulk",
+        "powerstats": {
+            "hp": 150,
+            "atk": 95,
+            "def": 80,
+            "spd": 40
+        },
+        "role": "Bruiser",
+        "cost": 60,
+        "tags": [
+            "Gamma",
+            "Tank"
+        ]
+    },
+    {
+        "id": 3,
+        "name": "Black Widow",
+        "powerstats": {
+            "hp": 70,
+            "atk": 65,
+            "def": 40,
+            "spd": 75
+        },
+        "role": "Infiltrator",
+        "cost": 30,
+        "tags": [
+            "Spy",
+            "Martial Artist"
+        ]
+    },
+    {
+        "id": 4,
+        "name": "Thor",
+        "powerstats": {
+            "hp": 140,
+            "atk": 90,
+            "def": 85,
+            "spd": 55
+        },
+        "role": "Blaster",
+        "cost": 65,
+        "tags": [
+            "God",
+            "Flyer",
+            "Electric"
+        ]
+    },
+    {
+        "id": 5,
+        "name": "Captain America",
+        "powerstats": {
+            "hp": 110,
+            "atk": 70,
+            "def": 75,
+            "spd": 50
+        },
+        "role": "Tactician",
+        "cost": 45,
+        "tags": [
+            "Leader",
+            "Soldier"
+        ]
+    }
+]
