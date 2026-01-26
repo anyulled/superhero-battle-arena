@@ -1,4 +1,4 @@
-package com.superherobattle.superherobattlearena;
+package org.barcelonajug.superherobattlearena;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,6 +1,6 @@
-package com.superherobattle.superherobattlearena.domain;
+package org.barcelonajug.superherobattlearena.domain;
 
-import com.superherobattle.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

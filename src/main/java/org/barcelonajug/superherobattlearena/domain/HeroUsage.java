@@ -1,4 +1,4 @@
-package com.superherobattle.superherobattlearena.domain;
+package org.barcelonajug.superherobattlearena.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

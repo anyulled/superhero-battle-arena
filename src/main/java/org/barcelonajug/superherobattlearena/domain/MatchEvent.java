@@ -1,4 +1,4 @@
-package com.superherobattle.superherobattlearena.domain;
+package org.barcelonajug.superherobattlearena.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +23,7 @@ public class MatchEvent {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "event_json")
-    private com.superherobattle.superherobattlearena.domain.json.MatchEvent eventJson;
+    private org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson;
 
     public MatchEvent() {
     }
@@ -44,11 +44,11 @@ public class MatchEvent {
         this.seq = seq;
     }
 
-    public com.superherobattle.superherobattlearena.domain.json.MatchEvent getEventJson() {
+    public org.barcelonajug.superherobattlearena.domain.json.MatchEvent getEventJson() {
         return eventJson;
     }
 
-    public void setEventJson(com.superherobattle.superherobattlearena.domain.json.MatchEvent eventJson) {
+    public void setEventJson(org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson) {
         this.eventJson = eventJson;
     }
 }

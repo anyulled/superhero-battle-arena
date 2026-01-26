@@ -1,4 +1,4 @@
-package com.superherobattle.superherobattlearena.domain;
+package org.barcelonajug.superherobattlearena.domain;
 
 public enum MatchStatus {
     PENDING,

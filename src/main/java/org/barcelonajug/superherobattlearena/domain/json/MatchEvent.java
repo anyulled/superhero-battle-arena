@@ -1,4 +1,4 @@
-package com.superherobattle.superherobattlearena.domain.json;
+package org.barcelonajug.superherobattlearena.domain.json;
 
 public record MatchEvent(
         String type,
