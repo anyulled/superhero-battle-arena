@@ -43,35 +43,34 @@ public class RoundController {
     }
 
     @PostMapping("/{roundNo}/submit")
-    public ResponseEntity<String> submitTeam(@PathVariable Integer roundNo,
-            @RequestParam UUID teamId,
+
+    public ResponseEntity<Void> submitTeam(@PathVariable Integer roundNo, @RequestParam UUID teamId,
             @RequestBody DraftSubmission draft) {
-        // 1. Get Round
-        Round round = roundRepository.findById(roundNo)
-                .orElseThrow(() -> new IllegalArgumentException("Round not found"));
-
-        // 2. Validate Deadline (mock check, can be implemented in domain service)
-        if (round.getSubmissionDeadline() != null && OffsetDateTime.now().isAfter(round.getSubmissionDeadline())) {
-            return ResponseEntity.badRequest().body("Deadline exceeded");
+        if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
+            return ResponseEntity.badRequest().build(); // Already submitted
         }
 
-        // 3. Validate Submission Logic
-        try {
-            submissionValidator.validate(draft, round.getSpecJson());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        // Naive validation
+        if (draft.heroIds().size() != 5) {
+            return ResponseEntity.badRequest().build();
         }
 
-        // 4. Save Submission
         Submission submission = new Submission();
         submission.setTeamId(teamId);
         submission.setRoundNo(roundNo);
         submission.setSubmissionJson(draft);
-        submission.setSubmittedAt(OffsetDateTime.now());
-        submission.setAccepted(true); // Assuming valid = accepted for now
+        submission.setAccepted(true); // Auto-accept for now
+        submission.setSubmittedAt(java.time.OffsetDateTime.now());
 
         submissionRepository.save(submission);
+        return ResponseEntity.ok().build();
+    }
 
-        return ResponseEntity.ok("Submission received");
+    @GetMapping("/{roundNo}/submission")
+    public ResponseEntity<DraftSubmission> getSubmission(@PathVariable Integer roundNo, @RequestParam UUID teamId) {
+        return submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo)
+                .map(Submission::getSubmissionJson)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

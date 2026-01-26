@@ -28,7 +28,8 @@ class FatigueServiceTest {
     @Test
     void shouldReturnOriginalHeroIfNoStreak() {
         UUID teamId = UUID.randomUUID();
-        Hero hero = new Hero(1, "Hero", new Hero.PowerStats(100, 10, 10, 10), "Fighter", 10, Collections.emptyList());
+        Hero hero = new Hero(1, "Hero", new Hero.PowerStats(100, 10, 10, 10), "Fighter", 10, Collections.emptyList(),
+                null);
 
         when(heroUsageRepository.findByTeamId(any())).thenReturn(Collections.emptyList());
 

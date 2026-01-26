@@ -38,4 +38,9 @@ public class TeamPersistenceAdapter implements TeamRepositoryPort {
     public Optional<Team> findById(UUID id) {
         return repository.findById(id).map(mapper::toDomain);
     }
+
+    @Override
+    public java.util.List<Team> findAll() {
+        return repository.findAll().stream().map(mapper::toDomain).toList();
+    }
 }

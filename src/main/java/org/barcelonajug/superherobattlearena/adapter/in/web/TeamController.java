@@ -16,9 +16,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class TeamController {
 
     private final TeamRepositoryPort teamRepository;
+    private final org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService;
 
-    public TeamController(TeamRepositoryPort teamRepository) {
+    public TeamController(TeamRepositoryPort teamRepository,
+            org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService) {
         this.teamRepository = teamRepository;
+        this.rosterService = rosterService;
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/heroes")
+    public java.util.List<org.barcelonajug.superherobattlearena.domain.Hero> getHeroes() {
+        return rosterService.getAllHeroes();
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping
+    public ResponseEntity<List<Team>> getTeams() {
+        return ResponseEntity.ok(teamRepository.findAll());
     }
 
     @PostMapping("/register")

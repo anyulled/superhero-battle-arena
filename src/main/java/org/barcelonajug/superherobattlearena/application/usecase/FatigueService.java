@@ -44,7 +44,8 @@ public class FatigueService {
                         (int) (hero.powerstats().spd() * multiplier.doubleValue())),
                 hero.role(),
                 hero.cost(),
-                hero.tags());
+                hero.tags(),
+                hero.images());
     }
 
     private int calculateStreak(List<HeroUsage> history, int heroId) {

@@ -25,10 +25,10 @@ class SubmissionValidatorTest {
         validator = new SubmissionValidator(rosterService);
 
         // Mock some heroes
-        when(rosterService.getHero(1)).thenReturn(Optional.of(new Hero(1, "H1", null, "Tank", 10, List.of("A"))));
-        when(rosterService.getHero(2)).thenReturn(Optional.of(new Hero(2, "H2", null, "Dps", 20, List.of("B"))));
+        when(rosterService.getHero(1)).thenReturn(Optional.of(new Hero(1, "H1", null, "Tank", 10, List.of("A"), null)));
+        when(rosterService.getHero(2)).thenReturn(Optional.of(new Hero(2, "H2", null, "Dps", 20, List.of("B"), null)));
         when(rosterService.getHero(3))
-                .thenReturn(Optional.of(new Hero(3, "H3", null, "Heal", 15, List.of("C", "Banned"))));
+                .thenReturn(Optional.of(new Hero(3, "H3", null, "Heal", 15, List.of("C", "Banned"), null)));
     }
 
     @Test

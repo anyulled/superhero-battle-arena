@@ -35,4 +35,9 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
     public List<Match> findByStatus(MatchStatus status) {
         return repository.findByStatus(status).stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public List<Match> findAll() {
+        return repository.findAll().stream().map(mapper::toDomain).toList();
+    }
 }

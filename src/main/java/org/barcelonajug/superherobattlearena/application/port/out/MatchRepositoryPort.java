@@ -12,4 +12,6 @@ public interface MatchRepositoryPort {
     Optional<Match> findById(UUID matchId);
 
     List<Match> findByStatus(MatchStatus status);
+
+    List<Match> findAll();
 }

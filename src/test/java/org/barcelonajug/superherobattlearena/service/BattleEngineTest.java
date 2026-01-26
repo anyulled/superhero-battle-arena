@@ -16,8 +16,8 @@ class BattleEngineTest {
 
     @Test
     void shouldBeDeterministic() {
-        Hero h1 = new Hero(1, "Strongman", new Hero.PowerStats(100, 10, 10, 10), "Bruiser", 10, List.of());
-        Hero h2 = new Hero(2, "Fastguy", new Hero.PowerStats(50, 5, 5, 20), "Infiltrator", 10, List.of());
+        Hero h1 = new Hero(1, "Strongman", new Hero.PowerStats(100, 10, 10, 10), "Bruiser", 10, List.of(), null);
+        Hero h2 = new Hero(2, "Fastguy", new Hero.PowerStats(50, 5, 5, 20), "Infiltrator", 10, List.of(), null);
 
         UUID matchId = UUID.randomUUID();
         UUID teamA = UUID.randomUUID();
@@ -40,8 +40,8 @@ class BattleEngineTest {
     @Test
     void fastHeroShouldGoFirst() {
         // H1 Spd 10, H2 Spd 20. H2 should hit H1 first.
-        Hero h1 = new Hero(1, "Slow", new Hero.PowerStats(20, 10, 10, 10), "Bruiser", 10, List.of());
-        Hero h2 = new Hero(2, "Fast", new Hero.PowerStats(20, 10, 10, 20), "Infiltrator", 10, List.of());
+        Hero h1 = new Hero(1, "Slow", new Hero.PowerStats(20, 10, 10, 10), "Bruiser", 10, List.of(), null);
+        Hero h2 = new Hero(2, "Fast", new Hero.PowerStats(20, 10, 10, 20), "Infiltrator", 10, List.of(), null);
 
         UUID matchId = UUID.randomUUID();
         UUID teamA = UUID.randomUUID();
@@ -62,8 +62,8 @@ class BattleEngineTest {
     void shouldUseTagModifiers() {
         // H1 vs H2. H1 has "Fire" tag. Modifiers: "Fire" -> 10.0 (Massive boost to
         // ensure one shot or high diff)
-        Hero h1 = new Hero(1, "Pyro", new Hero.PowerStats(100, 10, 10, 10), "Blaster", 10, List.of("Fire"));
-        Hero h2 = new Hero(2, "Dummy", new Hero.PowerStats(1000, 10, 10, 10), "Target", 10, List.of());
+        Hero h1 = new Hero(1, "Pyro", new Hero.PowerStats(100, 10, 10, 10), "Blaster", 10, List.of("Fire"), null);
+        Hero h2 = new Hero(2, "Dummy", new Hero.PowerStats(1000, 10, 10, 10), "Target", 10, List.of(), null);
 
         UUID matchId = UUID.randomUUID();
         UUID teamA = UUID.randomUUID();

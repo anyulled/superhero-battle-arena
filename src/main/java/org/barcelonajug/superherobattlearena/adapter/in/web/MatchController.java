@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -59,6 +60,19 @@ public class MatchController {
         this.rosterService = rosterService;
         this.heroUsageRepository = heroUsageRepository;
         this.fatigueService = fatigueService;
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<UUID> createMatch(@RequestParam UUID teamA, @RequestParam UUID teamB,
+            @RequestParam(defaultValue = "1") Integer roundNo) {
+        Match match = new Match();
+        match.setMatchId(UUID.randomUUID());
+        match.setTeamA(teamA);
+        match.setTeamB(teamB);
+        match.setRoundNo(roundNo);
+        match.setStatus(MatchStatus.PENDING);
+        matchRepository.save(match);
+        return ResponseEntity.ok(match.getMatchId());
     }
 
     @PostMapping("/{matchId}/run")
@@ -155,5 +169,40 @@ public class MatchController {
         return matchEventRepository.findByMatchId(matchId).stream()
                 .map(MatchEvent::eventJson)
                 .toList();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Match>> getAllMatches() {
+        return ResponseEntity.ok(matchRepository.findAll());
+    }
+
+    @GetMapping("/{matchId}")
+    public ResponseEntity<Match> getMatch(@PathVariable UUID matchId) {
+        return matchRepository.findById(matchId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{matchId}/events/stream")
+    public org.springframework.web.servlet.mvc.method.annotation.SseEmitter streamEvents(@PathVariable UUID matchId) {
+        org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter = new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(
+                600000L); // 10 min timeout
+        executor.submit(() -> {
+            try {
+                // If match is still pending or running, we might need to wait or poll.
+                // But for now, we assume we stream what is available or replay.
+                // In a real scenario, this would subscribe to a live event bus.
+                // Here we just dump existing events with a slight delay to simulate replay.
+                List<MatchEvent> events = matchEventRepository.findByMatchId(matchId);
+                for (MatchEvent event : events) {
+                    emitter.send(event.eventJson());
+                    Thread.sleep(500);
+                }
+                emitter.complete();
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+            }
+        });
+        return emitter;
     }
 }
