@@ -1,4 +1,4 @@
-package org.barcelonajug.superherobattlearena.service;
+package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.util.List;
 import java.util.Map;
@@ -57,7 +57,7 @@ class SubmissionValidatorTest {
 
         assertThatThrownBy(() -> validator.validate(submission, spec))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("exceeds budget");
+                .hasMessageContaining("exceeds maximum");
     }
 
     @Test

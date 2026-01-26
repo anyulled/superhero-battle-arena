@@ -1,4 +1,4 @@
-package org.barcelonajug.superherobattlearena.service;
+package org.barcelonajug.superherobattlearena.application.usecase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
