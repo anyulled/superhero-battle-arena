@@ -26,7 +26,7 @@ public class RosterService {
 
     @PostConstruct
     public void loadRoster() throws IOException {
-        ClassPathResource resource = new ClassPathResource("data/all-heroes.json");
+        ClassPathResource resource = new ClassPathResource("all-superheroes.json");
         try (InputStream inputStream = resource.getInputStream()) {
             List<Hero> heroes = objectMapper.readValue(inputStream, new TypeReference<List<Hero>>() {
             });

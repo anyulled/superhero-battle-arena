@@ -1,8 +1,6 @@
 package org.barcelonajug.superherobattlearena.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Round;
@@ -15,25 +13,21 @@ import org.barcelonajug.superherobattlearena.service.SubmissionValidator;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(RoundController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RoundControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private TestRestTemplate restTemplate;
 
     @MockitoBean
     private RoundRepository roundRepository;
@@ -45,7 +39,7 @@ class RoundControllerTest {
     private SubmissionValidator submissionValidator;
 
     @Test
-    void shouldReturnRoundSpec() throws Exception {
+    void shouldReturnRoundSpec() {
         RoundSpec spec = new RoundSpec("Test", 1, 100, null, null, null, null, "Arena");
         Round round = new Round();
         round.setRoundNo(1);
@@ -53,12 +47,12 @@ class RoundControllerTest {
 
         given(roundRepository.findById(1)).willReturn(Optional.of(round));
 
-        mockMvc.perform(get("/api/rounds/1"))
-                .andExpect(status().isOk());
+        ResponseEntity<RoundSpec> response = restTemplate.getForEntity("/api/rounds/1", RoundSpec.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
     @Test
-    void shouldAcceptSubmission() throws Exception {
+    void shouldAcceptSubmission() {
         RoundSpec spec = new RoundSpec("Test", 1, 100, null, null, null, null, "Arena");
         Round round = new Round();
         round.setRoundNo(1);
@@ -68,11 +62,11 @@ class RoundControllerTest {
 
         DraftSubmission draft = new DraftSubmission(List.of(1), "Attack");
 
-        mockMvc.perform(post("/api/rounds/1/submit")
-                .param("teamId", UUID.randomUUID().toString())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(draft)))
-                .andExpect(status().isOk());
+        ResponseEntity<String> response = restTemplate.postForEntity(
+                "/api/rounds/1/submit?teamId=" + UUID.randomUUID(),
+                draft,
+                String.class);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         Mockito.verify(submissionValidator).validate(any(), any());
     }
