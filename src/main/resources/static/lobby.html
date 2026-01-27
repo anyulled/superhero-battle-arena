@@ -88,12 +88,7 @@
                 </table>
             </div>
 
-            <div class="mt-6 flex justify-end space-x-4">
-                <button id="createMatchBtn"
-                    class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg transition-colors font-medium shadow-lg hover:shadow-purple-500/20 flex items-center gap-2">
-                    <i data-lucide="swords"></i> Auto-Match All Teams
-                </button>
-            </div>
+
         </section>
 
         <div class="text-center">
@@ -127,39 +122,7 @@
 
 
 
-                // Create Match
-                $('#createMatchBtn').click(function () {
-                    $(this).prop('disabled', true).text('Creating matches...');
 
-                    API.matches.autoMatch(1).done(function (matchIds) {
-                        if (!matchIds || matchIds.length === 0) {
-                            alert('No matches created. Ensure there are at least 2 teams.');
-                            $('#createMatchBtn').prop('disabled', false).text('Auto-Match All Teams');
-                            return;
-                        }
-
-                        // For each match, get details, submit rosters, and run
-                        const matchPromises = matchIds.map(matchId => {
-                            return API.matches.get(matchId).then(function (match) {
-                                const draft = { heroIds: [1, 2, 3, 4, 5], strategy: "BALANCED" };
-                                return $.when(
-                                    API.rounds.submit(1, match.teamA, draft),
-                                    API.rounds.submit(1, match.teamB, draft)
-                                ).then(function () {
-                                    return API.matches.run(matchId);
-                                });
-                            });
-                        });
-
-                        $.when.apply($, matchPromises).always(function () {
-                            alert('Matches created and started! Redirecting to Bracket...');
-                            window.location.href = 'bracket.html';
-                        });
-                    }).fail(function () {
-                        alert('Failed to auto-match teams.');
-                        $('#createMatchBtn').prop('disabled', false).text('Auto-Match All Teams');
-                    });
-                });
 
                 $('#refreshTeams').click(loadTeams);
                 loadTeams();
