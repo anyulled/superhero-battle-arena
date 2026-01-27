@@ -30,6 +30,9 @@ A Spring Boot application built with Hexagonal Architecture that simulates battl
 
 3. **Access the Application**:
    Open your browser to [http://localhost:8080/lobby.html](http://localhost:8080/lobby.html)
+4. **API Documentation**:
+   - Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+   - OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
 ## Architecture
 
