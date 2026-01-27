@@ -16,8 +16,10 @@ echo "Initializing Enhanced Fixture Data"
 echo "========================================="
 
 # 1. Create a Session
-SESSION_ID=$(uuidgen)
-echo "Session ID: $SESSION_ID"
+SESSION_ID="2e387ed6-e366-40ce-9d44-da1ad8380ba4"
+echo "Initializing Session: $SESSION_ID"
+curl -s -X POST "$URL/api/admin/sessions/start?sessionId=$SESSION_ID" -H "Authorization: Basic YWRtaW46YWRtaW4=" > /dev/null
+echo "Session started."
 echo ""
 
 # Define 20 creative team names with 2-5 members each
@@ -88,7 +90,7 @@ echo "========================================="
 
 # Get hero IDs from JSON file using JBang
 # We'll select 100 heroes (5 per team for 20 teams)
-HERO_IDS=$(jbang extract-heroes.java src/main/resources/all-superheroes.json 100)
+HERO_IDS=$(jbang ExtractHeroes.java src/main/resources/all-superheroes.json 100)
 
 # Convert to bash array
 HERO_ARRAY=($HERO_IDS)
