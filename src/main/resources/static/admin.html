@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Superhero Battle Arena</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+
+</head>
+
+<body>
+    <main class="admin-container">
+        <!-- Login Panel -->
+        <section id="loginPanel" class="login-panel">
+            <h2>🛡️ Admin Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+                <div id="loginError" class="status-badge error hidden"></div>
+            </form>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section id="adminPanel" class="admin-panel">
+            <button class="btn btn-secondary logout-btn" onclick="logout()">Logout</button>
+
+            <h1>⚔️ Tournament Admin Dashboard</h1>
+
+            <div class="panel-grid">
+                <!-- Session Management -->
+                <article class="panel-card">
+                    <h3>📅 Session Management</h3>
+                    <button class="btn btn-primary" onclick="startSession()">Start New Session</button>
+                    <div id="sessionStatus"></div>
+                </article>
+
+                <!-- Round Management -->
+                <article class="panel-card">
+                    <h3>🎯 Round Management</h3>
+                    <div class="form-group">
+                        <label for="roundNo">Round Number</label>
+                        <input type="number" id="roundNo" min="1" value="1">
+                    </div>
+                    <div class="constraint-builder">
+                        <div class="form-group">
+                            <label for="teamSize">Team Size</label>
+                            <input type="number" id="teamSize" min="1" max="10" value="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="budgetCap">Budget Cap</label>
+                            <input type="number" id="budgetCap" min="0" value="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <input type="text" id="description" value="Tournament Round"
+                                placeholder="Round description">
+                        </div>
+                        <div class="form-group">
+                            <label for="mapType">Map Type</label>
+                            <select id="mapType">
+                                <option value="ARENA_1">Arena 1</option>
+                                <option value="ARENA_2">Arena 2</option>
+                                <option value="COSMIC">Cosmic Battlefield</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="createRound()">Create Round</button>
+                    <div id="roundStatus"></div>
+                </article>
+
+                <!-- Matchmaking -->
+                <article class="panel-card">
+                    <h3>🎲 Matchmaking</h3>
+                    <p class="panel-description">
+                        Automatically match teams for the current round
+                    </p>
+                    <button class="btn btn-primary" onclick="autoMatch()">Auto-Match Teams</button>
+                    <div id="matchStatus"></div>
+                    <div id="matchResults" class="results-list"></div>
+                </article>
+
+                <!-- Battle Execution -->
+                <article class="panel-card">
+                    <h3>⚔️ Battle Execution</h3>
+                    <p class="panel-description">
+                        Run all pending battles for the current round
+                    </p>
+                    <button class="btn btn-primary" onclick="runAllBattles()">Run All Battles</button>
+                    <div id="battleStatus"></div>
+                    <div id="battleResults" class="results-list"></div>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <script src="api.js"></script>
+    <script>
+        let authHeader = '';
+        let currentSessionId = null;
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Create Basic Auth header
+            authHeader = 'Basic ' + btoa(username + ':' + password);
+
+            // Test authentication by trying to start a session
+            try {
+                const response = await fetch('/api/admin/sessions/start', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader
+                    }
+                });
+
+                if (response.ok) {
+                    currentSessionId = await response.json();
+                    document.getElementById('loginPanel').style.display = 'none';
+                    document.getElementById('adminPanel').classList.add('active');
+                    showStatus('sessionStatus', `Session started: ${currentSessionId}`, 'success');
+                } else {
+                    showStatus('loginError', 'Invalid credentials', 'error');
+                    document.getElementById('loginError').classList.remove('hidden');
+                }
+            } catch (error) {
+                showStatus('loginError', 'Login failed: ' + error.message, 'error');
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        });
+
+        async function startSession() {
+            try {
+                const response = await fetch('/api/admin/sessions/start', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader
+                    }
+                });
+
+                if (response.ok) {
+                    currentSessionId = await response.json();
+                    showStatus('sessionStatus', `New session started: ${currentSessionId}`, 'success');
+                } else {
+                    showStatus('sessionStatus', 'Failed to start session', 'error');
+                }
+            } catch (error) {
+                showStatus('sessionStatus', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function createRound() {
+            if (!currentSessionId) {
+                showStatus('roundStatus', 'Please start a session first', 'error');
+                return;
+            }
+
+            const roundNo = parseInt(document.getElementById('roundNo').value);
+            const teamSize = parseInt(document.getElementById('teamSize').value);
+            const budgetCap = parseInt(document.getElementById('budgetCap').value);
+            const description = document.getElementById('description').value;
+            const mapType = document.getElementById('mapType').value;
+
+            const spec = {
+                description: description,
+                teamSize: teamSize,
+                budgetCap: budgetCap,
+                requiredRoles: {},
+                maxSameRole: {},
+                bannedTags: [],
+                tagModifiers: {},
+                mapType: mapType
+            };
+
+            try {
+                const response = await fetch('/api/admin/rounds/create', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: currentSessionId,
+                        roundNo: roundNo,
+                        spec: spec
+                    })
+                });
+
+                if (response.ok) {
+                    const createdRoundNo = await response.json();
+                    showStatus('roundStatus', `Round ${createdRoundNo} created successfully`, 'success');
+                } else {
+                    showStatus('roundStatus', 'Failed to create round', 'error');
+                }
+            } catch (error) {
+                showStatus('roundStatus', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function autoMatch() {
+            if (!currentSessionId) {
+                showStatus('matchStatus', 'Please start a session first', 'error');
+                return;
+            }
+
+            const roundNo = parseInt(document.getElementById('roundNo').value);
+
+            try {
+                const response = await fetch(`/api/admin/matches/auto-match?sessionId=${currentSessionId}&roundNo=${roundNo}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader
+                    }
+                });
+
+                if (response.ok) {
+                    const matchIds = await response.json();
+                    showStatus('matchStatus', `Created ${matchIds.length} matches`, 'success');
+
+                    const resultsDiv = document.getElementById('matchResults');
+                    resultsDiv.innerHTML = matchIds.map(id =>
+                        `<div class="result-item">Match ID: ${id}</div>`
+                    ).join('');
+                } else {
+                    showStatus('matchStatus', 'Failed to create matches', 'error');
+                }
+            } catch (error) {
+                showStatus('matchStatus', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        async function runAllBattles() {
+            const roundNo = parseInt(document.getElementById('roundNo').value);
+
+            try {
+                showStatus('battleStatus', 'Running battles...', 'info');
+
+                const response = await fetch(`/api/admin/matches/run-all?roundNo=${roundNo}${currentSessionId ? '&sessionId=' + currentSessionId : ''}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader
+                    }
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showStatus('battleStatus',
+                        `Completed ${result.successfulSimulations}/${result.totalMatches} battles`,
+                        'success');
+
+                    const resultsDiv = document.getElementById('battleResults');
+                    resultsDiv.innerHTML = result.matchIds.map(matchId => {
+                        const winner = result.winners[matchId];
+                        return `<div class="result-item">
+                            Match: ${matchId}<br>
+                            Winner: ${winner || 'DRAW'}
+                        </div>`;
+                    }).join('');
+                } else {
+                    showStatus('battleStatus', 'Failed to run battles', 'error');
+                }
+            } catch (error) {
+                showStatus('battleStatus', 'Error: ' + error.message, 'error');
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status-badge ${type}">${message}</div>`;
+        }
+
+        function logout() {
+            authHeader = '';
+            currentSessionId = null;
+            document.getElementById('loginPanel').style.display = 'block';
+            document.getElementById('adminPanel').classList.remove('active');
+            document.getElementById('loginForm').reset();
+            document.getElementById('loginError').classList.add('hidden');
+        }
+    </script>
+</body>
+
+</html>
