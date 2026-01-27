@@ -7,6 +7,7 @@ const API = {
     matches: {
         list: () => $.get('/api/matches'),
         create: (teamA, teamB) => $.post('/api/matches/create', { teamA, teamB }),
+        autoMatch: (roundNo) => $.post('/api/matches/auto-match', { roundNo }),
         get: (id) => $.get(`/api/matches/${id}`),
         run: (id) => $.post(`/api/matches/${id}/run`),
         eventsStream: (id) => new EventSource(`/api/matches/${id}/events/stream`)

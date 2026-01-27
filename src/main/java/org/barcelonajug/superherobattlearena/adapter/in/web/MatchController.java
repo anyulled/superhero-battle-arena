@@ -76,7 +76,7 @@ public class MatchController {
     }
 
     @PostMapping("/auto-match")
-    public ResponseEntity<List<UUID>> createMatchesForRound(@RequestParam UUID sessionId,
+    public ResponseEntity<List<UUID>> createMatchesForRound(@RequestParam(required = false) UUID sessionId,
             @RequestParam Integer roundNo) {
         List<UUID> matchIds = matchCreationService.autoMatch(sessionId, roundNo);
         return ResponseEntity.ok(matchIds);
