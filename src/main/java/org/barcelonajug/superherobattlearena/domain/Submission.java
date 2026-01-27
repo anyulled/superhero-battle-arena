@@ -1,9 +1,13 @@
 package org.barcelonajug.superherobattlearena.domain;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+/**
+ * Represents a team's submission for a round.
+ */
 public class Submission {
     private UUID teamId;
     private Integer roundNo;

@@ -1,8 +1,12 @@
 package org.barcelonajug.superherobattlearena.domain;
 
-import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 
+import java.util.UUID;
+
+/**
+ * Represents a round in a tournament session.
+ */
 public class Round {
     private Integer roundNo;
     private UUID sessionId;

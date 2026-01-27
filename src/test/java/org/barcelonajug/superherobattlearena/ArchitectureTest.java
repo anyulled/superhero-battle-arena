@@ -16,7 +16,6 @@ import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.sli
 @AnalyzeClasses(packages = "org.barcelonajug.superherobattlearena", importOptions = ImportOption.DoNotIncludeTests.class)
 public class ArchitectureTest {
 
-        private static final String ROOT = "org.barcelonajug.superherobattlearena..";
         private static final String DOMAIN = "org.barcelonajug.superherobattlearena.domain..";
         private static final String APPLICATION = "org.barcelonajug.superherobattlearena.application..";
         private static final String ADAPTER = "org.barcelonajug.superherobattlearena.adapter..";

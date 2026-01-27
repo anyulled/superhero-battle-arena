@@ -1,8 +1,12 @@
 package org.barcelonajug.superherobattlearena.domain;
 
-import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 
+import java.util.UUID;
+
+/**
+ * Represents a battle match between two teams in a tournament session.
+ */
 public class Match {
 
     private UUID matchId;
