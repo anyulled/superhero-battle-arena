@@ -7,10 +7,16 @@
     <title>Superhero Battle Arena - Lobby</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="icon" href="favicon.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="api.js"></script>
     <style>
         body {
-            background-color: #0f172a;
+            background-image: url('images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             color: #e2e8f0;
         }
 
@@ -35,7 +41,9 @@
 
         <!-- Registration -->
         <div class="glass-panel p-6 rounded-2xl shadow-xl">
-            <h2 class="text-2xl font-semibold mb-4 text-blue-300">Register Team</h2>
+            <h2 class="text-2xl font-semibold mb-4 text-blue-300 flex items-center gap-2">
+                <i data-lucide="user-plus"></i> Register Team
+            </h2>
             <form id="registerForm" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-300">Team Name</label>
@@ -58,8 +66,12 @@
         <!-- Teams List & Matchmaking -->
         <div class="glass-panel p-6 rounded-2xl shadow-xl">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-purple-300">Registered Teams</h2>
-                <button id="refreshTeams" class="text-sm text-slate-400 hover:text-white">Refresh</button>
+                <h2 class="text-2xl font-semibold text-purple-300 flex items-center gap-2">
+                    <i data-lucide="users"></i> Registered Teams
+                </h2>
+                <button id="refreshTeams" class="text-sm text-slate-400 hover:text-white flex items-center gap-1">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh
+                </button>
             </div>
             <div class="overflow-hidden rounded-lg border border-slate-700">
                 <table class="w-full text-left text-sm text-slate-400">
@@ -79,17 +91,18 @@
 
             <div class="mt-6 flex justify-end space-x-4">
                 <button id="createMatchBtn"
-                    class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/20"
+                    class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/20 flex items-center gap-2"
                     disabled>
-                    Create Match from Selected
+                    <i data-lucide="swords"></i> Create Match from Selected
                 </button>
             </div>
         </div>
 
         <div class="text-center">
             <a href="bracket.html"
-                class="inline-block text-blue-400 hover:text-blue-300 underline underline-offset-4">Go to Tournament
-                Bracket -></a>
+                class="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 underline underline-offset-4">
+                <i data-lucide="trophy"></i> Go to Tournament Bracket ->
+            </a>
         </div>
 
     </div>
@@ -114,6 +127,7 @@
                     `);
                     });
                     updateCreateButton();
+                    lucide.createIcons();
                 });
             }
 
@@ -175,6 +189,7 @@
 
             $('#refreshTeams').click(loadTeams);
             loadTeams();
+            lucide.createIcons();
         });
     </script>
 </body>

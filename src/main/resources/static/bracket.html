@@ -8,9 +8,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="api.js"></script>
+    <link rel="icon" href="favicon.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
-            background-color: #0f172a;
+            background-image: url('images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             color: #e2e8f0;
         }
 
@@ -28,13 +34,14 @@
         <div class="flex justify-between items-center">
             <div>
                 <h1
-                    class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                    Tournament Bracket</h1>
+                    class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 flex items-center gap-3">
+                    <i data-lucide="trophy" class="text-purple-400"></i> Tournament Bracket
+                </h1>
                 <p class="text-slate-400 mt-2">View Matches & Replays</p>
             </div>
             <a href="lobby.html"
                 class="text-blue-400 hover:text-blue-300 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                <- Back to Lobby </a>
+                <i data-lucide="arrow-left"></i> Back to Lobby </a>
         </div>
 
         <div class="glass-panel p-8 rounded-2xl shadow-xl min-h-[500px]">
@@ -116,12 +123,12 @@
                            <div class="space-y-4 mb-6">
                                 <div class="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg ${match.winnerTeam === match.teamA ? 'border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : ''}">
                                     <span class="font-bold text-lg ${match.winnerTeam === match.teamA ? 'text-green-400' : 'text-slate-300'}">${teamAName}</span>
-                                    ${match.winnerTeam === match.teamA ? '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>' : ''}
+                                    ${match.winnerTeam === match.teamA ? '<i data-lucide="crown" class="w-5 h-5 text-yellow-500"></i>' : ''}
                                 </div>
                                 <div class="flex justify-center text-xs text-slate-600 font-bold">VS</div>
                                 <div class="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg ${match.winnerTeam === match.teamB ? 'border border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]' : ''}">
                                     <span class="font-bold text-lg ${match.winnerTeam === match.teamB ? 'text-green-400' : 'text-slate-300'}">${teamBName}</span>
-                                    ${match.winnerTeam === match.teamB ? '<svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>' : ''}
+                                    ${match.winnerTeam === match.teamB ? '<i data-lucide="crown" class="w-5 h-5 text-yellow-500"></i>' : ''}
                                 </div>
                            </div>
 
@@ -130,10 +137,11 @@
                     `;
                         container.append(card);
                     });
+                    lucide.createIcons();
                 });
             }
 
-            loadTeams().then(loadMatches);
+            loadTeams().then(loadMatches).then(() => lucide.createIcons());
         });
     </script>
 </body>

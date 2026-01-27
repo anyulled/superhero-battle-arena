@@ -9,9 +9,15 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="api.js"></script>
     <script src="battle-replay.js" defer></script>
+    <link rel="icon" href="favicon.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
-            background-color: #0f172a;
+            background-image: url('images/background.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
             color: #e2e8f0;
         }
 
@@ -100,10 +106,14 @@
 
     <div class="flex justify-between items-center mb-4 min-h-[60px]">
         <div class="flex items-center gap-4">
-            <a href="bracket.html" class="text-slate-400 hover:text-white"><- Back</a>
-                    <h1 class="text-2xl font-bold">Battle Arena</h1>
-                    <span id="roundIndicator" class="bg-indigo-600 px-3 py-1 rounded text-sm font-bold hidden">ROUND
-                        1</span>
+            <a href="bracket.html" class="text-slate-400 hover:text-white flex items-center gap-1">
+                <i data-lucide="arrow-left"></i> Back
+            </a>
+            <h1 class="text-2xl font-bold flex items-center gap-2">
+                <i data-lucide="swords"></i> Battle Arena
+            </h1>
+            <span id="roundIndicator" class="bg-indigo-600 px-3 py-1 rounded text-sm font-bold hidden">ROUND
+                1</span>
         </div>
         <div id="battleStatus" class="font-mono text-yellow-400 animate-pulse">CONNECTING...</div>
     </div>
@@ -150,14 +160,22 @@
                     Name</span></div>
             <div class="flex justify-center gap-4">
                 <a href="bracket.html"
-                    class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium">Back to
-                    Bracket</a>
+                    class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2">
+                    <i data-lucide="arrow-left"></i> Back to Bracket
+                </a>
                 <button onclick="location.reload()"
-                    class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium">Replay</button>
+                    class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-lg font-medium flex items-center gap-2">
+                    <i data-lucide="rotate-ccw"></i> Replay
+                </button>
             </div>
         </div>
     </div>
 
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 
 </html>
