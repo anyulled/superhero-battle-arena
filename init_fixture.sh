@@ -3,9 +3,10 @@
 # Base URL
 URL="http://localhost:8080"
 
-# Check if python3 is installed
-if ! command -v python3 &> /dev/null; then
-    echo "Error: python3 is required but not installed."
+# Check if jbang is installed
+if ! command -v jbang &> /dev/null; then
+    echo "Error: jbang is required but not installed."
+    echo "Install it from: https://www.jbang.dev/download/"
     exit 1
 fi
 
@@ -85,15 +86,9 @@ echo "========================================="
 echo "Submitting Squad Formations..."
 echo "========================================="
 
-# Get hero IDs from JSON file using Python
+# Get hero IDs from JSON file using JBang
 # We'll select 100 heroes (5 per team for 20 teams)
-HERO_IDS=$(python3 -c "
-import json
-with open('src/main/resources/all-superheroes.json', 'r') as f:
-    heroes = json.load(f)
-    hero_ids = [h['id'] for h in heroes[:100]]
-    print(' '.join(map(str, hero_ids)))
-")
+HERO_IDS=$(jbang extract-heroes.java src/main/resources/all-superheroes.json 100)
 
 # Convert to bash array
 HERO_ARRAY=($HERO_IDS)
