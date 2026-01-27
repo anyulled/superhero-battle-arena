@@ -32,7 +32,7 @@ public class SecurityConfig {
                         // Admin endpoints require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Public API endpoints
-                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/api/**", "/").permitAll()
                         // Static resources
                         .requestMatchers("/**/*.html", "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg",
                                 "/images/**")
