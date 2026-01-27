@@ -10,38 +10,23 @@
     <link rel="icon" href="favicon.png">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="api.js"></script>
-    <style>
-        body {
-            background-image: url('images/background.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            color: #e2e8f0;
-        }
-
-        .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="p-8">
 
-    <div class="max-w-4xl mx-auto space-y-8">
-        <div class="text-center">
+    <main class="max-w-4xl mx-auto space-y-8">
+        <header class="text-center">
             <img src="images/hero-image.png" alt="Superhero Arena"
                 class="w-full h-48 object-cover rounded-2xl shadow-2xl mb-8 border border-slate-700">
             <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                 Superhero Battle Arena</h1>
             <p class="text-slate-400 mt-2">Lobby & Registration</p>
-        </div>
+        </header>
 
         <!-- Registration -->
         <!-- Registration Instructions -->
-        <div class="glass-panel p-6 rounded-2xl shadow-xl">
+        <section class="glass-panel p-6 rounded-2xl shadow-xl" aria-label="Registration Instructions">
             <h2 class="text-2xl font-semibold mb-4 text-blue-300 flex items-center gap-2">
                 <i data-lucide="terminal"></i> Register Team via API
             </h2>
@@ -67,10 +52,10 @@
                     </ul>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Teams List & Matchmaking -->
-        <div class="glass-panel p-6 rounded-2xl shadow-xl">
+        <section class="glass-panel p-6 rounded-2xl shadow-xl" aria-label="Registered Teams">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-semibold text-purple-300 flex items-center gap-2">
                     <i data-lucide="users"></i> Registered Teams
@@ -100,7 +85,7 @@
                     <i data-lucide="swords"></i> Auto-Match All Teams
                 </button>
             </div>
-        </div>
+        </section>
 
         <div class="text-center">
             <a href="bracket.html"
@@ -109,72 +94,72 @@
             </a>
         </div>
 
-    </div>
+        </div>
 
-    <script>
-        $(document).ready(function () {
-            // Load Teams
-            function loadTeams() {
-                API.teams.list().done(function (teams) {
-                    const tbody = $('#teamsBody');
-                    tbody.empty();
-                    teams.forEach(team => {
-                        tbody.append(`
+        <script>
+            $(document).ready(function () {
+                // Load Teams
+                function loadTeams() {
+                    API.teams.list().done(function (teams) {
+                        const tbody = $('#teamsBody');
+                        tbody.empty();
+                        teams.forEach(team => {
+                            tbody.append(`
                         <tr class="hover:bg-slate-800/50">
                             <td class="px-6 py-4 font-medium text-white">${team.name}</td>
                             <td class="px-6 py-4">${team.members.join(', ')}</td>
                             <td class="px-6 py-4 font-mono text-xs text-slate-500">${team.teamId}</td>
                         </tr>
                     `);
+                        });
+                        lucide.createIcons();
                     });
-                    lucide.createIcons();
-                });
-            }
+                }
 
 
 
-            // Create Match
-            $('#createMatchBtn').click(function () {
-                $(this).prop('disabled', true).text('Creating matches...');
+                // Create Match
+                $('#createMatchBtn').click(function () {
+                    $(this).prop('disabled', true).text('Creating matches...');
 
-                API.matches.autoMatch(1).done(function (matchIds) {
-                    if (!matchIds || matchIds.length === 0) {
-                        alert('No matches created. Ensure there are at least 2 teams.');
-                        $('#createMatchBtn').prop('disabled', false).text('Auto-Match All Teams');
-                        return;
-                    }
+                    API.matches.autoMatch(1).done(function (matchIds) {
+                        if (!matchIds || matchIds.length === 0) {
+                            alert('No matches created. Ensure there are at least 2 teams.');
+                            $('#createMatchBtn').prop('disabled', false).text('Auto-Match All Teams');
+                            return;
+                        }
 
-                    // For each match, get details, submit rosters, and run
-                    const matchPromises = matchIds.map(matchId => {
-                        return API.matches.get(matchId).then(function (match) {
-                            const draft = { heroIds: [1, 2, 3, 4, 5] };
-                            return $.when(
-                                API.rounds.submit(1, match.teamA, draft),
-                                API.rounds.submit(1, match.teamB, draft)
-                            ).then(function () {
-                                return API.matches.run(matchId);
+                        // For each match, get details, submit rosters, and run
+                        const matchPromises = matchIds.map(matchId => {
+                            return API.matches.get(matchId).then(function (match) {
+                                const draft = { heroIds: [1, 2, 3, 4, 5], strategy: "BALANCED" };
+                                return $.when(
+                                    API.rounds.submit(1, match.teamA, draft),
+                                    API.rounds.submit(1, match.teamB, draft)
+                                ).then(function () {
+                                    return API.matches.run(matchId);
+                                });
                             });
                         });
-                    });
 
-                    $.when.apply($, matchPromises).always(function () {
-                        alert('Matches created and started! Redirecting to Bracket...');
-                        window.location.href = 'bracket.html';
+                        $.when.apply($, matchPromises).always(function () {
+                            alert('Matches created and started! Redirecting to Bracket...');
+                            window.location.href = 'bracket.html';
+                        });
+                    }).fail(function () {
+                        alert('Failed to auto-match teams.');
+                        $('#createMatchBtn').prop('disabled', false).text('Auto-Match All Teams');
                     });
-                }).fail(function () {
-                    alert('Failed to auto-match teams.');
-                    $('#createMatchBtn').prop('disabled', false).text('Auto-Match All Teams');
                 });
+
+                $('#refreshTeams').click(loadTeams);
+                loadTeams();
+                setInterval(loadTeams, 3000); // Poll every 3 seconds
+                lucide.createIcons();
             });
 
-            $('#refreshTeams').click(loadTeams);
-            loadTeams();
-            setInterval(loadTeams, 3000); // Poll every 3 seconds
-            lucide.createIcons();
-        });
 
-
-    </script>
+        </script>
 </body>
 
 </html>

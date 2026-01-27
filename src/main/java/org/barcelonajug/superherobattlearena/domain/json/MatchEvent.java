@@ -1,10 +1,10 @@
 package org.barcelonajug.superherobattlearena.domain.json;
 
 public record MatchEvent(
-        String type,
-        long timestamp,
-        String description,
-        Integer actorId,
-        Integer targetId,
-        int value) {
+                String type,
+                long timestamp,
+                String description,
+                String actorId,
+                String targetId,
+                int value) {
 }

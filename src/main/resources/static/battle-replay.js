@@ -40,25 +40,29 @@ $(document).ready(async function () {
     }
 
     // Helper: Render Hero Card
-    function renderHeroCard(heroId, container) {
+    function renderHeroCard(heroId, container, teamId) {
         const hero = state.heroes[heroId];
-        const currentHealth = 100; // Default start
+        const uniqueId = `${teamId}_${heroId}`;
+
+        // Calculate Max HP (durability) - matching backend BattleEngine logic
+        // BattleEngine uses hero.powerstats.durability() directly (no multiplier in latest version)
+        // Wait, step 198 removed the multiplier? Let's check.
+        // Step 198: this.currentHp = hero.powerstats().durability();
+        // Step 202: (int) (hero.powerstats().durability() * multiplier.doubleValue()) in FatigueService
+        // But in BattleEngine constructor it is just durability().
+        // So Max HP = durability.
+        const maxHealth = hero.powerstats ? hero.powerstats.durability : 100;
+
         // Store initial state
-        state.rosters[heroId] = { ...hero, currentHealth: 100, maxHealth: 100 }; // Assuming 100 for now, or fetch from stats?
-        // Actually stats are: strength, defense... health is usually derived?
-        // Let's assume 100 HP base for visualization if not provided.
-        // Or better: `hero.durability` * 10?
-        // The simulation engine determines max health. But we don't have it here initially?
-        // We will update it on first health update or assume standard.
-        // Let's assume 100 for percentage bar.
+        state.rosters[uniqueId] = { ...hero, currentHealth: maxHealth, maxHealth: maxHealth };
 
         const card = $(`
-            <div id="hero-${heroId}" class="hero-card bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center gap-3 relative overflow-hidden">
-                <img src="${hero.imageUrl || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full border-2 border-slate-500 object-cover" alt="${hero.name}">
+            <div id="hero-${uniqueId}" class="hero-card bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center gap-3 relative overflow-hidden">
+                <img src="${hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full border-2 border-slate-500 object-cover" alt="${hero.name}">
                 <div class="flex-1">
                     <div class="flex justify-between items-center">
                         <span class="font-bold text-sm text-white">${hero.name}</span>
-                        <span class="text-xs text-slate-400 font-mono hp-text">100/100</span>
+                        <span class="text-xs text-slate-400 font-mono hp-text">${maxHealth}/${maxHealth}</span>
                     </div>
                     <div class="w-full bg-slate-700 h-2 rounded-full mt-1 overflow-hidden">
                         <div class="hp-bar bg-green-500 h-full w-full transition-all duration-300"></div>
@@ -95,7 +99,7 @@ $(document).ready(async function () {
             const subA = await API.rounds.getSubmission(roundNo, state.match.teamA);
             subA.heroIds.forEach(id => {
                 state.teamAffiliation[id] = state.match.teamA;
-                renderHeroCard(id, els.teamARoster);
+                renderHeroCard(id, els.teamARoster, state.match.teamA);
             });
         } catch (e) {
             console.warn('Failed to load roster A', e);
@@ -106,7 +110,7 @@ $(document).ready(async function () {
             const subB = await API.rounds.getSubmission(roundNo, state.match.teamB);
             subB.heroIds.forEach(id => {
                 state.teamAffiliation[id] = state.match.teamB;
-                renderHeroCard(id, els.teamBRoster);
+                renderHeroCard(id, els.teamBRoster, state.match.teamB);
             });
         } catch (e) {
             console.warn('Failed to load roster B', e);
@@ -162,38 +166,47 @@ $(document).ready(async function () {
             case 'MATCH_END':
                 handleWin(value); // value is winning team ID
                 break;
+            case 'HIT': // Fallthrough or explicit
+                handleAttack(actorId, targetId, value, description);
+                break;
             default:
                 log(description);
         }
     }
 
     function handleAttack(actorId, targetId, damage, desc) {
-        const actorCard = $(`#hero-${actorId}`);
-        const targetCard = $(`#hero-${targetId}`);
+        // IDs are now composite strings from backend: teamId_heroId
+        // But we need to be careful. DOM IDs are hero-{uniqueId}
+        // Using document.getElementById to avoid any selector escaping issues
+        const actorCard = $(document.getElementById(`hero-${actorId}`));
+        const targetCard = $(document.getElementById(`hero-${targetId}`));
 
         // Visuals
-        const isTeamA = state.teamAffiliation[actorId] === state.match.teamA;
-        actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
-        targetCard.addClass('target');
+        const actorTeamId = actorId.split('_')[0];
+        const isTeamA = actorTeamId === state.match.teamA;
 
-        setTimeout(() => {
-            actorCard.removeClass('attacking-right attacking-left');
-            targetCard.removeClass('target');
-        }, 500);
+        if (actorCard.length) {
+            actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
+            setTimeout(() => {
+                actorCard.removeClass('attacking-right attacking-left');
+            }, 500);
+        }
 
-        // Show damage number
         if (targetCard.length) {
+            targetCard.addClass('target shake');
+            setTimeout(() => {
+                targetCard.removeClass('target shake');
+            }, 500);
+
             const dmgEl = $(`<div class="damage-number">-${damage}</div>`);
-            // Position roughly center
             targetCard.append(dmgEl);
             setTimeout(() => dmgEl.remove(), 1000);
-
-            // Update Health Logic
-            // The event might not carry current health, only damage.
-            // But usually we get a HEALTH_CHANGED event?
-            // If not, we deduct locally.
-            updateHealth(targetId, -damage);
+        } else {
+            console.warn(`Target card not found for ID: hero-${targetId}`);
         }
+
+        // updateHealth should run regardless of UI presence to keep state consistent
+        updateHealth(targetId, -damage);
 
         log(desc);
     }
@@ -203,10 +216,14 @@ $(document).ready(async function () {
     // Looking at MatchEventType: HEALTH_CHANGED might exist?
     // Let's handle it if it comes.
 
-    function updateHealth(heroId, deltaOrExact, isExact = false) {
-        const heroData = state.rosters[heroId];
-        if (!heroData) return;
+    function updateHealth(uniqueId, deltaOrExact, isExact = false) {
+        const heroData = state.rosters[uniqueId];
+        if (!heroData) {
+            console.warn(`Health update failed: No hero data for ${uniqueId}`);
+            return;
+        }
 
+        const oldHp = heroData.currentHealth;
         if (isExact) {
             heroData.currentHealth = deltaOrExact;
         } else {
@@ -214,17 +231,25 @@ $(document).ready(async function () {
         }
         if (heroData.currentHealth < 0) heroData.currentHealth = 0;
 
+        console.debug(`Updated Health for ${heroData.name} (${uniqueId}): ${oldHp} -> ${heroData.currentHealth} (Max: ${heroData.maxHealth})`);
+
         // Update UI
-        const pct = Math.max(0, Math.min(100, (heroData.currentHealth / heroData.maxHealth) * 100)); // Assuming max 100
-        const card = $(`#hero-${heroId}`);
-        card.find('.hp-bar').css('width', `${pct}%`).removeClass('bg-green-500 bg-yellow-500 bg-red-500')
-            .addClass(pct > 50 ? 'bg-green-500' : (pct > 20 ? 'bg-yellow-500' : 'bg-red-500'));
-        card.find('.hp-text').text(`${Math.ceil(heroData.currentHealth)}HP`);
+        const pct = Math.max(0, Math.min(100, (heroData.currentHealth / heroData.maxHealth) * 100));
+        const card = $(document.getElementById(`hero-${uniqueId}`));
+
+        if (card.length) {
+            card.find('.hp-bar').css('width', `${pct}%`).removeClass('bg-green-500 bg-yellow-500 bg-red-500')
+                .addClass(pct > 50 ? 'bg-green-500' : (pct > 20 ? 'bg-yellow-500' : 'bg-red-500'));
+            card.find('.hp-text').text(`${Math.ceil(heroData.currentHealth)}/${heroData.maxHealth}`);
+        } else {
+            console.warn(`UI update skipped: Card #hero-${uniqueId} not found`);
+        }
     }
 
-    function handleKO(heroId) {
-        $(`#hero-${heroId}`).addClass('ko');
-        updateHealth(heroId, 0, true);
+    function handleKO(uniqueId) {
+        const card = $(document.getElementById(`hero-${uniqueId}`));
+        card.addClass('ko');
+        updateHealth(uniqueId, 0, true);
     }
 
     function handleWin(winnerTeamId) {

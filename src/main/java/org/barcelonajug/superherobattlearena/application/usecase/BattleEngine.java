@@ -42,7 +42,7 @@ public class BattleEngine {
             events.add(new MatchEvent("TURN_START", logicalTime++, "Turn " + turn + " started", null, null, turn));
 
             // Sort by Speed Descending. Stability with ID for determinism.
-            allHeroes.sort(Comparator.comparingInt((BattleHero bh) -> bh.hero.powerstats().spd())
+            allHeroes.sort(Comparator.comparingInt((BattleHero bh) -> bh.hero.powerstats().speed())
                     .reversed()
                     .thenComparingInt(bh -> bh.hero.id()));
 
@@ -76,13 +76,15 @@ public class BattleEngine {
                 // Apply Damage
                 target.currentHp -= damage;
                 events.add(new MatchEvent("HIT", logicalTime++,
-                        attacker.hero.name() + " hits " + target.hero.name() + " for " + damage, attacker.hero.id(),
-                        target.hero.id(), damage));
+                        attacker.hero.name() + " hits " + target.hero.name() + " for " + damage,
+                        attacker.getUniqueId(),
+                        target.getUniqueId(), damage));
 
                 if (target.currentHp <= 0) {
                     target.currentHp = 0;
-                    events.add(new MatchEvent("KO", logicalTime++, target.hero.name() + " is KO!", attacker.hero.id(),
-                            target.hero.id(), 0));
+                    events.add(new MatchEvent("KO", logicalTime++, target.hero.name() + " is KO!",
+                            attacker.getUniqueId(),
+                            target.getUniqueId(), 0));
                 }
             }
 
@@ -142,8 +144,8 @@ public class BattleEngine {
             }
         }
 
-        int baseAtk = attacker.hero.powerstats().atk();
-        int targetDef = target.hero.powerstats().def();
+        int baseAtk = attacker.hero.powerstats().strength();
+        int targetDef = target.hero.powerstats().power();
 
         int rawDamage = (int) (baseAtk * multiplier - (targetDef * DAMAGE_DEF_FACTOR));
         return Math.max(1, rawDamage);
@@ -163,11 +165,15 @@ public class BattleEngine {
         public BattleHero(Hero hero, UUID teamId) {
             this.hero = hero;
             this.teamId = teamId;
-            this.currentHp = hero.powerstats().hp();
+            this.currentHp = hero.powerstats().durability();
         }
 
         public boolean isAlive() {
             return currentHp > 0;
+        }
+
+        public String getUniqueId() {
+            return teamId.toString() + "_" + hero.id();
         }
     }
 }

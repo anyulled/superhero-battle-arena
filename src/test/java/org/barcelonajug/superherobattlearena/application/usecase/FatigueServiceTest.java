@@ -33,13 +33,7 @@ class FatigueServiceTest {
 
         Hero result = fatigueService.applyFatigue(teamId, hero, 1);
 
-        org.assertj.core.api.Assertions.assertThat(result.powerstats().hp()).isEqualTo(100);
-        org.assertj.core.api.Assertions.assertThat(result.powerstats().atk()).isEqualTo(10);
+        org.assertj.core.api.Assertions.assertThat(result.powerstats().durability()).isEqualTo(100);
+        org.assertj.core.api.Assertions.assertThat(result.powerstats().strength()).isEqualTo(10);
     }
-
-    // Since we simplified the logic in refactoring (returning original hero
-    // mostly),
-    // we can keep this test simple or update it if we implement complex logic
-    // later.
-    // For now, ensuring it compiles and runs is key.
 }

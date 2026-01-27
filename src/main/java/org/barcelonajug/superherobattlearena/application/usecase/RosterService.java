@@ -15,6 +15,9 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectReader;
+
 @Service
 public class RosterService {
 
@@ -29,10 +32,13 @@ public class RosterService {
     public void loadRoster() throws IOException {
         ClassPathResource resource = new ClassPathResource("all-superheroes.json");
         try (InputStream inputStream = resource.getInputStream()) {
-            List<Hero> heroesList = objectMapper.readValue(inputStream, new TypeReference<List<Hero>>() {
-            });
+            ObjectReader reader = objectMapper.readerFor(new TypeReference<List<Hero>>() {
+            })
+                    .without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            List<Hero> heroesList = reader.readValue(inputStream);
             this.heroes = heroesList.stream()
                     .collect(Collectors.toMap(Hero::id, Function.identity()));
+            System.out.println("RosterService: Loaded " + this.heroes.size() + " heroes.");
         }
     }
 

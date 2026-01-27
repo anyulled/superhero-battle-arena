@@ -11,100 +11,12 @@
     <script src="battle-replay.js" defer></script>
     <link rel="icon" href="favicon.png">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body {
-            background-image: url('images/background.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            color: #e2e8f0;
-        }
-
-        .hero-card {
-            transition: all 0.3s ease;
-        }
-
-        .hero-card.ko {
-            filter: grayscale(100%) brightness(50%);
-            opacity: 0.7;
-        }
-
-        .hero-card.active {
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-            border-color: #3b82f6;
-            transform: scale(1.05);
-        }
-
-        .hero-card.target {
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
-            border-color: #ef4444;
-        }
-
-        .damage-number {
-            position: absolute;
-            font-weight: bold;
-            color: #ef4444;
-            font-size: 1.5rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-            animation: floatUp 1s ease-out forwards;
-        }
-
-        @keyframes floatUp {
-            from {
-                transform: translateY(0);
-                opacity: 1;
-            }
-
-            to {
-                transform: translateY(-50px);
-                opacity: 0;
-            }
-        }
-
-        /* Simple attack animation class - will be added dynamically */
-        .attacking-right {
-            animation: attackRight 0.5s ease-in-out;
-        }
-
-        .attacking-left {
-            animation: attackLeft 0.5s ease-in-out;
-        }
-
-        @keyframes attackRight {
-            0% {
-                transform: translateX(0);
-            }
-
-            50% {
-                transform: translateX(50px);
-            }
-
-            100% {
-                transform: translateX(0);
-            }
-        }
-
-        @keyframes attackLeft {
-            0% {
-                transform: translateX(0);
-            }
-
-            50% {
-                transform: translateX(-50px);
-            }
-
-            100% {
-                transform: translateX(0);
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body class="p-4 h-screen flex flex-col overflow-hidden">
 
-    <div class="flex justify-between items-center mb-4 min-h-[60px]">
+    <header class="flex justify-between items-center mb-4 min-h-[60px]">
         <div class="flex items-center gap-4">
             <a href="bracket.html" class="text-slate-400 hover:text-white flex items-center gap-1">
                 <i data-lucide="arrow-left"></i> Back
@@ -116,37 +28,39 @@
                 1</span>
         </div>
         <div id="battleStatus" class="font-mono text-yellow-400 animate-pulse">CONNECTING...</div>
-    </div>
+    </header>
 
-    <div class="flex-1 grid grid-cols-12 gap-4 h-full">
+    <main class="flex-1 grid grid-cols-12 gap-4 h-full">
 
         <!-- Team A -->
-        <div class="col-span-3 bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 flex flex-col">
+        <section class="col-span-3 bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 flex flex-col"
+            aria-label="Team A Roster">
             <h2 id="teamAName" class="text-xl font-bold text-blue-400 mb-4 text-center">Team A</h2>
             <div id="teamARoster" class="flex-1 overflow-y-auto space-y-4 pr-2">
                 <!-- Hero Cards -->
             </div>
-        </div>
+        </section>
 
         <!-- Arena / Logs -->
-        <div class="col-span-6 flex flex-col gap-4">
+        <section class="col-span-6 flex flex-col gap-4" aria-label="Battle Log">
             <!-- Visual Arena Placeholders if needed, or just focus on logs/feedback -->
             <div
                 class="flex-1 bg-slate-900/80 rounded-xl p-6 border border-slate-700 flex flex-col shadow-inner relative overflow-hidden">
                 <!-- Battle Messages Feed -->
                 <div id="battleLog" class="flex-1 overflow-y-auto space-y-2 font-mono text-sm"></div>
             </div>
-        </div>
+        </section>
 
         <!-- Team B -->
-        <div class="col-span-3 bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 flex flex-col">
+        <section class="col-span-3 bg-slate-900/50 rounded-xl p-4 border border-slate-700/50 flex flex-col"
+            aria-label="Team B Roster">
             <h2 id="teamBName" class="text-xl font-bold text-red-400 mb-4 text-center">Team B</h2>
             <div id="teamBRoster" class="flex-1 overflow-y-auto space-y-4 pr-2">
                 <!-- Hero Cards -->
             </div>
-        </div>
+        </section>
 
-    </div>
+    </main>
 
     <!-- Winner Modal -->
     <div id="winnerModal"
