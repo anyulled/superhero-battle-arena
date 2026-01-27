@@ -1,6 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Optional;
 import org.barcelonajug.superherobattlearena.domain.Hero;
@@ -29,6 +29,7 @@ class RosterServiceTest {
         Optional<Hero> hero = rosterService.getHero(1);
         assertThat(hero).isPresent();
         assertThat(hero.get().name()).isEqualTo("A-Bomb");
+        assertThat(hero.get().powerstats().hp()).isGreaterThan(0);
     }
 
     @Test

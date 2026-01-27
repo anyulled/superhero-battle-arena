@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import java.time.OffsetDateTime;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -19,6 +20,9 @@ public class RoundEntity {
     @Id
     @Column(name = "round_no")
     private Integer roundNo;
+
+    @Column(name = "session_id")
+    private UUID sessionId;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "spec_json")
@@ -38,6 +42,14 @@ public class RoundEntity {
 
     public void setRoundNo(Integer roundNo) {
         this.roundNo = roundNo;
+    }
+
+    public UUID getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(UUID sessionId) {
+        this.sessionId = sessionId;
     }
 
     public RoundSpec getSpecJson() {

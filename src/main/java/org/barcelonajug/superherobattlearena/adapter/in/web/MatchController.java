@@ -6,16 +6,15 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.usecase.BattleEngine;
 import org.barcelonajug.superherobattlearena.application.usecase.FatigueService;
+import org.barcelonajug.superherobattlearena.application.usecase.MatchCreationService;
 import org.barcelonajug.superherobattlearena.application.usecase.RosterService;
 import org.barcelonajug.superherobattlearena.domain.Hero;
-import org.barcelonajug.superherobattlearena.domain.HeroUsage;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
@@ -42,8 +41,8 @@ public class MatchController {
     private final RoundRepositoryPort roundRepository;
     private final BattleEngine battleEngine;
     private final RosterService rosterService;
-    private final HeroUsageRepositoryPort heroUsageRepository;
     private final FatigueService fatigueService;
+    private final MatchCreationService matchCreationService;
 
     // A simple executor for async simulation (demo purpose)
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -51,28 +50,36 @@ public class MatchController {
     public MatchController(MatchRepositoryPort matchRepository, MatchEventRepositoryPort matchEventRepository,
             SubmissionRepositoryPort submissionRepository, RoundRepositoryPort roundRepository,
             BattleEngine battleEngine, RosterService rosterService,
-            HeroUsageRepositoryPort heroUsageRepository, FatigueService fatigueService) {
+            FatigueService fatigueService, MatchCreationService matchCreationService) {
         this.matchRepository = matchRepository;
         this.matchEventRepository = matchEventRepository;
         this.submissionRepository = submissionRepository;
         this.roundRepository = roundRepository;
         this.battleEngine = battleEngine;
         this.rosterService = rosterService;
-        this.heroUsageRepository = heroUsageRepository;
         this.fatigueService = fatigueService;
+        this.matchCreationService = matchCreationService;
     }
 
     @PostMapping("/create")
     public ResponseEntity<UUID> createMatch(@RequestParam UUID teamA, @RequestParam UUID teamB,
-            @RequestParam(defaultValue = "1") Integer roundNo) {
+            @RequestParam(defaultValue = "1") Integer roundNo, @RequestParam(required = false) UUID sessionId) {
         Match match = new Match();
         match.setMatchId(UUID.randomUUID());
+        match.setSessionId(sessionId);
         match.setTeamA(teamA);
         match.setTeamB(teamB);
         match.setRoundNo(roundNo);
         match.setStatus(MatchStatus.PENDING);
         matchRepository.save(match);
         return ResponseEntity.ok(match.getMatchId());
+    }
+
+    @PostMapping("/auto-match")
+    public ResponseEntity<List<UUID>> createMatchesForRound(@RequestParam UUID sessionId,
+            @RequestParam Integer roundNo) {
+        List<UUID> matchIds = matchCreationService.autoMatch(sessionId, roundNo);
+        return ResponseEntity.ok(matchIds);
     }
 
     @PostMapping("/{matchId}/run")
@@ -131,37 +138,14 @@ public class MatchController {
         for (Integer heroId : submission.heroIds()) {
             Hero baseHero = rosterService.getHero(heroId).orElseThrow();
             // Apply Fatigue
-            Hero fatiguedHero = fatigueService.applyFatigue(teamId, baseHero);
+            Hero fatiguedHero = fatigueService.applyFatigue(teamId, baseHero, roundNo);
             battleHeroes.add(fatiguedHero);
         }
         return battleHeroes;
     }
 
     private void updateHeroUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
-        // Need to calculate streak. Simplified:
-        // Query previous usage.
-        // We actually need a robust way to store usage.
-        // For this Hackathon step, we store a record for this round.
-        // Logic for streak calculation resides in Service or we pre-calculate it here.
-
-        for (Integer heroId : heroIds) {
-            // Find streak from previous round
-            // This logic ideally belongs to Domain Service / FatigueService "recordUsage"
-            // For now, simple insert
-            HeroUsage usage = new HeroUsage(
-                    teamId,
-                    heroId,
-                    roundNo,
-                    1 + getStreakFromPrevious(teamId, heroId, roundNo),
-                    java.math.BigDecimal.ONE);
-
-            heroUsageRepository.save(usage);
-        }
-    }
-
-    private int getStreakFromPrevious(UUID teamId, Integer heroId, int currentRound) {
-        // Mock query
-        return 0;
+        fatigueService.recordUsage(teamId, roundNo, heroIds);
     }
 
     @GetMapping("/{matchId}/events")
@@ -199,6 +183,9 @@ public class MatchController {
                     Thread.sleep(500);
                 }
                 emitter.complete();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                emitter.completeWithError(e);
             } catch (Exception e) {
                 emitter.completeWithError(e);
             }

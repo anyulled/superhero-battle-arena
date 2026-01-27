@@ -9,8 +9,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.HashMap;
+import org.springframework.stereotype.Component;
 
-// No @Service
+@Component
 public class SubmissionValidator {
 
     private final RosterService rosterService;

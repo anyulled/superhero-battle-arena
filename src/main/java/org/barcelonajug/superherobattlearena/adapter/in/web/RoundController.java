@@ -1,10 +1,8 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.usecase.SubmissionValidator;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
@@ -24,14 +22,38 @@ public class RoundController {
 
     private final RoundRepositoryPort roundRepository;
     private final SubmissionRepositoryPort submissionRepository;
-    private final SubmissionValidator submissionValidator;
 
     public RoundController(RoundRepositoryPort roundRepository,
-            SubmissionRepositoryPort submissionRepository,
-            SubmissionValidator submissionValidator) {
+            SubmissionRepositoryPort submissionRepository) {
         this.roundRepository = roundRepository;
         this.submissionRepository = submissionRepository;
-        this.submissionValidator = submissionValidator;
+    }
+
+    @PostMapping
+    public ResponseEntity<Integer> createRound(@RequestParam UUID sessionId, @RequestParam Integer roundNo) {
+        // Simple logic: create a round if not exists
+        // In real app, we check if session exists.
+
+        Round round = new Round();
+        round.setRoundNo(roundNo);
+        round.setSessionId(sessionId);
+        round.setSeed(System.currentTimeMillis()); // Random seed
+        round.setStatus(org.barcelonajug.superherobattlearena.domain.RoundStatus.OPEN);
+
+        // Ensure default spec
+        RoundSpec spec = new RoundSpec(
+                "Default Round",
+                5,
+                100,
+                java.util.Collections.emptyMap(),
+                java.util.Collections.emptyMap(),
+                java.util.Collections.emptyList(),
+                java.util.Collections.emptyMap(),
+                "ARENA_1");
+        round.setSpecJson(spec);
+
+        roundRepository.save(round);
+        return ResponseEntity.ok(round.getRoundNo());
     }
 
     @GetMapping("/{roundNo}")
@@ -43,7 +65,6 @@ public class RoundController {
     }
 
     @PostMapping("/{roundNo}/submit")
-
     public ResponseEntity<Void> submitTeam(@PathVariable Integer roundNo, @RequestParam UUID teamId,
             @RequestBody DraftSubmission draft) {
         if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {

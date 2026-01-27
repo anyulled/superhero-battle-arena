@@ -9,15 +9,24 @@ public record Hero(
                 String name,
                 PowerStats powerstats,
                 String role,
-                int cost,
+                Integer cost,
                 List<String> tags,
                 Images images) {
+        public Hero {
+                if (role == null)
+                        role = "Fighter";
+                if (cost == null)
+                        cost = 10;
+                if (tags == null)
+                        tags = List.of();
+        }
+
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record PowerStats(
-                        int hp,
-                        int atk,
-                        int def,
-                        int spd) {
+                        @com.fasterxml.jackson.annotation.JsonProperty("durability") int hp,
+                        @com.fasterxml.jackson.annotation.JsonProperty("strength") int atk,
+                        @com.fasterxml.jackson.annotation.JsonProperty("power") int def,
+                        @com.fasterxml.jackson.annotation.JsonProperty("speed") int spd) {
         }
 
         @JsonIgnoreProperties(ignoreUnknown = true)

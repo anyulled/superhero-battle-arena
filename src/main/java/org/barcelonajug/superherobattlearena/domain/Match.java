@@ -6,6 +6,7 @@ import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 public class Match {
 
     private UUID matchId;
+    private UUID sessionId;
     private Integer roundNo;
     private UUID teamA;
     private UUID teamB;
@@ -19,6 +20,14 @@ public class Match {
 
     public void setMatchId(UUID matchId) {
         this.matchId = matchId;
+    }
+
+    public UUID getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(UUID sessionId) {
+        this.sessionId = sessionId;
     }
 
     public Integer getRoundNo() {

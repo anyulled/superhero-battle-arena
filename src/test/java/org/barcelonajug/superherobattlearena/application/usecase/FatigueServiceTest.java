@@ -5,12 +5,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
-import org.barcelonajug.superherobattlearena.domain.HeroUsage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,11 +27,11 @@ class FatigueServiceTest {
     void shouldReturnOriginalHeroIfNoStreak() {
         UUID teamId = UUID.randomUUID();
         Hero hero = new Hero(1, "Hero", new Hero.PowerStats(100, 10, 10, 10), "Fighter", 10, Collections.emptyList(),
-                null);
+                new Hero.Images(null, null, null, null));
 
         when(heroUsageRepository.findByTeamId(any())).thenReturn(Collections.emptyList());
 
-        Hero result = fatigueService.applyFatigue(teamId, hero);
+        Hero result = fatigueService.applyFatigue(teamId, hero, 1);
 
         org.assertj.core.api.Assertions.assertThat(result.powerstats().hp()).isEqualTo(100);
         org.assertj.core.api.Assertions.assertThat(result.powerstats().atk()).isEqualTo(10);

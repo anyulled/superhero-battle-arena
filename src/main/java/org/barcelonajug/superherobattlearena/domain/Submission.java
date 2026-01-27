@@ -9,6 +9,7 @@ public class Submission {
     private Integer roundNo;
     private DraftSubmission submissionJson;
     private Boolean accepted;
+    private String rejectedReason;
     private OffsetDateTime submittedAt;
 
     public UUID getTeamId() {
@@ -41,6 +42,14 @@ public class Submission {
 
     public void setAccepted(Boolean accepted) {
         this.accepted = accepted;
+    }
+
+    public String getRejectedReason() {
+        return rejectedReason;
+    }
+
+    public void setRejectedReason(String rejectedReason) {
+        this.rejectedReason = rejectedReason;
     }
 
     public OffsetDateTime getSubmittedAt() {

@@ -13,8 +13,9 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.springframework.stereotype.Service;
 
-// No @Service
+@Service
 public class BattleEngine {
 
     private static final int MAX_TURNS = 50;

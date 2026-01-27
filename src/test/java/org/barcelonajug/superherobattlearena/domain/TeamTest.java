@@ -13,7 +13,7 @@ class TeamTest {
     @Test
     void shouldCreateTeamWithTwoMembers() {
         List<String> members = List.of("Alice", "Bob");
-        Team team = new Team(UUID.randomUUID(), "Avengers", OffsetDateTime.now(), members);
+        Team team = new Team(UUID.randomUUID(), UUID.randomUUID(), "Avengers", OffsetDateTime.now(), members);
 
         assertThat(team.members()).hasSize(2);
         assertThat(team.members()).containsExactly("Alice", "Bob");
@@ -23,7 +23,7 @@ class TeamTest {
     void shouldFailToCreateTeamWithOneMember() {
         List<String> members = List.of("Alice");
 
-        assertThatThrownBy(() -> new Team(UUID.randomUUID(), "Solo", OffsetDateTime.now(), members))
+        assertThatThrownBy(() -> new Team(UUID.randomUUID(), UUID.randomUUID(), "Solo", OffsetDateTime.now(), members))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("A team must have at least two members.");
     }
@@ -32,7 +32,7 @@ class TeamTest {
     void shouldFailToCreateTeamWithNoMembers() {
         List<String> members = List.of();
 
-        assertThatThrownBy(() -> new Team(UUID.randomUUID(), "Empty", OffsetDateTime.now(), members))
+        assertThatThrownBy(() -> new Team(UUID.randomUUID(), UUID.randomUUID(), "Empty", OffsetDateTime.now(), members))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("A team must have at least two members.");
     }

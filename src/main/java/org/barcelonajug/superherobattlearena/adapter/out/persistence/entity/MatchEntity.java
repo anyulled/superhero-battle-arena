@@ -20,6 +20,9 @@ public class MatchEntity {
     @Column(name = "match_id")
     private UUID matchId;
 
+    @Column(name = "session_id")
+    private UUID sessionId;
+
     @Column(name = "round_no")
     private Integer roundNo;
 
@@ -45,6 +48,14 @@ public class MatchEntity {
 
     public void setMatchId(UUID matchId) {
         this.matchId = matchId;
+    }
+
+    public UUID getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(UUID sessionId) {
+        this.sessionId = sessionId;
     }
 
     public Integer getRoundNo() {

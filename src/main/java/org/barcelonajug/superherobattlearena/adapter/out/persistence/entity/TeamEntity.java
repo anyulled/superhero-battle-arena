@@ -17,6 +17,7 @@ public class TeamEntity {
 
     @Id
     private UUID teamId;
+    private UUID sessionId;
     private String name;
     private OffsetDateTime createdAt;
 
@@ -31,6 +32,14 @@ public class TeamEntity {
 
     public void setTeamId(UUID teamId) {
         this.teamId = teamId;
+    }
+
+    public UUID getSessionId() {
+        return sessionId;
+    }
+
+    public void setSessionId(UUID sessionId) {
+        this.sessionId = sessionId;
     }
 
     public String getName() {

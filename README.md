@@ -54,28 +54,62 @@ graph TD
 
 ### Battle Flow
 
+The system flow is divided into three main phases: Registration, Matchmaking, and Battle.
+
+#### Phase 1: Registration (Session & Teams)
+
+```mermaid
+sequenceDiagram
+    participant U as User/Admin
+    participant C as SessionController
+    participant T as TeamController
+    participant R as Repository
+
+    U->>C: POST /api/sessions
+    C->>R: Save New Session
+    C-->>U: Session ID
+    
+    U->>T: POST /api/teams/register (with Session ID)
+    T->>R: Save Team
+    T-->>U: Team ID
+```
+
+#### Phase 2: Matchmaking & Round Setup
+
+```mermaid
+sequenceDiagram
+    participant U as Admin
+    participant RC as RoundController
+    participant MC as MatchController
+    participant R as Repository
+
+    U->>RC: POST /api/rounds (Session ID, Round No)
+    RC->>R: Save Round Config
+    
+    U->>MC: POST /api/matches/create (Team A, Team B)
+    MC->>R: Create Pending Match
+    MC-->>U: Match ID
+```
+
+#### Phase 3: Battle Simulation & Visualization
+
 ```mermaid
 sequenceDiagram
     participant U as User
     participant F as Frontend
-    participant C as MatchController
+    participant MC as MatchController
     participant E as BattleEngine
-    participant R as Repository
 
-    U->>F: Create Match (Team A vs Team B)
-    F->>C: POST /api/matches/create
-    C->>R: Save NEW Match
-    C-->>F: Match ID
+    U->>F: Start/Watch Match
+    F->>MC: POST /api/matches/{id}/run
+    MC->>E: simulate(match)
+    E-->>MC: Full Battle Result (Winner, Events)
+    MC-->>F: Match Completed
     
-    U->>F: Watch Replay
-    F->>C: GET /api/matches/{id}/events/stream (SSE)
-    
-    loop Every Tick
-        C->>E: simulate(match)
-        E->>E: Calculate Turn
-        E-->>C: Battle Event (Attack, Damage, KO)
-        C-->>F: SSE Event Data
-        F->>F: Animate Action
+    F->>MC: GET /api/matches/{id}/events/stream
+    loop Replay
+        MC-->>F: SSE Event (Attack, Damage)
+        F->>F: Animate
     end
 ```
 

@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SubmissionMapper;
@@ -27,5 +28,12 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
     @Override
     public Optional<Submission> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
         return repository.findByTeamIdAndRoundNo(teamId, roundNo).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Submission> findByRoundNo(Integer roundNo) {
+        return repository.findByRoundNo(roundNo).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

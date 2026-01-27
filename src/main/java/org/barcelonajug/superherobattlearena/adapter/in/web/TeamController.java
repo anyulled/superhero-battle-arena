@@ -35,12 +35,13 @@ public class TeamController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UUID> registerTeam(@RequestParam String name, @RequestParam List<String> members) {
+    public ResponseEntity<UUID> registerTeam(@RequestParam String name, @RequestParam List<String> members,
+            @RequestParam(required = false) UUID sessionId) {
         if (teamRepository.existsByName(name)) {
             return ResponseEntity.badRequest().build();
         }
 
-        Team team = new Team(UUID.randomUUID(), name, OffsetDateTime.now(), members);
+        Team team = new Team(UUID.randomUUID(), sessionId, name, OffsetDateTime.now(), members);
         teamRepository.save(team);
 
         return ResponseEntity.ok(team.teamId());

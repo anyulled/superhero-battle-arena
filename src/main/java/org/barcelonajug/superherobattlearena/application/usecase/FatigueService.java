@@ -2,15 +2,14 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
+import org.springframework.stereotype.Service;
 
-// No @Service annotation
+@Service
 public class FatigueService {
 
     private final HeroUsageRepositoryPort heroUsageRepository;
@@ -19,14 +18,11 @@ public class FatigueService {
         this.heroUsageRepository = heroUsageRepository;
     }
 
-    public Hero applyFatigue(UUID teamId, Hero hero) {
+    public Hero applyFatigue(UUID teamId, Hero hero, int currentRoundNo) {
         List<HeroUsage> usageHistory = heroUsageRepository.findByTeamId(teamId);
 
-        // Simple logic: if used in previous round, stats are reduced.
-        // This is a placeholder for the actual complex logic which involves streaks.
-
-        // Find current streak
-        int currentStreak = calculateStreak(usageHistory, hero.id());
+        // Find current streak by looking at the previous round's usage
+        int currentStreak = calculateStreak(usageHistory, hero.id(), currentRoundNo);
 
         if (currentStreak == 0) {
             return hero;
@@ -48,18 +44,31 @@ public class FatigueService {
                 hero.images());
     }
 
-    private int calculateStreak(List<HeroUsage> history, int heroId) {
-        // Logic to calculate consecutive uses from history
-        // This is simplified for the refactoring step
-        return 0;
+    private int calculateStreak(List<HeroUsage> history, int heroId, int currentRoundNo) {
+        return history.stream()
+                .filter(u -> u.heroId().equals(heroId) && u.roundNo().equals(currentRoundNo - 1))
+                .map(HeroUsage::streak)
+                .findFirst()
+                .orElse(0);
     }
 
     private BigDecimal calculateMultiplier(int streak) {
-        // Logic for multiplier
-        return BigDecimal.ONE;
+        // Stats decrease by 5% for each round in a streak, capped at 30% reduction (0.7
+        // multiplier)
+        double reduction = Math.min(0.3, streak * 0.05);
+        return BigDecimal.valueOf(1.0 - reduction);
     }
 
     public void recordUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
-        // Record usage for next rounds
+        List<HeroUsage> history = heroUsageRepository.findByTeamId(teamId);
+
+        for (Integer heroId : heroIds) {
+            int previousStreak = calculateStreak(history, heroId, roundNo);
+            int newStreak = previousStreak + 1;
+            BigDecimal multiplier = calculateMultiplier(newStreak);
+
+            HeroUsage usage = new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+            heroUsageRepository.save(usage);
+        }
     }
 }
