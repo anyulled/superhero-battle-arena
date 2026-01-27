@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superhero Battle Arena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="favicon.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen relative">
+
+    <div class="absolute top-6 left-6 z-50">
+        <img src="images/barcelonajug.png" alt="Barcelona JUG"
+            class="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity">
+    </div>
+
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-16">
+
+        <!-- Hero Section -->
+        <header class="text-center space-y-6 animate-fade-in-down">
+            <div class="relative group">
+                <div
+                    class="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200">
+                </div>
+                <img src="images/hero-image.png" alt="Superhero Battle Arena"
+                    class="relative w-full h-80 object-cover rounded-2xl shadow-2xl border border-slate-700">
+            </div>
+
+            <h1
+                class="text-6xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-indigo-500 py-2">
+                Superhero Battle Arena
+            </h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                The ultimate simulation platform where legendary heroes clash in turn-based combat.
+                Register your team, devise strategies, and watch the battles unfold in real-time.
+            </p>
+        </header>
+
+        <!-- Actions -->
+        <div class="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+            <a href="lobby.html"
+                class="group relative block p-8 bg-slate-800 rounded-2xl border border-slate-700 hover:border-blue-500 transition-all hover:shadow-lg hover:shadow-blue-500/20">
+                <div class="flex items-center justify-between mb-4">
+                    <div
+                        class="p-3 bg-blue-500/10 rounded-lg text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                        <i data-lucide="swords" class="w-8 h-8"></i>
+                    </div>
+                    <i data-lucide="arrow-right"
+                        class="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-white">Enter Lobby</h3>
+                <p class="text-slate-400">Manage your team, view match history, and join the competition.</p>
+            </a>
+
+            <a href="admin.html"
+                class="group relative block p-8 bg-slate-800 rounded-2xl border border-slate-700 hover:border-purple-500 transition-all hover:shadow-lg hover:shadow-purple-500/20">
+                <div class="flex items-center justify-between mb-4">
+                    <div
+                        class="p-3 bg-purple-500/10 rounded-lg text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                        <i data-lucide="settings" class="w-8 h-8"></i>
+                    </div>
+                    <i data-lucide="arrow-right"
+                        class="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-2 text-white">Admin Area</h3>
+                <p class="text-slate-400">Configure rounds, schedule matches, and manage the tournament.</p>
+            </a>
+        </div>
+
+        <!-- Competition Rules -->
+        <section class="bg-slate-800/50 p-8 rounded-3xl border border-slate-700 backdrop-blur-sm">
+            <h2 class="text-3xl font-bold mb-8 text-center flex items-center justify-center gap-3">
+                <i data-lucide="scroll-text" class="text-yellow-500"></i>
+                <span>Competition Rules</span>
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-8 text-slate-300">
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-blue-400"></i> Teams
+                    </h3>
+                    <p class="text-sm leading-relaxed">
+                        Each team must consist of at least 2 distinct superheroes. Choose wisely to balance Strength,
+                        Speed, and Durability. A balanced composition is key to victory.
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="activity" class="w-5 h-5 text-red-400"></i> Combat
+                    </h3>
+                    <p class="text-sm leading-relaxed">
+                        Battles are turn-based. Priority goes to the faster hero. Attack damage is calculated based on
+                        Strength vs. Defense, with elemental tag modifiers applying crucial multipliers.
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i data-lucide="trophy" class="w-5 h-5 text-yellow-400"></i> Winning
+                    </h3>
+                    <p class="text-sm leading-relaxed">
+                        A team wins when all opposing heroes are Knocked Out (KO). If the turn limit (50) is reached,
+                        the match ends in a Draw. Points are awarded for wins and survival.
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-slate-700/50 text-center">
+                <p class="text-slate-500 text-sm">
+                    Powered by Spring Boot & Hexagonal Architecture &bull; Built for the Barcelona JUG
+                </p>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

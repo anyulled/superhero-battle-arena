@@ -26,19 +26,27 @@
             </div>
         </div>
 
-        <header class="flex justify-between items-center">
-            <div>
-                <h1
-                    class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 flex items-center gap-3">
-                    <i data-lucide="trophy" class="text-purple-400"></i> Tournament Bracket
-                </h1>
-                <p class="text-slate-400 mt-2">View Matches & Replays</p>
+        <header class="flex justify-between items-center relative">
+            <div class="absolute -top-20 left-4 opacity-50 pointer-events-none">
+                <!-- Background Watermark or similar if preferred, but let's stick to header -->
             </div>
-            <div class="flex gap-4">
-                <a href="lobby.html"
-                    class="text-blue-400 hover:text-blue-300 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
-                    <i data-lucide="arrow-left"></i> Back to Lobby </a>
-            </div>
+            <div class="flex items-center gap-4">
+                <a href="index.html">
+                    <img src="images/barcelonajug.png" alt="Barcelona JUG"
+                        class="h-14 w-auto opacity-80 hover:opacity-100 transition-opacity">
+                </a>
+                <div>
+                    <h1
+                        class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 flex items-center gap-3">
+                        <i data-lucide="trophy" class="text-purple-400"></i> Tournament Bracket
+                    </h1>
+                    <p class="text-slate-400 mt-2">View Matches & Replays</p>
+                </div>
+                <div class="flex gap-4">
+                    <a href="lobby.html"
+                        class="text-blue-400 hover:text-blue-300 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
+                        <i data-lucide="arrow-left"></i> Back to Lobby </a>
+                </div>
         </header>
 
         <section class="glass-panel p-8 rounded-2xl shadow-xl min-h-[500px]" aria-label="Tournament Matches">

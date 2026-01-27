@@ -14,7 +14,7 @@ A Spring Boot application built with Hexagonal Architecture that simulates battl
 
 ## Technology Stack
 
-- **Backend**: Java 25 (Preview Features), Spring Boot 3.4
+- **Backend**: Java 25 (Preview Features), Spring Boot 4.0.2
 - **Frontend**: HTML5, Tailwind CSS, jQuery
 - **Architecture**: Hexagonal (Ports & Adapters)
 - **Build Tool**: Maven
