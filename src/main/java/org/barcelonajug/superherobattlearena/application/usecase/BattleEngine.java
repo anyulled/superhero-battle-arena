@@ -1,14 +1,10 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
@@ -30,92 +26,109 @@ public class BattleEngine {
         teamBHeroes.forEach(h -> allHeroes.add(new BattleHero(h, teamBId)));
 
         List<MatchEvent> events = new ArrayList<>();
-        long logicalTime = 0;
+        java.util.concurrent.atomic.AtomicLong logicalTime = new java.util.concurrent.atomic.AtomicLong(0);
 
-        events.add(new MatchEvent("MATCH_START", logicalTime++, "Match started", null, null, 0));
+        events.add(new MatchEvent("MATCH_START", logicalTime.getAndIncrement(), "Match started", null, null, 0));
 
         int turn = 0;
         UUID winnerId = null;
 
         while (turn < MAX_TURNS && winnerId == null) {
             turn++;
-            events.add(new MatchEvent("TURN_START", logicalTime++, "Turn " + turn + " started", null, null, turn));
+            events.add(new MatchEvent("TURN_START", logicalTime.getAndIncrement(), "Turn " + turn + " started", null,
+                    null, turn));
 
-            // Sort by Speed Descending. Stability with ID for determinism.
-            allHeroes.sort(Comparator.comparingInt((BattleHero bh) -> bh.hero.powerstats().speed())
-                    .reversed()
-                    .thenComparingInt(bh -> bh.hero.id()));
+            sortHeroesBySpeed(allHeroes);
+            winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
 
-            for (BattleHero attacker : allHeroes) {
-                if (!attacker.isAlive())
-                    continue;
-
-                // Check if match ended mid-turn (e.g. last standing defender died)
-                if (isTeamWipedOut(allHeroes, attacker.teamId == teamAId ? teamBId : teamAId)) {
-                    winnerId = attacker.teamId;
-                    break;
-                }
-
-                // Identify Targets (Opposing Team)
-                UUID opposingTeamId = attacker.teamId == teamAId ? teamBId : teamAId;
-                List<BattleHero> targets = allHeroes.stream()
-                        .filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
-                        .collect(Collectors.toList());
-
-                if (targets.isEmpty()) {
-                    winnerId = attacker.teamId;
-                    break;
-                }
-
-                // Select Target: Lowest HP. Tied -> Random
-                BattleHero target = selectTarget(targets, random);
-
-                // Calculate Damage
-                int damage = calculateDamage(attacker, target, roundSpec);
-
-                // Apply Damage
-                target.currentHp -= damage;
-                events.add(new MatchEvent("HIT", logicalTime++,
-                        attacker.hero.name() + " hits " + target.hero.name() + " for " + damage,
-                        attacker.getUniqueId(),
-                        target.getUniqueId(), damage));
-
-                if (target.currentHp <= 0) {
-                    target.currentHp = 0;
-                    events.add(new MatchEvent("KO", logicalTime++, target.hero.name() + " is KO!",
-                            attacker.getUniqueId(),
-                            target.getUniqueId(), 0));
-                }
-            }
-
-            // Check win condition at end of turn as well
             if (winnerId == null) {
-                boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
-                boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
-
-                if (teamADead && teamBDead) {
-                    // Draw? or Simultaneous KO? The logic implies turn-based, so someone dies
-                    // first.
-                    // But if we check strictly after loop.
-                    // The loop checks break on win. So this block handles case where turn ends and
-                    // maybe
-                    // we want to double check strictly.
-                    // Actually, if Team A wipes out Team B, loop breaks.
-                } else if (teamADead) {
-                    winnerId = teamBId;
-                } else if (teamBDead) {
-                    winnerId = teamAId;
-                }
+                winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
             }
         }
 
         if (winnerId != null) {
-            events.add(new MatchEvent("MATCH_END", logicalTime++, "Winner: " + winnerId, null, null, 0));
+            events.add(new MatchEvent("MATCH_END", logicalTime.getAndIncrement(), "Winner: " + winnerId, null, null,
+                    0));
         } else {
-            events.add(new MatchEvent("MATCH_END", logicalTime++, "Draw - Max turns reached", null, null, 0));
+            events.add(new MatchEvent("MATCH_END", logicalTime.getAndIncrement(), "Draw - Max turns reached", null,
+                    null, 0));
         }
 
         return new SimulationResult(winnerId, turn, events);
+    }
+
+    private UUID executeTurn(List<BattleHero> allHeroes, UUID teamAId, UUID teamBId, RoundSpec roundSpec, Random random,
+            List<MatchEvent> events, java.util.concurrent.atomic.AtomicLong logicalTime) {
+        for (BattleHero attacker : allHeroes) {
+            if (!attacker.isAlive()) {
+                continue;
+            }
+
+            UUID winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
+            if (winnerId != null) {
+                return winnerId;
+            }
+
+            BattleHero target = findTarget(attacker, allHeroes, teamAId, teamBId, random);
+            if (target == null) {
+                return attacker.teamId;
+            }
+
+            performAttack(attacker, target, roundSpec, events, logicalTime);
+        }
+        return null;
+    }
+
+    private void performAttack(BattleHero attacker, BattleHero target, RoundSpec roundSpec, List<MatchEvent> events,
+            java.util.concurrent.atomic.AtomicLong logicalTime) {
+        int damage = calculateDamage(attacker, target, roundSpec);
+        target.currentHp -= damage;
+
+        events.add(new MatchEvent("HIT", logicalTime.getAndIncrement(),
+                attacker.hero.name() + " hits " + target.hero.name() + " for " + damage,
+                attacker.getUniqueId(),
+                target.getUniqueId(), damage));
+
+        if (target.currentHp <= 0) {
+            target.currentHp = 0;
+            events.add(new MatchEvent("KO", logicalTime.getAndIncrement(), target.hero.name() + " is KO!",
+                    attacker.getUniqueId(),
+                    target.getUniqueId(), 0));
+        }
+    }
+
+    private void sortHeroesBySpeed(List<BattleHero> heroes) {
+        heroes.sort(Comparator.comparingInt((BattleHero bh) -> bh.hero.powerstats().speed())
+                .reversed()
+                .thenComparingInt(bh -> bh.hero.id()));
+    }
+
+    private UUID checkWinCondition(List<BattleHero> allHeroes, UUID teamAId, UUID teamBId) {
+        boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
+        boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
+
+        if (teamADead && teamBDead) {
+            // Simultaneous KO case (unlikely with current serial logic, but safe handling)
+            return null;
+        } else if (teamADead) {
+            return teamBId;
+        } else if (teamBDead) {
+            return teamAId;
+        }
+        return null; // Battle continues
+    }
+
+    private BattleHero findTarget(BattleHero attacker, List<BattleHero> allHeroes, UUID teamAId, UUID teamBId,
+            Random random) {
+        UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
+        List<BattleHero> targets = allHeroes.stream()
+                .filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
+                .toList();
+
+        if (targets.isEmpty()) {
+            return null;
+        }
+        return selectTarget(targets, random);
     }
 
     private BattleHero selectTarget(List<BattleHero> targets, Random random) {
@@ -123,7 +136,7 @@ public class BattleEngine {
         int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
         List<BattleHero> lowestHpTargets = targets.stream()
                 .filter(h -> h.currentHp == minHp)
-                .collect(Collectors.toList());
+                .toList();
 
         if (lowestHpTargets.size() == 1) {
             return lowestHpTargets.get(0);
