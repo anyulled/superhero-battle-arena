@@ -35,10 +35,6 @@
                 <p class="text-slate-400 mt-2">View Matches & Replays</p>
             </div>
             <div class="flex gap-4">
-                <button id="simulateAllBtn"
-                    class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg transition-colors font-medium flex items-center gap-2 shadow-lg hover:shadow-purple-500/20">
-                    <i data-lucide="play-circle"></i> Simulate All Battles
-                </button>
                 <a href="lobby.html"
                     class="text-blue-400 hover:text-blue-300 flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-slate-800 transition-colors">
                     <i data-lucide="arrow-left"></i> Back to Lobby </a>
@@ -138,45 +134,6 @@
                     lucide.createIcons();
                 });
             }
-
-            // Simulate All
-            $('#simulateAllBtn').click(function () {
-                const btn = $(this);
-                btn.prop('disabled', true).html('<i data-lucide="loader-2" class="animate-spin"></i> Simulating...');
-                lucide.createIcons();
-
-                API.matches.list().done(function (matches) {
-                    const pending = matches.filter(m => m.status === 'PENDING');
-
-                    if (pending.length === 0) {
-                        alert('No pending matches to simulate.');
-                        btn.prop('disabled', false).html('<i data-lucide="play-circle"></i> Simulate All Battles');
-                        lucide.createIcons();
-                        return;
-                    }
-
-                    const promises = pending.map(match => {
-                        const draft = { heroIds: [1, 2, 3, 4, 5], strategy: "BALANCED" };
-
-                        // Try to submit rosters (ignore failures if already submitted)
-                        const p1 = API.rounds.submit(match.roundNo, match.teamA, draft).catch(() => { });
-                        const p2 = API.rounds.submit(match.roundNo, match.teamB, draft).catch(() => { });
-
-                        return $.when(p1, p2).then(() => {
-                            return API.matches.run(match.matchId);
-                        });
-                    });
-
-                    $.when.apply($, promises).always(function () {
-                        setTimeout(() => {
-                            btn.prop('disabled', false).html('<i data-lucide="play-circle"></i> Simulate All Battles');
-                            loadMatches();
-                            lucide.createIcons();
-                        }, 1000);
-                    });
-                });
-            });
-
             loadTeams().then(loadMatches).then(() => lucide.createIcons());
         });
     </script>
