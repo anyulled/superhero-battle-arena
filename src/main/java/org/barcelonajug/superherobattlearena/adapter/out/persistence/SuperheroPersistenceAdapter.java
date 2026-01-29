@@ -42,6 +42,13 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
     }
 
     @Override
+    public List<Hero> findByIds(List<Integer> ids) {
+        return repository.findAllById(ids).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<Hero> searchByName(String term) {
         return repository.searchByName(term).stream()
                 .map(mapper::toDomain)

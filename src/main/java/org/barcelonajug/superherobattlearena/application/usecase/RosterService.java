@@ -28,6 +28,10 @@ public class RosterService {
         return superheroRepository.findById(id);
     }
 
+    public List<Hero> getHeroes(List<Integer> ids) {
+        return superheroRepository.findByIds(ids);
+    }
+
     public List<Hero> searchHeroes(String term) {
         return superheroRepository.searchByName(term);
     }

@@ -5,10 +5,10 @@ import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,71 +23,95 @@ public class SubmissionValidator {
     public void validate(DraftSubmission submission, RoundSpec roundSpec) {
         List<Integer> heroIds = submission.heroIds();
 
-        // 1. Check Team Size
+        validateTeamSize(heroIds, roundSpec);
+        validateDuplicates(heroIds);
+
+        List<Hero> heroes = resolveHeroes(heroIds);
+
+        validateCost(heroes, roundSpec);
+        validateBannedTags(heroes, roundSpec);
+        validateRoleComposition(heroes, roundSpec);
+    }
+
+    private void validateTeamSize(List<Integer> heroIds, RoundSpec roundSpec) {
         if (heroIds.size() != roundSpec.teamSize()) {
             throw new IllegalArgumentException(
                     "Team size must be " + roundSpec.teamSize() + " (was " + heroIds.size() + ")");
         }
+    }
 
-        // 2. Check Duplicates
+    private void validateDuplicates(List<Integer> heroIds) {
         Set<Integer> uniqueIds = new HashSet<>(heroIds);
         if (uniqueIds.size() != heroIds.size()) {
             throw new IllegalArgumentException("Duplicate heroes are not allowed");
         }
+    }
 
-        int totalCost = 0;
-        Map<String, Integer> roleCounts = new HashMap<>();
-
-        for (Integer heroId : heroIds) {
-            Optional<Hero> heroOpt = rosterService.getHero(heroId);
-            if (heroOpt.isEmpty()) {
-                throw new IllegalArgumentException("Hero not found: " + heroId);
-            }
-            Hero hero = heroOpt.get();
-
-            // 3. Check Cost
-            totalCost += hero.cost();
-
-            // Count Roles
-            roleCounts.put(hero.role(), roleCounts.getOrDefault(hero.role(), 0) + 1);
-
-            // 4. Check Banned Tags
-            if (roundSpec.bannedTags() != null) {
-                for (String tag : hero.tags()) {
-                    if (roundSpec.bannedTags().contains(tag)) {
-                        throw new IllegalArgumentException("Hero " + hero.name() + " has banned tag: " + tag);
-                    }
+    private List<Hero> resolveHeroes(List<Integer> heroIds) {
+        List<Hero> heroes = rosterService.getHeroes(heroIds);
+        if (heroes.size() != heroIds.size()) {
+            Set<Integer> foundIds = heroes.stream().map(Hero::id).collect(Collectors.toSet());
+            for (Integer id : heroIds) {
+                if (!foundIds.contains(id)) {
+                    throw new IllegalArgumentException("Hero not found: " + id);
                 }
             }
         }
+        return heroes;
+    }
 
+    private void validateCost(List<Hero> heroes, RoundSpec roundSpec) {
+        int totalCost = heroes.stream().mapToInt(Hero::cost).sum();
         if (totalCost > roundSpec.budgetCap()) {
             throw new IllegalArgumentException(
                     "Team cost exceeds maximum: " + totalCost + " > " + roundSpec.budgetCap());
         }
+    }
 
-        // 5. Check Required Roles
-        if (roundSpec.requiredRoles() != null) {
-            for (Map.Entry<String, Integer> entry : roundSpec.requiredRoles().entrySet()) {
-                String role = entry.getKey();
-                int minCount = entry.getValue();
-                if (roleCounts.getOrDefault(role, 0) < minCount) {
-                    throw new IllegalArgumentException(
-                            "Missing required role: " + role + " (required " + minCount + ")");
-                }
-            }
+    private void validateBannedTags(List<Hero> heroes, RoundSpec roundSpec) {
+        if (roundSpec.bannedTags() != null) {
+            heroes.stream()
+                    .flatMap(hero -> hero.tags().stream().map(tag -> Map.entry(hero, tag)))
+                    .filter(entry -> roundSpec.bannedTags().contains(entry.getValue()))
+                    .findFirst()
+                    .ifPresent(entry -> {
+                        throw new IllegalArgumentException(
+                                "Hero " + entry.getKey().name() + " has banned tag: " + entry.getValue());
+                    });
+        }
+    }
+
+    private void validateRoleComposition(List<Hero> heroes, RoundSpec roundSpec) {
+        Map<String, Integer> roleCounts = new HashMap<>();
+        for (Hero hero : heroes) {
+            roleCounts.put(hero.role(), roleCounts.getOrDefault(hero.role(), 0) + 1);
         }
 
-        // 6. Check Max Same Role (if applicable, though test doesn't explicitly fail on
-        // this yet, good to have)
+        validateRequiredRoles(roleCounts, roundSpec);
+        validateMaxSameRole(roleCounts, roundSpec);
+    }
+
+    private void validateRequiredRoles(Map<String, Integer> roleCounts, RoundSpec roundSpec) {
+        if (roundSpec.requiredRoles() != null) {
+            roundSpec.requiredRoles().entrySet().stream()
+                    .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0) < entry.getValue())
+                    .findFirst()
+                    .ifPresent(entry -> {
+                        throw new IllegalArgumentException(
+                                "Missing required role: " + entry.getKey() + " (required " + entry.getValue() + ")");
+                    });
+        }
+    }
+
+    private void validateMaxSameRole(Map<String, Integer> roleCounts, RoundSpec roundSpec) {
         if (roundSpec.maxSameRole() != null) {
-            for (Map.Entry<String, Integer> entry : roundSpec.maxSameRole().entrySet()) {
-                String role = entry.getKey();
-                int maxCount = entry.getValue();
-                if (roleCounts.getOrDefault(role, 0) > maxCount) {
-                    throw new IllegalArgumentException("Too many of role: " + role + " (max " + maxCount + ")");
-                }
-            }
+            roundSpec.maxSameRole().entrySet().stream()
+                    .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0) > entry.getValue())
+                    .findFirst()
+                    .ifPresent(entry -> {
+                        throw new IllegalArgumentException(
+                                "Too many of role: " + entry.getKey() + " (max " + entry.getValue() + ")");
+                    });
         }
     }
 }

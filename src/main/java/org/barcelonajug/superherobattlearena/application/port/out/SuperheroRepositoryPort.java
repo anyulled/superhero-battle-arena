@@ -23,5 +23,7 @@ public interface SuperheroRepositoryPort {
     // needed, or simple offset/limit params here.
     List<Hero> findAll(int page, int size);
 
+    List<Hero> findByIds(List<Integer> ids);
+
     long count();
 }

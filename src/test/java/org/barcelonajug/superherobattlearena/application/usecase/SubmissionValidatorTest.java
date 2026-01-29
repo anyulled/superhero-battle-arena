@@ -1,18 +1,18 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
 
 class SubmissionValidatorTest {
 
@@ -24,22 +24,24 @@ class SubmissionValidatorTest {
                 rosterService = Mockito.mock(RosterService.class);
                 validator = new SubmissionValidator(rosterService);
 
-                // Mock some heroes
-                when(rosterService.getHero(1))
-                                .thenReturn(Optional.of(
-                                                new Hero(1, "H1", "h1", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Tank",
-                                                                10, "good", "Marvel", null, null, List.of("A"),
-                                                                new Hero.Images(null, null, null, null))));
-                when(rosterService.getHero(2))
-                                .thenReturn(Optional.of(
-                                                new Hero(2, "H2", "h2", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Dps",
-                                                                20, "bad", "DC", null, null, List.of("B"),
-                                                                new Hero.Images(null, null, null, null))));
-                when(rosterService.getHero(3))
-                                .thenReturn(Optional.of(new Hero(3, "H3", "h3", new Hero.PowerStats(0, 0, 0, 0, 0, 0),
-                                                "Heal", 15, "neutral", "Image",
-                                                null, null, List.of("C", "Banned"),
-                                                new Hero.Images(null, null, null, null))));
+                Hero h1 = new Hero(1, "H1", "h1", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Tank",
+                                10, "good", "Marvel", null, null, List.of("A"),
+                                new Hero.Images(null, null, null, null));
+                Hero h2 = new Hero(2, "H2", "h2", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Dps",
+                                20, "bad", "DC", null, null, List.of("B"),
+                                new Hero.Images(null, null, null, null));
+                Hero h3 = new Hero(3, "H3", "h3", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Heal",
+                                15, "neutral", "Image", null, null, List.of("C", "Banned"),
+                                new Hero.Images(null, null, null, null));
+
+                List<Hero> allHeroes = List.of(h1, h2, h3);
+
+                when(rosterService.getHeroes(Mockito.anyList())).thenAnswer(invocation -> {
+                        List<Integer> ids = invocation.getArgument(0);
+                        return allHeroes.stream()
+                                        .filter(h -> ids.contains(h.id()))
+                                        .toList();
+                });
         }
 
         @Test
