@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
+
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,28 +28,37 @@ class RosterUseCaseTest {
     when(repository.findAll())
         .thenReturn(
             List.of(
-                new Hero(
-                    1, "Test", "test", null, "Fighter", 10, "good", "Marvel", null, null, List.of(),
-                    null)));
+                Hero.builder()
+                    .id(1)
+                    .name("Test")
+                    .slug("test")
+                    .role("Fighter")
+                    .alignment("good")
+                    .publisher("Marvel")
+                    .build()));
     assertThat(rosterUseCase.getAllHeroes()).isNotEmpty();
   }
 
   @Test
   void shouldGetHeroById() {
-    Hero mockHero =
-        new Hero(
-            1,
-            "A-Bomb",
-            "1-a-bomb",
-            new Hero.PowerStats(80, 100, 24, 17, 38, 64),
-            "Fighter",
-            15,
-            "good",
-            "Marvel Comics",
-            null,
-            null,
-            List.of(),
-            null);
+    Hero mockHero = Hero.builder()
+        .id(1)
+        .name("A-Bomb")
+        .slug("1-a-bomb")
+        .powerstats(
+            Hero.PowerStats.builder()
+                .durability(80)
+                .strength(100)
+                .power(24)
+                .speed(17)
+                .intelligence(38)
+                .combat(64)
+                .build())
+        .role("Fighter")
+        .cost(15)
+        .alignment("good")
+        .publisher("Marvel Comics")
+        .build();
     when(repository.findById(1)).thenReturn(Optional.of(mockHero));
 
     Optional<Hero> hero = rosterUseCase.getHero(1);
