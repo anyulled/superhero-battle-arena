@@ -83,6 +83,27 @@ $(document).ready(async function () {
         // 2. Load Match Info
         state.match = await API.matches.get(matchId);
 
+        // 2b. Load Round Info to get Map Type
+        try {
+            const roundSpec = await API.rounds.get(state.match.roundNo);
+            const mapType = roundSpec.mapType;
+            let bgImage = 'images/backgrounds/arena_1.png'; // Default
+
+            if (mapType === 'ARENA_2') bgImage = 'images/backgrounds/arena_2.png';
+            else if (mapType === 'COSMIC') bgImage = 'images/backgrounds/cosmic.png';
+
+            // Apply background
+            $('body').css({
+                'background-image': `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('${bgImage}')`,
+                'background-size': 'cover',
+                'background-position': 'center',
+                'background-attachment': 'fixed'
+            });
+
+        } catch (e) {
+            console.warn('Failed to load round spec for background', e);
+        }
+
         // 3. Load Team Names
         const allTeams = await API.teams.list();
         state.teamA = allTeams.find(t => t.teamId === state.match.teamA);
