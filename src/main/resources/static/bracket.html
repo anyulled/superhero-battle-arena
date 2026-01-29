@@ -117,9 +117,12 @@
                                 <span class="text-6xl font-black">VS</span>
                            </div>
                            
-                           <div class="flex justify-between items-center mb-4">
-                                <span class="bg-slate-900 text-slate-400 text-xs font-mono px-2 py-1 rounded">R ${match.roundNo}</span>
-                                <span class="px-2 py-1 rounded text-xs font-bold ${statusColor}">${statusText}</span>
+                           <div class="flex flex-col gap-2 mb-4">
+                                <div class="flex justify-between items-center">
+                                     <span class="bg-slate-900 text-slate-400 text-xs font-mono px-2 py-1 rounded">Round ${match.roundNo}</span>
+                                     <span class="px-2 py-1 rounded text-xs font-bold ${statusColor}">${statusText}</span>
+                                </div>
+                                <div class="text-[10px] text-slate-600 font-mono select-all">Session: ${match.sessionId}</div>
                            </div>
 
                            <div class="space-y-4 mb-6">

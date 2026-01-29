@@ -53,14 +53,23 @@ public class TeamController {
       @RequestParam List<String> members,
       @RequestParam(required = false) UUID sessionId) {
     if (teamRepository.existsByName(name)) {
-      return ResponseEntity.badRequest().build();
+      throw new org.springframework.web.ErrorResponseException(
+          org.springframework.http.HttpStatus.BAD_REQUEST,
+          org.springframework.http.ProblemDetail.forStatusAndDetail(
+              org.springframework.http.HttpStatus.BAD_REQUEST,
+              "Team name '" + name + "' already exists"),
+          null);
     }
 
     UUID targetSessionId = sessionId;
     if (targetSessionId == null) {
       var activeSession = sessionService.getActiveSession();
       if (activeSession.isEmpty()) {
-        return ResponseEntity.badRequest().build();
+        throw new org.springframework.web.ErrorResponseException(
+            org.springframework.http.HttpStatus.BAD_REQUEST,
+            org.springframework.http.ProblemDetail.forStatusAndDetail(
+                org.springframework.http.HttpStatus.BAD_REQUEST, "No active session found"),
+            null);
       }
       targetSessionId = activeSession.get().getSessionId();
     }

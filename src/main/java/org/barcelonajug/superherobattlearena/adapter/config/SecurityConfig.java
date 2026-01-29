@@ -26,7 +26,7 @@ public class SecurityConfig {
   private String adminPassword;
 
   @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
             authorize ->
                 authorize
@@ -34,7 +34,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/admin/**")
                     .hasRole("ADMIN")
                     // Public API endpoints
-                    .requestMatchers("/api/**", "/", "/swagger-ui/**")
+                    .requestMatchers(
+                        "/api/teams", "/api/teams/**", "/api/**", "/", "/swagger-ui/**")
                     .permitAll()
                     // Static resources
                     .requestMatchers(
