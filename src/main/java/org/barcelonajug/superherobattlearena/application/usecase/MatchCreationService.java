@@ -3,6 +3,7 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Match;
@@ -30,13 +31,14 @@ public class MatchCreationService {
             Submission subA = submissions.get(i);
             Submission subB = submissions.get(i + 1);
 
-            Match match = new Match();
-            match.setMatchId(UUID.randomUUID());
-            match.setSessionId(sessionId);
-            match.setTeamA(subA.getTeamId());
-            match.setTeamB(subB.getTeamId());
-            match.setRoundNo(roundNo);
-            match.setStatus(MatchStatus.PENDING);
+            Match match = Match.builder()
+                    .matchId(UUID.randomUUID())
+                    .sessionId(sessionId)
+                    .teamA(subA.getTeamId())
+                    .teamB(subB.getTeamId())
+                    .roundNo(roundNo)
+                    .status(MatchStatus.PENDING)
+                    .build();
 
             matchRepository.save(match);
             matchIds.add(match.getMatchId());

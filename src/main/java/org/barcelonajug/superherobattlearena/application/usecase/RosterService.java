@@ -5,9 +5,12 @@ import java.util.Optional;
 
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
 public class RosterService {
 
     private final SuperheroRepositoryPort superheroRepository;
@@ -24,10 +27,12 @@ public class RosterService {
         return superheroRepository.findAll(page, size);
     }
 
+    @Cacheable(value = "heroes", key = "#id")
     public Optional<Hero> getHero(int id) {
         return superheroRepository.findById(id);
     }
 
+    @Cacheable(value = "heroLists", key = "#ids.hashCode()")
     public List<Hero> getHeroes(List<Integer> ids) {
         return superheroRepository.findByIds(ids);
     }

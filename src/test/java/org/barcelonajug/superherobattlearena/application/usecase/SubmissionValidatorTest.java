@@ -7,7 +7,15 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
+import org.barcelonajug.superherobattlearena.application.usecase.validation.BannedTagValidationRule;
+import org.barcelonajug.superherobattlearena.application.usecase.validation.CostValidationRule;
+import org.barcelonajug.superherobattlearena.application.usecase.validation.RoleCompositionValidationRule;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.exception.BannedTagException;
+import org.barcelonajug.superherobattlearena.domain.exception.BudgetExceededException;
+import org.barcelonajug.superherobattlearena.domain.exception.DuplicateHeroException;
+import org.barcelonajug.superherobattlearena.domain.exception.RoleCompositionException;
+import org.barcelonajug.superherobattlearena.domain.exception.TeamSizeException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +30,15 @@ class SubmissionValidatorTest {
         @BeforeEach
         void setUp() {
                 rosterService = Mockito.mock(RosterService.class);
-                validator = new SubmissionValidator(rosterService);
+
+                // Create validation rules
+                List<org.barcelonajug.superherobattlearena.application.usecase.validation.ValidationRule> validationRules = List
+                                .of(
+                                                new CostValidationRule(),
+                                                new BannedTagValidationRule(),
+                                                new RoleCompositionValidationRule());
+
+                validator = new SubmissionValidator(rosterService, validationRules);
 
                 Hero h1 = new Hero(1, "H1", "h1", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Tank",
                                 10, "good", "Marvel", null, null, List.of("A"),
@@ -59,7 +75,7 @@ class SubmissionValidatorTest {
                 DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
                 assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(TeamSizeException.class)
                                 .hasMessageContaining("Team size");
         }
 
@@ -69,7 +85,7 @@ class SubmissionValidatorTest {
                 DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Cost 10+20=30 > 25
 
                 assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(BudgetExceededException.class)
                                 .hasMessageContaining("exceeds maximum");
         }
 
@@ -79,7 +95,7 @@ class SubmissionValidatorTest {
                 DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Tank, Dps. Missing Heal.
 
                 assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(RoleCompositionException.class)
                                 .hasMessageContaining("Missing required role");
         }
 
@@ -89,7 +105,7 @@ class SubmissionValidatorTest {
                 DraftSubmission submission = new DraftSubmission(List.of(3), "Attack"); // Has "Banned" tag
 
                 assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(BannedTagException.class)
                                 .hasMessageContaining("banned tag");
         }
 
@@ -99,7 +115,7 @@ class SubmissionValidatorTest {
                 DraftSubmission submission = new DraftSubmission(List.of(1, 1), "Attack");
 
                 assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(IllegalArgumentException.class)
+                                .isInstanceOf(DuplicateHeroException.class)
                                 .hasMessageContaining("Duplicate heroes");
         }
 }
