@@ -7,9 +7,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
+import org.barcelonajug.superherobattlearena.application.usecase.RosterService;
+import org.barcelonajug.superherobattlearena.application.usecase.SessionService;
+import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.ErrorResponseException;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,26 +24,24 @@ import org.springframework.web.bind.annotation.RestController;
 public class TeamController {
 
   private final TeamRepositoryPort teamRepository;
-  private final org.barcelonajug.superherobattlearena.application.usecase.RosterService
-      rosterService;
-  private final org.barcelonajug.superherobattlearena.application.usecase.SessionService
-      sessionService;
+  private final RosterService rosterService;
+  private final SessionService sessionService;
 
   public TeamController(
       TeamRepositoryPort teamRepository,
-      org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService,
-      org.barcelonajug.superherobattlearena.application.usecase.SessionService sessionService) {
+      RosterService rosterService,
+      SessionService sessionService) {
     this.teamRepository = teamRepository;
     this.rosterService = rosterService;
     this.sessionService = sessionService;
   }
 
-  @org.springframework.web.bind.annotation.GetMapping("/heroes")
-  public java.util.List<org.barcelonajug.superherobattlearena.domain.Hero> getHeroes() {
+  @GetMapping("/heroes")
+  public List<Hero> getHeroes() {
     return rosterService.getAllHeroes();
   }
 
-  @org.springframework.web.bind.annotation.GetMapping
+  @GetMapping
   public ResponseEntity<List<Team>> getTeams(@RequestParam(required = false) UUID sessionId) {
     if (sessionId != null) {
       return ResponseEntity.ok(teamRepository.findBySessionId(sessionId));

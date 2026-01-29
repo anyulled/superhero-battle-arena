@@ -32,6 +32,9 @@ Coding Standards:
   - Return unmodifiable views where possible.
 - **Static Imports**:
   - Use static imports for constants, enums, and static utility methods to avoid verbose fully qualified names in the code (e.g., `HttpStatus.BAD_REQUEST`, `ProblemDetail.forStatusAndDetail`).
+- **Imports**:
+  - Avoid fully qualified class names in the code body. Always import the class.
+  - Exception: multiple classes with the same name (e.g., `java.util.Date` vs `java.sql.Date`).
 - **Error Handling**: Use Try-with-resources (`AutoCloseable`) and validate inputs using `Objects.requireNonNull`.
 
 Specific Patterns:
