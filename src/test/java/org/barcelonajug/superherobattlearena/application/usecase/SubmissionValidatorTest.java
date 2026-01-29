@@ -26,14 +26,20 @@ class SubmissionValidatorTest {
 
                 // Mock some heroes
                 when(rosterService.getHero(1))
-                                .thenReturn(Optional.of(new Hero(1, "H1", new Hero.PowerStats(0, 0, 0, 0), "Tank",
-                                                10, List.of("A"), new Hero.Images(null, null, null, null))));
+                                .thenReturn(Optional.of(
+                                                new Hero(1, "H1", "h1", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Tank",
+                                                                10, "good", "Marvel", null, null, List.of("A"),
+                                                                new Hero.Images(null, null, null, null))));
                 when(rosterService.getHero(2))
-                                .thenReturn(Optional.of(new Hero(2, "H2", new Hero.PowerStats(0, 0, 0, 0), "Dps",
-                                                20, List.of("B"), new Hero.Images(null, null, null, null))));
+                                .thenReturn(Optional.of(
+                                                new Hero(2, "H2", "h2", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Dps",
+                                                                20, "bad", "DC", null, null, List.of("B"),
+                                                                new Hero.Images(null, null, null, null))));
                 when(rosterService.getHero(3))
-                                .thenReturn(Optional.of(new Hero(3, "H3", new Hero.PowerStats(0, 0, 0, 0), "Heal", 15,
-                                                List.of("C", "Banned"), new Hero.Images(null, null, null, null))));
+                                .thenReturn(Optional.of(new Hero(3, "H3", "h3", new Hero.PowerStats(0, 0, 0, 0, 0, 0),
+                                                "Heal", 15, "neutral", "Image",
+                                                null, null, List.of("C", "Banned"),
+                                                new Hero.Images(null, null, null, null))));
         }
 
         @Test

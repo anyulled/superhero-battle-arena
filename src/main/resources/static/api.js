@@ -1,6 +1,9 @@
 const API = {
+    sessions: {
+        active: () => $.get('/api/sessions/active')
+    },
     teams: {
-        list: () => $.get('/api/teams'),
+        list: (sessionId) => $.get('/api/teams', sessionId ? { sessionId } : {}),
         getHeroes: () => $.get('/api/teams/heroes'),
         register: (name, members) => $.post('/api/teams/register', { name, members })
     },

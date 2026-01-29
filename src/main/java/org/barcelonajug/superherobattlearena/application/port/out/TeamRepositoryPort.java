@@ -15,4 +15,6 @@ public interface TeamRepositoryPort {
     Optional<Team> findById(UUID id);
 
     List<Team> findAll();
+
+    List<Team> findBySessionId(UUID sessionId);
 }

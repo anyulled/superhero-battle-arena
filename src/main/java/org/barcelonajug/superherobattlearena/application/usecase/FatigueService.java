@@ -33,13 +33,20 @@ public class FatigueService {
         return new Hero(
                 hero.id(),
                 hero.name(),
+                hero.slug(),
                 new Hero.PowerStats(
                         (int) (hero.powerstats().durability() * multiplier.doubleValue()),
                         (int) (hero.powerstats().strength() * multiplier.doubleValue()),
                         (int) (hero.powerstats().power() * multiplier.doubleValue()),
-                        (int) (hero.powerstats().speed() * multiplier.doubleValue())),
+                        (int) (hero.powerstats().speed() * multiplier.doubleValue()),
+                        (int) (hero.powerstats().intelligence() * multiplier.doubleValue()),
+                        (int) (hero.powerstats().combat() * multiplier.doubleValue())),
                 hero.role(),
                 hero.cost(),
+                hero.alignment(),
+                hero.publisher(),
+                hero.appearance(),
+                hero.biography(),
                 hero.tags(),
                 hero.images());
     }

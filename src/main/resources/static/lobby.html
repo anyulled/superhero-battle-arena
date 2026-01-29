@@ -16,7 +16,7 @@
 <body class="p-8 relative">
 
     <div class="absolute top-6 left-6 z-50 flex items-center gap-4">
-        <a href="index.html" class="flex items-center gap-4">
+        <a href="https://www.barcelonajug.org/" class="flex items-center gap-4">
             <img src="images/barcelonajug.png" alt="Barcelona JUG"
                 class="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity">
             <img src="images/talentArena.png" alt="Talent Arena"
@@ -31,6 +31,7 @@
             <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                 Superhero Battle Arena</h1>
             <p class="text-slate-400 mt-2">Lobby & Registration</p>
+            <div id="sessionStatus" class="mt-2 min-h-[24px]"></div>
         </header>
 
         <!-- Registration -->
@@ -102,11 +103,34 @@
 
         <script>
             $(document).ready(function () {
+                let currentSessionId = null;
+
+                function checkActiveSession() {
+                    API.sessions.active()
+                        .done(function (session) {
+                            currentSessionId = session.sessionId;
+                            $('#sessionStatus').html(`<span class="text-green-400 font-mono text-sm">Active Session: ${session.sessionId}</span>`);
+                            // Update curl example with sessionId
+                            $('#curlCommand').html(`"http://localhost:8080/api/teams/register?name=YourTeamName&members=Member1,Member2&sessionId=${session.sessionId}"`);
+                            loadTeams();
+                        })
+                        .fail(function () {
+                            $('#sessionStatus').html('<span class="text-red-400 font-mono text-sm">No Active Session</span>');
+                            $('#teamsBody').html('<tr><td colspan="3" class="text-center py-4 text-slate-500">No active session found. Please ask an admin to create one.</td></tr>');
+                        });
+                }
+
                 // Load Teams
                 function loadTeams() {
-                    API.teams.list().done(function (teams) {
+                    if (!currentSessionId) return;
+
+                    API.teams.list(currentSessionId).done(function (teams) {
                         const tbody = $('#teamsBody');
                         tbody.empty();
+                        if (teams.length === 0) {
+                            tbody.html('<tr><td colspan="3" class="text-center py-4 text-slate-500">No teams registered yet. Be the first!</td></tr>');
+                            return;
+                        }
                         teams.forEach(team => {
                             tbody.append(`
                         <tr class="hover:bg-slate-800/50">
@@ -120,16 +144,14 @@
                     });
                 }
 
-
-
-
-
                 $('#refreshTeams').click(loadTeams);
-                loadTeams();
-                setInterval(loadTeams, 3000); // Poll every 3 seconds
+                checkActiveSession();
+                setInterval(function () {
+                    if (currentSessionId) loadTeams();
+                    else checkActiveSession();
+                }, 5000); // Poll every 5 seconds
                 lucide.createIcons();
             });
-
 
         </script>
 </body>

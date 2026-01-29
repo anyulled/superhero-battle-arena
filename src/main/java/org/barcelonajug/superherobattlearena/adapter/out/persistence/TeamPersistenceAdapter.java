@@ -43,4 +43,9 @@ public class TeamPersistenceAdapter implements TeamRepositoryPort {
     public java.util.List<Team> findAll() {
         return repository.findAll().stream().map(mapper::toDomain).toList();
     }
+
+    @Override
+    public java.util.List<Team> findBySessionId(UUID sessionId) {
+        return repository.findBySessionId(sessionId).stream().map(mapper::toDomain).toList();
+    }
 }

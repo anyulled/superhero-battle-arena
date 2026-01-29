@@ -26,13 +26,13 @@ public class SecurityConfig {
     private String adminPassword;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
                 .authorizeHttpRequests(authorize -> authorize
                         // Admin endpoints require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         // Public API endpoints
-                        .requestMatchers("/api/**", "/").permitAll()
+                        .requestMatchers("/api/**", "/", "/swagger-ui/**").permitAll()
                         // Static resources
                         .requestMatchers("/**/*.html", "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg",
                                 "/images/**")
@@ -43,7 +43,7 @@ public class SecurityConfig {
                 })
                 .csrf(csrf -> csrf
                         // Disable CSRF for API endpoints to simplify implementation
-                        .ignoringRequestMatchers("/api/**"));
+                        .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
 
         return http.build();
     }

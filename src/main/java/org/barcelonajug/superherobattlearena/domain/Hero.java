@@ -1,3 +1,4 @@
+
 package org.barcelonajug.superherobattlearena.domain;
 
 import java.util.List;
@@ -8,21 +9,18 @@ import java.util.List;
 public record Hero(
                 int id,
                 String name,
+                String slug,
                 PowerStats powerstats,
                 String role,
                 Integer cost,
+                String alignment,
+                String publisher,
+                Appearance appearance,
+                Biography biography,
                 List<String> tags,
                 Images images) {
         /**
          * Constructs a new Hero with default values if needed.
-         *
-         * @param id         the hero ID.
-         * @param name       the hero name.
-         * @param powerstats the hero power stats.
-         * @param role       the hero role.
-         * @param cost       the hero cost.
-         * @param tags       the hero tags.
-         * @param images     the hero images.
          */
         public Hero {
                 if (role == null) {
@@ -36,29 +34,31 @@ public record Hero(
                 }
         }
 
-        /**
-         * Represents the power statistics of a hero.
-         *
-         * @param durability the durability stat.
-         * @param strength   the strength stat.
-         * @param power      the power stat.
-         * @param speed      the speed stat.
-         */
         public record PowerStats(
                         int durability,
                         int strength,
                         int power,
-                        int speed) {
+                        int speed,
+                        int intelligence,
+                        int combat) {
         }
 
-        /**
-         * Represents the images of a hero in different sizes.
-         *
-         * @param xs the xs image URL.
-         * @param sm the sm image URL.
-         * @param md the md image URL.
-         * @param lg the lg image URL.
-         */
+        public record Appearance(
+                        String gender,
+                        String race,
+                        Integer heightCm,
+                        Integer weightKg,
+                        String eyeColor,
+                        String hairColor) {
+        }
+
+        public record Biography(
+                        String fullName,
+                        String placeOfBirth,
+                        String firstAppearance,
+                        List<String> aliases) {
+        }
+
         public record Images(
                         String xs,
                         String sm,

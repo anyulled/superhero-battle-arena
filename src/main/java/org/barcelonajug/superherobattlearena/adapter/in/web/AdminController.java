@@ -76,10 +76,19 @@ public class AdminController {
      * Start a new tournament session
      */
     @PostMapping("/sessions/start")
-    public ResponseEntity<UUID> startSession() {
-        Session session = new Session(UUID.randomUUID(), OffsetDateTime.now(), true);
+    public ResponseEntity<UUID> startSession(@RequestParam(required = false) UUID sessionId) {
+        UUID id = (sessionId != null) ? sessionId : UUID.randomUUID();
+        Session session = new Session(id, OffsetDateTime.now(), true);
         sessionRepository.save(session);
         return ResponseEntity.ok(session.getSessionId());
+    }
+
+    /**
+     * List all tournament sessions
+     */
+    @org.springframework.web.bind.annotation.GetMapping("/sessions")
+    public ResponseEntity<List<Session>> listSessions() {
+        return ResponseEntity.ok(sessionRepository.findAll());
     }
 
     /**

@@ -306,19 +306,41 @@
         });
 
         async function loadSessions() {
-            // Since there's no list sessions endpoint, we'll track created sessions
-            // For now, load existing session if available
-            if (currentSessionId) {
-                updateSessionSelector();
+            try {
+                const response = await fetch('/api/admin/sessions', {
+                    headers: { 'Authorization': authHeader }
+                });
+                if (response.ok) {
+                    const fetchedSessions = await response.json();
+                    sessions = fetchedSessions.map(s => ({
+                        id: s.sessionId,
+                        active: s.active,
+                        budget: 100, // Default for now
+                        teamSize: 5  // Default for now
+                    }));
+
+                    if (sessions.length > 0 && !currentSessionId) {
+                        currentSessionId = sessions[0].id;
+                    }
+                    updateSessionSelector();
+                }
+            } catch (error) {
+                console.error('Failed to load sessions:', error);
             }
         }
 
         function updateSessionSelector() {
             const selector = document.getElementById('sessionSelector');
+            const info = document.getElementById('sessionInfo');
             selector.innerHTML = '';
 
-            if (sessions.length === 0 && currentSessionId) {
-                sessions.push({ id: currentSessionId, budget: 100, teamSize: 5 });
+            if (sessions.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No sessions available";
+                selector.appendChild(option);
+                info.textContent = "";
+                return;
             }
 
             sessions.forEach(session => {
@@ -330,13 +352,15 @@
 
             if (currentSessionId) {
                 selector.value = currentSessionId;
-                document.getElementById('sessionInfo').textContent = `Active Session: ${currentSessionId.substring(0, 8)}...`;
+                info.textContent = `Active Session: ${currentSessionId}`;
+                loadRounds();
             }
 
-            selector.addEventListener('change', function () {
+            selector.onchange = function () {
                 currentSessionId = this.value;
+                info.textContent = `Active Session: ${currentSessionId}`;
                 loadRounds();
-            });
+            };
         }
 
         async function createSession() {
@@ -354,7 +378,7 @@
                     currentSessionId = sessionId;
                     sessions.push({ id: sessionId, budget, teamSize });
                     updateSessionSelector();
-                    showSuccess('sessionStatus', `Session created: ${sessionId.substring(0, 8)}...`);
+                    showSuccess('sessionStatus', `Session created: ${sessionId}`);
                     lucide.createIcons();
                 } else {
                     showError('sessionStatus', 'Failed to create session');

@@ -11,4 +11,6 @@ public interface SpringDataTeamRepository extends JpaRepository<TeamEntity, UUID
     boolean existsByName(String name);
 
     Optional<TeamEntity> findByName(String name);
+
+    java.util.List<TeamEntity> findBySessionId(UUID sessionId);
 }

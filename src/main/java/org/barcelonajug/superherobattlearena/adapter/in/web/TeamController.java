@@ -17,11 +17,14 @@ public class TeamController {
 
     private final TeamRepositoryPort teamRepository;
     private final org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService;
+    private final org.barcelonajug.superherobattlearena.application.usecase.SessionService sessionService;
 
     public TeamController(TeamRepositoryPort teamRepository,
-            org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService) {
+            org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService,
+            org.barcelonajug.superherobattlearena.application.usecase.SessionService sessionService) {
         this.teamRepository = teamRepository;
         this.rosterService = rosterService;
+        this.sessionService = sessionService;
     }
 
     @org.springframework.web.bind.annotation.GetMapping("/heroes")
@@ -30,8 +33,14 @@ public class TeamController {
     }
 
     @org.springframework.web.bind.annotation.GetMapping
-    public ResponseEntity<List<Team>> getTeams() {
-        return ResponseEntity.ok(teamRepository.findAll());
+    public ResponseEntity<List<Team>> getTeams(@RequestParam(required = false) UUID sessionId) {
+        if (sessionId != null) {
+            return ResponseEntity.ok(teamRepository.findBySessionId(sessionId));
+        }
+
+        return sessionService.getActiveSession()
+                .map(session -> ResponseEntity.ok(teamRepository.findBySessionId(session.getSessionId())))
+                .orElse(ResponseEntity.ok(List.of()));
     }
 
     @PostMapping("/register")
@@ -41,7 +50,16 @@ public class TeamController {
             return ResponseEntity.badRequest().build();
         }
 
-        Team team = new Team(UUID.randomUUID(), sessionId, name, OffsetDateTime.now(), members);
+        UUID targetSessionId = sessionId;
+        if (targetSessionId == null) {
+            var activeSession = sessionService.getActiveSession();
+            if (activeSession.isEmpty()) {
+                return ResponseEntity.badRequest().build();
+            }
+            targetSessionId = activeSession.get().getSessionId();
+        }
+
+        Team team = new Team(UUID.randomUUID(), targetSessionId, name, OffsetDateTime.now(), members);
         teamRepository.save(team);
 
         return ResponseEntity.ok(team.teamId());

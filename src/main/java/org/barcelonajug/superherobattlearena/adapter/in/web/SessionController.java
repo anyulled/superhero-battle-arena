@@ -1,10 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
-import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
+import org.barcelonajug.superherobattlearena.application.usecase.SessionService;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,16 +12,21 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/sessions")
 public class SessionController {
 
-    private final SessionRepositoryPort sessionRepository;
+    private final SessionService sessionService;
 
-    public SessionController(SessionRepositoryPort sessionRepository) {
-        this.sessionRepository = sessionRepository;
+    public SessionController(SessionService sessionService) {
+        this.sessionService = sessionService;
     }
 
     @PostMapping
-    public ResponseEntity<UUID> createSession() {
-        Session session = new Session(UUID.randomUUID(), OffsetDateTime.now(), true);
-        sessionRepository.save(session);
-        return ResponseEntity.ok(session.getSessionId());
+    public ResponseEntity<Session> createSession() {
+        return ResponseEntity.ok(sessionService.createSession());
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<Session> getActiveSession() {
+        return sessionService.getActiveSession()
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
