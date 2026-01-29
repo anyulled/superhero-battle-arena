@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import net.datafaker.Faker;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
@@ -40,6 +41,7 @@ class TournamentHappyPathIT {
   @Autowired private MockMvc mockMvc;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+  private final Faker faker = new Faker();
 
   @Test
   void shouldCompleteFullTournamentHappyPath() throws Exception {
@@ -48,8 +50,16 @@ class TournamentHappyPathIT {
     assertThat(sessionId).isNotNull();
 
     // Step 2: Users register teams
-    UUID teamAId = registerTeam("Cosmic Defenders", List.of("Alice", "Bob"), sessionId);
-    UUID teamBId = registerTeam("Shadow Warriors", List.of("Charlie", "Dave"), sessionId);
+    UUID teamAId =
+        registerTeam(
+            faker.esports().team(),
+            List.of(faker.name().firstName(), faker.name().firstName()),
+            sessionId);
+    UUID teamBId =
+        registerTeam(
+            faker.esports().team(),
+            List.of(faker.name().firstName(), faker.name().firstName()),
+            sessionId);
     assertThat(teamAId).isNotNull();
     assertThat(teamBId).isNotNull();
 
