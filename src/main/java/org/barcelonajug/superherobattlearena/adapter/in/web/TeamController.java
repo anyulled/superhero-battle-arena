@@ -1,8 +1,5 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.ProblemDetail.forStatusAndDetail;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -12,7 +9,6 @@ import org.barcelonajug.superherobattlearena.application.usecase.SessionService;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,18 +55,14 @@ public class TeamController {
       @RequestParam List<String> members,
       @RequestParam(required = false) UUID sessionId) {
     if (teamRepository.existsByName(name)) {
-      throw new ErrorResponseException(
-          BAD_REQUEST,
-          forStatusAndDetail(BAD_REQUEST, "Team name '" + name + "' already exists"),
-          null);
+      throw new IllegalArgumentException("Team name '" + name + "' already exists");
     }
 
     UUID targetSessionId = sessionId;
     if (targetSessionId == null) {
       var activeSession = sessionService.getActiveSession();
       if (activeSession.isEmpty()) {
-        throw new ErrorResponseException(
-            BAD_REQUEST, forStatusAndDetail(BAD_REQUEST, "No active session found"), null);
+        throw new IllegalStateException("No active session found");
       }
       targetSessionId = activeSession.get().getSessionId();
     }

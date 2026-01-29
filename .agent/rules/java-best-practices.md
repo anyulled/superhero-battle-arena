@@ -24,6 +24,9 @@ Key Principles (LTS + Modern):
 Coding Standards:
 
 - **No Lombok**: Do not use Lombok annotations. Use Records for data-holding objects and manual implementation for others.
+- **Logging**:
+  - NEVER use `System.out.println` or `System.err.println`.
+  - ALWAYS use an SLF4J logger (`org.slf4j.Logger`, `org.slf4j.LoggerFactory`).
 - **Stream API**: 
   - Prefer `Stream.toList()` (Java 16+) over `.collect(Collectors.toList())`.
   - Avoid over-complex stream pipelines; readability first.

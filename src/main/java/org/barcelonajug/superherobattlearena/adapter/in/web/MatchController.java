@@ -98,7 +98,7 @@ public class MatchController {
             .orElseThrow(() -> new IllegalArgumentException("Match not found"));
 
     if (match.getStatus() != MatchStatus.PENDING) {
-      return ResponseEntity.badRequest().body("Match already run or running");
+      throw new IllegalStateException("Match already run or running");
     }
 
     // 1. Get Submissions
@@ -108,7 +108,7 @@ public class MatchController {
         submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
 
     if (subA.isEmpty() || subB.isEmpty()) {
-      return ResponseEntity.badRequest().body("Submissions missing for one or both teams");
+      throw new IllegalStateException("Submissions missing for one or both teams");
     }
 
     // 2. Build Teams (Apply Fatigue)

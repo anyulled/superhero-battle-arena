@@ -73,12 +73,12 @@ public class RoundController {
       @RequestParam UUID teamId,
       @RequestBody DraftSubmission draft) {
     if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
-      return ResponseEntity.badRequest().build(); // Already submitted
+      throw new IllegalStateException("Team " + teamId + " already submitted for round " + roundNo);
     }
 
     // Naive validation
     if (draft.heroIds().size() != 5) {
-      return ResponseEntity.badRequest().build();
+      throw new IllegalArgumentException("Team must have exactly 5 heroes");
     }
 
     Submission submission = new Submission();

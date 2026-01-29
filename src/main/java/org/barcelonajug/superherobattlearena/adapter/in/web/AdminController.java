@@ -29,8 +29,11 @@ import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminController {
+  private static final Logger log = LoggerFactory.getLogger(AdminController.class);
 
   private final SessionRepositoryPort sessionRepository;
   private final RoundRepositoryPort roundRepository;
@@ -83,7 +87,7 @@ public class AdminController {
   }
 
   /** List all tournament sessions */
-  @org.springframework.web.bind.annotation.GetMapping("/sessions")
+  @GetMapping("/sessions")
   public ResponseEntity<List<Session>> listSessions() {
     return ResponseEntity.ok(sessionRepository.findAll());
   }
@@ -94,7 +98,8 @@ public class AdminController {
     // Validate session exists
     Optional<Session> session = sessionRepository.findById(request.sessionId());
     if (session.isEmpty() || !session.get().isActive()) {
-      return ResponseEntity.badRequest().build();
+      throw new IllegalStateException(
+          "Session " + request.sessionId() + " does not exist or is not active");
     }
 
     Round round = new Round();
@@ -196,7 +201,7 @@ public class AdminController {
 
       } catch (Exception e) {
         // Log error and continue with next match
-        System.err.println("Error simulating match " + match.getMatchId() + ": " + e.getMessage());
+        log.error("Error simulating match {}: {}", match.getMatchId(), e.getMessage());
       }
     }
 
