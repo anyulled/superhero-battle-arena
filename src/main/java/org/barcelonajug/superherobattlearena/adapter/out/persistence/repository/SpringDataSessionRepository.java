@@ -4,5 +4,4 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SessionEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface SpringDataSessionRepository extends JpaRepository<SessionEntity, UUID> {
-}
+public interface SpringDataSessionRepository extends JpaRepository<SessionEntity, UUID> {}

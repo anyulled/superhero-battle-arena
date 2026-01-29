@@ -4,7 +4,7 @@ import java.util.Optional;
 import org.barcelonajug.superherobattlearena.domain.Round;
 
 public interface RoundRepositoryPort {
-    Optional<Round> findById(Integer roundNo);
+  Optional<Round> findById(Integer roundNo);
 
-    Round save(Round round);
+  Round save(Round round);
 }

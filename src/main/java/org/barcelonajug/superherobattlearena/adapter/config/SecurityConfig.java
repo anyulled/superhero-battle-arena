@@ -19,48 +19,60 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${admin.username}")
-    private String adminUsername;
+  @Value("${admin.username}")
+  private String adminUsername;
 
-    @Value("${admin.password}")
-    private String adminPassword;
+  @Value("${admin.password}")
+  private String adminPassword;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
-        http
-                .authorizeHttpRequests(authorize -> authorize
-                        // Admin endpoints require ADMIN role
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // Public API endpoints
-                        .requestMatchers("/api/**", "/", "/swagger-ui/**").permitAll()
-                        // Static resources
-                        .requestMatchers("/**/*.html", "/**/*.css", "/**/*.js", "/**/*.png", "/**/*.jpg", "/**/*.jpeg",
-                                "/images/**")
-                        .permitAll()
-                        // Any other request requires authentication
-                        .anyRequest().authenticated())
-                .httpBasic(httpBasic -> {
-                })
-                .csrf(csrf -> csrf
-                        // Disable CSRF for API endpoints to simplify implementation
-                        .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    http.authorizeHttpRequests(
+            authorize ->
+                authorize
+                    // Admin endpoints require ADMIN role
+                    .requestMatchers("/api/admin/**")
+                    .hasRole("ADMIN")
+                    // Public API endpoints
+                    .requestMatchers("/api/**", "/", "/swagger-ui/**")
+                    .permitAll()
+                    // Static resources
+                    .requestMatchers(
+                        "/**/*.html",
+                        "/**/*.css",
+                        "/**/*.js",
+                        "/**/*.png",
+                        "/**/*.jpg",
+                        "/**/*.jpeg",
+                        "/images/**")
+                    .permitAll()
+                    // Any other request requires authentication
+                    .anyRequest()
+                    .authenticated())
+        .httpBasic(httpBasic -> {})
+        .csrf(
+            csrf ->
+                csrf
+                    // Disable CSRF for API endpoints to simplify implementation
+                    .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
 
-        return http.build();
-    }
+    return http.build();
+  }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails admin = User.builder()
-                .username(adminUsername)
-                .password(passwordEncoder().encode(adminPassword))
-                .roles("ADMIN")
-                .build();
+  @Bean
+  public UserDetailsService userDetailsService() {
+    UserDetails admin =
+        User.builder()
+            .username(adminUsername)
+            .password(passwordEncoder().encode(adminPassword))
+            .roles("ADMIN")
+            .build();
 
-        return new InMemoryUserDetailsManager(admin);
-    }
+    return new InMemoryUserDetailsManager(admin);
+  }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 }

@@ -6,15 +6,15 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Team;
 
 public interface TeamRepositoryPort {
-    Team save(Team team);
+  Team save(Team team);
 
-    Optional<Team> findByName(String name);
+  Optional<Team> findByName(String name);
 
-    boolean existsByName(String name);
+  boolean existsByName(String name);
 
-    Optional<Team> findById(UUID id);
+  Optional<Team> findById(UUID id);
 
-    List<Team> findAll();
+  List<Team> findAll();
 
-    List<Team> findBySessionId(UUID sessionId);
+  List<Team> findBySessionId(UUID sessionId);
 }

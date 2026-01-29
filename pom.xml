@@ -147,13 +147,12 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.13.0</version>
 				<configuration>
-					<release>21</release>
+					<release>25</release>
 					<fork>true</fork>
 					<compilerArgs>
 						<arg>-XDcompilePolicy=simple</arg>
-						<!-- ErrorProne and Spotless are currently incompatible with JDK 25. 
-						     Enable them once compatible versions are available. -->
-						<!-- <arg>-Xplugin:ErrorProne</arg> -->
+						<arg>--should-stop=ifError=FLOW</arg>
+						<arg>-Xplugin:ErrorProne</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
@@ -181,19 +180,20 @@
 						<path>
 							<groupId>com.google.errorprone</groupId>
 							<artifactId>error_prone_core</artifactId>
-							<version>2.31.0</version>
+							<version>2.45.0</version>
 						</path>
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
-			<!-- Spotless is currently incompatible with JDK 25. Disabling until a fix is available.
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
-				<version>2.44.2</version>
+				<version>3.0.0</version>
 				<configuration>
 					<java>
-						<googleJavaFormat/>
+						<googleJavaFormat>
+							<version>1.28.0</version>
+						</googleJavaFormat>
 					</java>
 				</configuration>
 				<executions>
@@ -205,27 +205,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			-->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>3.6.0</version>
-				<configuration>
-					<configLocation>google_checks.xml</configLocation>
-					<consoleOutput>true</consoleOutput>
-					<failsOnError>true</failsOnError>
-					<linkXRef>false</linkXRef>
-				</configuration>
-				<executions>
-					<execution>
-						<id>validate</id>
-						<phase>validate</phase>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

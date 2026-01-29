@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface MatchEventMapper {
-    MatchEvent toDomain(MatchEventEntity entity);
+  MatchEvent toDomain(MatchEventEntity entity);
 
-    MatchEventEntity toEntity(MatchEvent domain);
+  MatchEventEntity toEntity(MatchEvent domain);
 }

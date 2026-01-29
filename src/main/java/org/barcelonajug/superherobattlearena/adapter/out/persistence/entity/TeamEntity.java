@@ -15,54 +15,53 @@ import java.util.UUID;
 @Table(name = "teams")
 public class TeamEntity {
 
-    @Id
-    private UUID teamId;
-    private UUID sessionId;
-    private String name;
-    private OffsetDateTime createdAt;
+  @Id private UUID teamId;
+  private UUID sessionId;
+  private String name;
+  private OffsetDateTime createdAt;
 
-    @ElementCollection
-    @CollectionTable(name = "team_members", joinColumns = @JoinColumn(name = "team_id"))
-    @Column(name = "member_name")
-    private List<String> members;
+  @ElementCollection
+  @CollectionTable(name = "team_members", joinColumns = @JoinColumn(name = "team_id"))
+  @Column(name = "member_name")
+  private List<String> members;
 
-    public UUID getTeamId() {
-        return teamId;
-    }
+  public UUID getTeamId() {
+    return teamId;
+  }
 
-    public void setTeamId(UUID teamId) {
-        this.teamId = teamId;
-    }
+  public void setTeamId(UUID teamId) {
+    this.teamId = teamId;
+  }
 
-    public UUID getSessionId() {
-        return sessionId;
-    }
+  public UUID getSessionId() {
+    return sessionId;
+  }
 
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(UUID sessionId) {
+    this.sessionId = sessionId;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setCreatedAt(OffsetDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 
-    public List<String> getMembers() {
-        return members;
-    }
+  public List<String> getMembers() {
+    return members;
+  }
 
-    public void setMembers(List<String> members) {
-        this.members = members;
-    }
+  public void setMembers(List<String> members) {
+    this.members = members;
+  }
 }

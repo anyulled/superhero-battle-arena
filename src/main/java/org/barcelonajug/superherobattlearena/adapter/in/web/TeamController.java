@@ -15,53 +15,59 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/teams")
 public class TeamController {
 
-    private final TeamRepositoryPort teamRepository;
-    private final org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService;
-    private final org.barcelonajug.superherobattlearena.application.usecase.SessionService sessionService;
+  private final TeamRepositoryPort teamRepository;
+  private final org.barcelonajug.superherobattlearena.application.usecase.RosterService
+      rosterService;
+  private final org.barcelonajug.superherobattlearena.application.usecase.SessionService
+      sessionService;
 
-    public TeamController(TeamRepositoryPort teamRepository,
-            org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService,
-            org.barcelonajug.superherobattlearena.application.usecase.SessionService sessionService) {
-        this.teamRepository = teamRepository;
-        this.rosterService = rosterService;
-        this.sessionService = sessionService;
+  public TeamController(
+      TeamRepositoryPort teamRepository,
+      org.barcelonajug.superherobattlearena.application.usecase.RosterService rosterService,
+      org.barcelonajug.superherobattlearena.application.usecase.SessionService sessionService) {
+    this.teamRepository = teamRepository;
+    this.rosterService = rosterService;
+    this.sessionService = sessionService;
+  }
+
+  @org.springframework.web.bind.annotation.GetMapping("/heroes")
+  public java.util.List<org.barcelonajug.superherobattlearena.domain.Hero> getHeroes() {
+    return rosterService.getAllHeroes();
+  }
+
+  @org.springframework.web.bind.annotation.GetMapping
+  public ResponseEntity<List<Team>> getTeams(@RequestParam(required = false) UUID sessionId) {
+    if (sessionId != null) {
+      return ResponseEntity.ok(teamRepository.findBySessionId(sessionId));
     }
 
-    @org.springframework.web.bind.annotation.GetMapping("/heroes")
-    public java.util.List<org.barcelonajug.superherobattlearena.domain.Hero> getHeroes() {
-        return rosterService.getAllHeroes();
+    return sessionService
+        .getActiveSession()
+        .map(session -> ResponseEntity.ok(teamRepository.findBySessionId(session.getSessionId())))
+        .orElse(ResponseEntity.ok(List.of()));
+  }
+
+  @PostMapping("/register")
+  public ResponseEntity<UUID> registerTeam(
+      @RequestParam String name,
+      @RequestParam List<String> members,
+      @RequestParam(required = false) UUID sessionId) {
+    if (teamRepository.existsByName(name)) {
+      return ResponseEntity.badRequest().build();
     }
 
-    @org.springframework.web.bind.annotation.GetMapping
-    public ResponseEntity<List<Team>> getTeams(@RequestParam(required = false) UUID sessionId) {
-        if (sessionId != null) {
-            return ResponseEntity.ok(teamRepository.findBySessionId(sessionId));
-        }
-
-        return sessionService.getActiveSession()
-                .map(session -> ResponseEntity.ok(teamRepository.findBySessionId(session.getSessionId())))
-                .orElse(ResponseEntity.ok(List.of()));
+    UUID targetSessionId = sessionId;
+    if (targetSessionId == null) {
+      var activeSession = sessionService.getActiveSession();
+      if (activeSession.isEmpty()) {
+        return ResponseEntity.badRequest().build();
+      }
+      targetSessionId = activeSession.get().getSessionId();
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UUID> registerTeam(@RequestParam String name, @RequestParam List<String> members,
-            @RequestParam(required = false) UUID sessionId) {
-        if (teamRepository.existsByName(name)) {
-            return ResponseEntity.badRequest().build();
-        }
+    Team team = new Team(UUID.randomUUID(), targetSessionId, name, OffsetDateTime.now(), members);
+    teamRepository.save(team);
 
-        UUID targetSessionId = sessionId;
-        if (targetSessionId == null) {
-            var activeSession = sessionService.getActiveSession();
-            if (activeSession.isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-            targetSessionId = activeSession.get().getSessionId();
-        }
-
-        Team team = new Team(UUID.randomUUID(), targetSessionId, name, OffsetDateTime.now(), members);
-        teamRepository.save(team);
-
-        return ResponseEntity.ok(team.teamId());
-    }
+    return ResponseEntity.ok(team.teamId());
+  }
 }

@@ -1,100 +1,96 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.Objects;
-import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Objects;
+import java.util.UUID;
 
 @Entity
 @Table(name = "hero_usage")
 @IdClass(HeroUsageEntity.HeroUsageId.class)
 public class HeroUsageEntity {
 
-    @Id
-    @Column(name = "team_id")
+  @Id
+  @Column(name = "team_id")
+  private UUID teamId;
+
+  @Id
+  @Column(name = "hero_id")
+  private Integer heroId;
+
+  @Id
+  @Column(name = "round_no")
+  private Integer roundNo;
+
+  private Integer streak;
+
+  private BigDecimal multiplier;
+
+  public static class HeroUsageId implements Serializable {
     private UUID teamId;
-
-    @Id
-    @Column(name = "hero_id")
     private Integer heroId;
-
-    @Id
-    @Column(name = "round_no")
     private Integer roundNo;
 
-    private Integer streak;
+    public HeroUsageId() {}
 
-    private BigDecimal multiplier;
-
-    public static class HeroUsageId implements Serializable {
-        private UUID teamId;
-        private Integer heroId;
-        private Integer roundNo;
-
-        public HeroUsageId() {
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (o == null || getClass() != o.getClass())
-                return false;
-            HeroUsageId that = (HeroUsageId) o;
-            return Objects.equals(teamId, that.teamId)
-                    && Objects.equals(heroId, that.heroId)
-                    && Objects.equals(roundNo, that.roundNo);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(teamId, heroId, roundNo);
-        }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      HeroUsageId that = (HeroUsageId) o;
+      return Objects.equals(teamId, that.teamId)
+          && Objects.equals(heroId, that.heroId)
+          && Objects.equals(roundNo, that.roundNo);
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    @Override
+    public int hashCode() {
+      return Objects.hash(teamId, heroId, roundNo);
     }
+  }
 
-    public void setTeamId(UUID teamId) {
-        this.teamId = teamId;
-    }
+  public UUID getTeamId() {
+    return teamId;
+  }
 
-    public Integer getHeroId() {
-        return heroId;
-    }
+  public void setTeamId(UUID teamId) {
+    this.teamId = teamId;
+  }
 
-    public void setHeroId(Integer heroId) {
-        this.heroId = heroId;
-    }
+  public Integer getHeroId() {
+    return heroId;
+  }
 
-    public Integer getRoundNo() {
-        return roundNo;
-    }
+  public void setHeroId(Integer heroId) {
+    this.heroId = heroId;
+  }
 
-    public void setRoundNo(Integer roundNo) {
-        this.roundNo = roundNo;
-    }
+  public Integer getRoundNo() {
+    return roundNo;
+  }
 
-    public Integer getStreak() {
-        return streak;
-    }
+  public void setRoundNo(Integer roundNo) {
+    this.roundNo = roundNo;
+  }
 
-    public void setStreak(Integer streak) {
-        this.streak = streak;
-    }
+  public Integer getStreak() {
+    return streak;
+  }
 
-    public BigDecimal getMultiplier() {
-        return multiplier;
-    }
+  public void setStreak(Integer streak) {
+    this.streak = streak;
+  }
 
-    public void setMultiplier(BigDecimal multiplier) {
-        this.multiplier = multiplier;
-    }
+  public BigDecimal getMultiplier() {
+    return multiplier;
+  }
+
+  public void setMultiplier(BigDecimal multiplier) {
+    this.multiplier = multiplier;
+  }
 }

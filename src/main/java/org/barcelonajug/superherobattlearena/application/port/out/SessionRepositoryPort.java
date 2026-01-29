@@ -1,14 +1,14 @@
 package org.barcelonajug.superherobattlearena.application.port.out;
 
-import org.barcelonajug.superherobattlearena.domain.Session;
 import java.util.Optional;
+import org.barcelonajug.superherobattlearena.domain.Session;
 
 public interface SessionRepositoryPort {
-    Session save(Session session);
+  Session save(Session session);
 
-    Optional<Session> findByActiveTrue();
+  Optional<Session> findByActiveTrue();
 
-    java.util.List<Session> findAll();
+  java.util.List<Session> findAll();
 
-    Optional<Session> findById(java.util.UUID id);
+  Optional<Session> findById(java.util.UUID id);
 }

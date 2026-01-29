@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface HeroUsageMapper {
-    HeroUsage toDomain(HeroUsageEntity entity);
+  HeroUsage toDomain(HeroUsageEntity entity);
 
-    HeroUsageEntity toEntity(HeroUsage domain);
+  HeroUsageEntity toEntity(HeroUsage domain);
 }

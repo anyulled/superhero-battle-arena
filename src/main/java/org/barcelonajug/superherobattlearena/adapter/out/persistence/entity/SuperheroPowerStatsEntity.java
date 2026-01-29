@@ -12,95 +12,94 @@ import jakarta.persistence.Table;
 @Table(name = "superhero_powerstats")
 public class SuperheroPowerStatsEntity {
 
-    @Id
-    @Column(name = "superhero_id")
-    private Integer superheroId;
+  @Id
+  @Column(name = "superhero_id")
+  private Integer superheroId;
 
-    private Integer intelligence;
-    private Integer strength;
-    private Integer speed;
-    private Integer durability;
-    private Integer power;
-    private Integer combat;
-    private Integer cost;
+  private Integer intelligence;
+  private Integer strength;
+  private Integer speed;
+  private Integer durability;
+  private Integer power;
+  private Integer combat;
+  private Integer cost;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "superhero_id")
-    private SuperheroEntity superhero;
+  @OneToOne
+  @MapsId
+  @JoinColumn(name = "superhero_id")
+  private SuperheroEntity superhero;
 
-    public SuperheroPowerStatsEntity() {
-    }
+  public SuperheroPowerStatsEntity() {}
 
-    public Integer getSuperheroId() {
-        return superheroId;
-    }
+  public Integer getSuperheroId() {
+    return superheroId;
+  }
 
-    public void setSuperheroId(Integer superheroId) {
-        this.superheroId = superheroId;
-    }
+  public void setSuperheroId(Integer superheroId) {
+    this.superheroId = superheroId;
+  }
 
-    public Integer getIntelligence() {
-        return intelligence;
-    }
+  public Integer getIntelligence() {
+    return intelligence;
+  }
 
-    public void setIntelligence(Integer intelligence) {
-        this.intelligence = intelligence;
-    }
+  public void setIntelligence(Integer intelligence) {
+    this.intelligence = intelligence;
+  }
 
-    public Integer getStrength() {
-        return strength;
-    }
+  public Integer getStrength() {
+    return strength;
+  }
 
-    public void setStrength(Integer strength) {
-        this.strength = strength;
-    }
+  public void setStrength(Integer strength) {
+    this.strength = strength;
+  }
 
-    public Integer getSpeed() {
-        return speed;
-    }
+  public Integer getSpeed() {
+    return speed;
+  }
 
-    public void setSpeed(Integer speed) {
-        this.speed = speed;
-    }
+  public void setSpeed(Integer speed) {
+    this.speed = speed;
+  }
 
-    public Integer getDurability() {
-        return durability;
-    }
+  public Integer getDurability() {
+    return durability;
+  }
 
-    public void setDurability(Integer durability) {
-        this.durability = durability;
-    }
+  public void setDurability(Integer durability) {
+    this.durability = durability;
+  }
 
-    public Integer getPower() {
-        return power;
-    }
+  public Integer getPower() {
+    return power;
+  }
 
-    public void setPower(Integer power) {
-        this.power = power;
-    }
+  public void setPower(Integer power) {
+    this.power = power;
+  }
 
-    public Integer getCombat() {
-        return combat;
-    }
+  public Integer getCombat() {
+    return combat;
+  }
 
-    public void setCombat(Integer combat) {
-        this.combat = combat;
-    }
+  public void setCombat(Integer combat) {
+    this.combat = combat;
+  }
 
-    public Integer getCost() {
-        return cost;
-    }
+  public Integer getCost() {
+    return cost;
+  }
 
-    public void setCost(Integer cost) {
-        this.cost = cost;
-    }
+  public void setCost(Integer cost) {
+    this.cost = cost;
+  }
 
-    public SuperheroEntity getSuperhero() {
-        return superhero;
-    }
+  public SuperheroEntity getSuperhero() {
+    return superhero;
+  }
 
-    public void setSuperhero(SuperheroEntity superhero) {
-        this.superhero = superhero;
-    }
+  public void setSuperhero(SuperheroEntity superhero) {
+    this.superhero = superhero;
+  }
 }

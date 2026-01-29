@@ -7,83 +7,82 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import java.util.List;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import java.util.List;
 
 @Entity
 @Table(name = "superhero_biography")
 public class SuperheroBiographyEntity {
 
-    @Id
-    @Column(name = "superhero_id")
-    private Integer superheroId;
+  @Id
+  @Column(name = "superhero_id")
+  private Integer superheroId;
 
-    @Column(name = "full_name")
-    private String fullName;
+  @Column(name = "full_name")
+  private String fullName;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    private List<String> aliases;
+  @JdbcTypeCode(SqlTypes.JSON)
+  private List<String> aliases;
 
-    @Column(name = "place_of_birth")
-    private String placeOfBirth;
+  @Column(name = "place_of_birth")
+  private String placeOfBirth;
 
-    @Column(name = "first_appearance")
-    private String firstAppearance;
+  @Column(name = "first_appearance")
+  private String firstAppearance;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "superhero_id")
-    private SuperheroEntity superhero;
+  @OneToOne
+  @MapsId
+  @JoinColumn(name = "superhero_id")
+  private SuperheroEntity superhero;
 
-    public SuperheroBiographyEntity() {
-    }
+  public SuperheroBiographyEntity() {}
 
-    public Integer getSuperheroId() {
-        return superheroId;
-    }
+  public Integer getSuperheroId() {
+    return superheroId;
+  }
 
-    public void setSuperheroId(Integer superheroId) {
-        this.superheroId = superheroId;
-    }
+  public void setSuperheroId(Integer superheroId) {
+    this.superheroId = superheroId;
+  }
 
-    public String getFullName() {
-        return fullName;
-    }
+  public String getFullName() {
+    return fullName;
+  }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
+  public void setFullName(String fullName) {
+    this.fullName = fullName;
+  }
 
-    public List<String> getAliases() {
-        return aliases;
-    }
+  public List<String> getAliases() {
+    return aliases;
+  }
 
-    public void setAliases(List<String> aliases) {
-        this.aliases = aliases;
-    }
+  public void setAliases(List<String> aliases) {
+    this.aliases = aliases;
+  }
 
-    public String getPlaceOfBirth() {
-        return placeOfBirth;
-    }
+  public String getPlaceOfBirth() {
+    return placeOfBirth;
+  }
 
-    public void setPlaceOfBirth(String placeOfBirth) {
-        this.placeOfBirth = placeOfBirth;
-    }
+  public void setPlaceOfBirth(String placeOfBirth) {
+    this.placeOfBirth = placeOfBirth;
+  }
 
-    public String getFirstAppearance() {
-        return firstAppearance;
-    }
+  public String getFirstAppearance() {
+    return firstAppearance;
+  }
 
-    public void setFirstAppearance(String firstAppearance) {
-        this.firstAppearance = firstAppearance;
-    }
+  public void setFirstAppearance(String firstAppearance) {
+    this.firstAppearance = firstAppearance;
+  }
 
-    public SuperheroEntity getSuperhero() {
-        return superhero;
-    }
+  public SuperheroEntity getSuperhero() {
+    return superhero;
+  }
 
-    public void setSuperhero(SuperheroEntity superhero) {
-        this.superhero = superhero;
-    }
+  public void setSuperhero(SuperheroEntity superhero) {
+    this.superhero = superhero;
+  }
 }

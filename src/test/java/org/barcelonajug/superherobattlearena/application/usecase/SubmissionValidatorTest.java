@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
-
 import org.barcelonajug.superherobattlearena.application.usecase.validation.BannedTagValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.CostValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.RoleCompositionValidationRule;
@@ -26,98 +25,131 @@ import org.junit.jupiter.api.Test;
 
 class SubmissionValidatorTest {
 
-        private RosterService rosterService;
-        private SubmissionValidator validator;
+  private RosterService rosterService;
+  private SubmissionValidator validator;
 
-        @BeforeEach
-        void setUp() {
-                rosterService = mock(RosterService.class);
+  @BeforeEach
+  void setUp() {
+    rosterService = mock(RosterService.class);
 
-                // Create validation rules
-                List<ValidationRule> validationRules = List
-                                .of(
-                                                new CostValidationRule(),
-                                                new BannedTagValidationRule(),
-                                                new RoleCompositionValidationRule());
+    // Create validation rules
+    List<ValidationRule> validationRules =
+        List.of(
+            new CostValidationRule(),
+            new BannedTagValidationRule(),
+            new RoleCompositionValidationRule());
 
-                validator = new SubmissionValidator(rosterService, validationRules);
+    validator = new SubmissionValidator(rosterService, validationRules);
 
-                Hero h1 = new Hero(1, "H1", "h1", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Tank",
-                                10, "good", "Marvel", null, null, List.of("A"),
-                                new Hero.Images(null, null, null, null));
-                Hero h2 = new Hero(2, "H2", "h2", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Dps",
-                                20, "bad", "DC", null, null, List.of("B"),
-                                new Hero.Images(null, null, null, null));
-                Hero h3 = new Hero(3, "H3", "h3", new Hero.PowerStats(0, 0, 0, 0, 0, 0), "Heal",
-                                15, "neutral", "Image", null, null, List.of("C", "Banned"),
-                                new Hero.Images(null, null, null, null));
+    Hero h1 =
+        new Hero(
+            1,
+            "H1",
+            "h1",
+            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
+            "Tank",
+            10,
+            "good",
+            "Marvel",
+            null,
+            null,
+            List.of("A"),
+            new Hero.Images(null, null, null, null));
+    Hero h2 =
+        new Hero(
+            2,
+            "H2",
+            "h2",
+            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
+            "Dps",
+            20,
+            "bad",
+            "DC",
+            null,
+            null,
+            List.of("B"),
+            new Hero.Images(null, null, null, null));
+    Hero h3 =
+        new Hero(
+            3,
+            "H3",
+            "h3",
+            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
+            "Heal",
+            15,
+            "neutral",
+            "Image",
+            null,
+            null,
+            List.of("C", "Banned"),
+            new Hero.Images(null, null, null, null));
 
-                List<Hero> allHeroes = List.of(h1, h2, h3);
+    List<Hero> allHeroes = List.of(h1, h2, h3);
 
-                when(rosterService.getHeroes(anyList())).thenAnswer(invocation -> {
-                        List<Integer> ids = invocation.getArgument(0);
-                        return allHeroes.stream()
-                                        .filter(h -> ids.contains(h.id()))
-                                        .toList();
-                });
-        }
+    when(rosterService.getHeroes(anyList()))
+        .thenAnswer(
+            invocation -> {
+              List<Integer> ids = invocation.getArgument(0);
+              return allHeroes.stream().filter(h -> ids.contains(h.id())).toList();
+            });
+  }
 
-        @Test
-        void shouldValidateValidSubmission() {
-                RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of("Tank", 1), null, null, null, "Basic");
-                DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
+  @Test
+  void shouldValidateValidSubmission() {
+    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of("Tank", 1), null, null, null, "Basic");
+    DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
-                assertThatCode(() -> validator.validate(submission, spec))
-                                .doesNotThrowAnyException();
-        }
+    assertThatCode(() -> validator.validate(submission, spec)).doesNotThrowAnyException();
+  }
 
-        @Test
-        void shouldFailWrongTeamSize() {
-                RoundSpec spec = new RoundSpec("Test", 3, 50, null, null, null, null, "Basic");
-                DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
+  @Test
+  void shouldFailWrongTeamSize() {
+    RoundSpec spec = new RoundSpec("Test", 3, 50, null, null, null, null, "Basic");
+    DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
-                assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(TeamSizeException.class)
-                                .hasMessageContaining("Team size");
-        }
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(TeamSizeException.class)
+        .hasMessageContaining("Team size");
+  }
 
-        @Test
-        void shouldFailBudgetExceeded() {
-                RoundSpec spec = new RoundSpec("Test", 2, 25, null, null, null, null, "Basic");
-                DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Cost 10+20=30 > 25
+  @Test
+  void shouldFailBudgetExceeded() {
+    RoundSpec spec = new RoundSpec("Test", 2, 25, null, null, null, null, "Basic");
+    DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Cost 10+20=30 > 25
 
-                assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(BudgetExceededException.class)
-                                .hasMessageContaining("exceeds maximum");
-        }
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(BudgetExceededException.class)
+        .hasMessageContaining("exceeds maximum");
+  }
 
-        @Test
-        void shouldFailMissingRole() {
-                RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of("Heal", 1), null, null, null, "Basic");
-                DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Tank, Dps. Missing Heal.
+  @Test
+  void shouldFailMissingRole() {
+    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of("Heal", 1), null, null, null, "Basic");
+    DraftSubmission submission =
+        new DraftSubmission(List.of(1, 2), "Attack"); // Tank, Dps. Missing Heal.
 
-                assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(RoleCompositionException.class)
-                                .hasMessageContaining("Missing required role");
-        }
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(RoleCompositionException.class)
+        .hasMessageContaining("Missing required role");
+  }
 
-        @Test
-        void shouldFailBannedTag() {
-                RoundSpec spec = new RoundSpec("Test", 1, 50, null, null, List.of("Banned"), null, "Basic");
-                DraftSubmission submission = new DraftSubmission(List.of(3), "Attack"); // Has "Banned" tag
+  @Test
+  void shouldFailBannedTag() {
+    RoundSpec spec = new RoundSpec("Test", 1, 50, null, null, List.of("Banned"), null, "Basic");
+    DraftSubmission submission = new DraftSubmission(List.of(3), "Attack"); // Has "Banned" tag
 
-                assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(BannedTagException.class)
-                                .hasMessageContaining("banned tag");
-        }
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(BannedTagException.class)
+        .hasMessageContaining("banned tag");
+  }
 
-        @Test
-        void shouldFailDuplicates() {
-                RoundSpec spec = new RoundSpec("Test", 2, 50, null, null, null, null, "Basic");
-                DraftSubmission submission = new DraftSubmission(List.of(1, 1), "Attack");
+  @Test
+  void shouldFailDuplicates() {
+    RoundSpec spec = new RoundSpec("Test", 2, 50, null, null, null, null, "Basic");
+    DraftSubmission submission = new DraftSubmission(List.of(1, 1), "Attack");
 
-                assertThatThrownBy(() -> validator.validate(submission, spec))
-                                .isInstanceOf(DuplicateHeroException.class)
-                                .hasMessageContaining("Duplicate heroes");
-        }
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(DuplicateHeroException.class)
+        .hasMessageContaining("Duplicate heroes");
+  }
 }

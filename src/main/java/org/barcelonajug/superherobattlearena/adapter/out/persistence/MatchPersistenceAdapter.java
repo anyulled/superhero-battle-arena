@@ -13,31 +13,31 @@ import org.springframework.stereotype.Component;
 @Component
 public class MatchPersistenceAdapter implements MatchRepositoryPort {
 
-    private final SpringDataMatchRepository repository;
-    private final MatchMapper mapper;
+  private final SpringDataMatchRepository repository;
+  private final MatchMapper mapper;
 
-    public MatchPersistenceAdapter(SpringDataMatchRepository repository, MatchMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public MatchPersistenceAdapter(SpringDataMatchRepository repository, MatchMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public Match save(Match match) {
-        return mapper.toDomain(repository.save(mapper.toEntity(match)));
-    }
+  @Override
+  public Match save(Match match) {
+    return mapper.toDomain(repository.save(mapper.toEntity(match)));
+  }
 
-    @Override
-    public Optional<Match> findById(UUID matchId) {
-        return repository.findById(matchId).map(mapper::toDomain);
-    }
+  @Override
+  public Optional<Match> findById(UUID matchId) {
+    return repository.findById(matchId).map(mapper::toDomain);
+  }
 
-    @Override
-    public List<Match> findByStatus(MatchStatus status) {
-        return repository.findByStatus(status).stream().map(mapper::toDomain).toList();
-    }
+  @Override
+  public List<Match> findByStatus(MatchStatus status) {
+    return repository.findByStatus(status).stream().map(mapper::toDomain).toList();
+  }
 
-    @Override
-    public List<Match> findAll() {
-        return repository.findAll().stream().map(mapper::toDomain).toList();
-    }
+  @Override
+  public List<Match> findAll() {
+    return repository.findAll().stream().map(mapper::toDomain).toList();
+  }
 }

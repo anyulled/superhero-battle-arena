@@ -12,21 +12,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/sessions")
 public class SessionController {
 
-    private final SessionService sessionService;
+  private final SessionService sessionService;
 
-    public SessionController(SessionService sessionService) {
-        this.sessionService = sessionService;
-    }
+  public SessionController(SessionService sessionService) {
+    this.sessionService = sessionService;
+  }
 
-    @PostMapping
-    public ResponseEntity<Session> createSession() {
-        return ResponseEntity.ok(sessionService.createSession());
-    }
+  @PostMapping
+  public ResponseEntity<Session> createSession() {
+    return ResponseEntity.ok(sessionService.createSession());
+  }
 
-    @GetMapping("/active")
-    public ResponseEntity<Session> getActiveSession() {
-        return sessionService.getActiveSession()
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+  @GetMapping("/active")
+  public ResponseEntity<Session> getActiveSession() {
+    return sessionService
+        .getActiveSession()
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
 }

@@ -10,21 +10,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class RoundPersistenceAdapter implements RoundRepositoryPort {
 
-    private final SpringDataRoundRepository repository;
-    private final RoundMapper mapper;
+  private final SpringDataRoundRepository repository;
+  private final RoundMapper mapper;
 
-    public RoundPersistenceAdapter(SpringDataRoundRepository repository, RoundMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public RoundPersistenceAdapter(SpringDataRoundRepository repository, RoundMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public Optional<Round> findById(Integer roundNo) {
-        return repository.findById(roundNo).map(mapper::toDomain);
-    }
+  @Override
+  public Optional<Round> findById(Integer roundNo) {
+    return repository.findById(roundNo).map(mapper::toDomain);
+  }
 
-    @Override
-    public Round save(Round round) {
-        return mapper.toDomain(repository.save(mapper.toEntity(round)));
-    }
+  @Override
+  public Round save(Round round) {
+    return mapper.toDomain(repository.save(mapper.toEntity(round)));
+  }
 }

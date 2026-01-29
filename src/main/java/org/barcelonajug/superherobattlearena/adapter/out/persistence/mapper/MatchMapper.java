@@ -7,7 +7,7 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface MatchMapper {
-    Match toDomain(MatchEntity entity);
+  Match toDomain(MatchEntity entity);
 
-    MatchEntity toEntity(Match domain);
+  MatchEntity toEntity(Match domain);
 }

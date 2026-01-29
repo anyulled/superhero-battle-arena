@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface RoundMapper {
-    Round toDomain(RoundEntity entity);
+  Round toDomain(RoundEntity entity);
 
-    RoundEntity toEntity(Round domain);
+  RoundEntity toEntity(Round domain);
 }

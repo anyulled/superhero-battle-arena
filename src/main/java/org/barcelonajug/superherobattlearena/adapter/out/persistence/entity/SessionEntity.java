@@ -9,32 +9,31 @@ import java.util.UUID;
 @Entity
 @Table(name = "sessions")
 public class SessionEntity {
-    @Id
-    private UUID sessionId;
-    private OffsetDateTime createdAt;
-    private boolean active;
+  @Id private UUID sessionId;
+  private OffsetDateTime createdAt;
+  private boolean active;
 
-    public UUID getSessionId() {
-        return sessionId;
-    }
+  public UUID getSessionId() {
+    return sessionId;
+  }
 
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(UUID sessionId) {
+    this.sessionId = sessionId;
+  }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setCreatedAt(OffsetDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 
-    public boolean isActive() {
-        return active;
-    }
+  public boolean isActive() {
+    return active;
+  }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
+  public void setActive(boolean active) {
+    this.active = active;
+  }
 }

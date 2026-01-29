@@ -1,78 +1,72 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-import java.util.UUID;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "match_events")
 @IdClass(MatchEventEntity.MatchEventId.class)
 public class MatchEventEntity {
 
-    @Id
-    @Column(name = "match_id")
-    private UUID matchId;
+  @Id
+  @Column(name = "match_id")
+  private UUID matchId;
 
-    @Id
+  @Id private Integer seq;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "event_json")
+  private org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson;
+
+  public static class MatchEventId implements Serializable {
+    private UUID matchId;
     private Integer seq;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "event_json")
-    private org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson;
+    public MatchEventId() {}
 
-    public static class MatchEventId implements Serializable {
-        private UUID matchId;
-        private Integer seq;
-
-        public MatchEventId() {
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (o == null || getClass() != o.getClass())
-                return false;
-            MatchEventId that = (MatchEventId) o;
-            return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(matchId, seq);
-        }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+      MatchEventId that = (MatchEventId) o;
+      return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
     }
 
-    public UUID getMatchId() {
-        return matchId;
+    @Override
+    public int hashCode() {
+      return Objects.hash(matchId, seq);
     }
+  }
 
-    public void setMatchId(UUID matchId) {
-        this.matchId = matchId;
-    }
+  public UUID getMatchId() {
+    return matchId;
+  }
 
-    public Integer getSeq() {
-        return seq;
-    }
+  public void setMatchId(UUID matchId) {
+    this.matchId = matchId;
+  }
 
-    public void setSeq(Integer seq) {
-        this.seq = seq;
-    }
+  public Integer getSeq() {
+    return seq;
+  }
 
-    public org.barcelonajug.superherobattlearena.domain.json.MatchEvent getEventJson() {
-        return eventJson;
-    }
+  public void setSeq(Integer seq) {
+    this.seq = seq;
+  }
 
-    public void setEventJson(org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson) {
-        this.eventJson = eventJson;
-    }
+  public org.barcelonajug.superherobattlearena.domain.json.MatchEvent getEventJson() {
+    return eventJson;
+  }
+
+  public void setEventJson(org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson) {
+    this.eventJson = eventJson;
+  }
 }

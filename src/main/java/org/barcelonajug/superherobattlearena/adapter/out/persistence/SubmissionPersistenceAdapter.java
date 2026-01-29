@@ -12,28 +12,27 @@ import org.springframework.stereotype.Component;
 @Component
 public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
 
-    private final SpringDataSubmissionRepository repository;
-    private final SubmissionMapper mapper;
+  private final SpringDataSubmissionRepository repository;
+  private final SubmissionMapper mapper;
 
-    public SubmissionPersistenceAdapter(SpringDataSubmissionRepository repository, SubmissionMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public SubmissionPersistenceAdapter(
+      SpringDataSubmissionRepository repository, SubmissionMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public Submission save(Submission submission) {
-        return mapper.toDomain(repository.save(mapper.toEntity(submission)));
-    }
+  @Override
+  public Submission save(Submission submission) {
+    return mapper.toDomain(repository.save(mapper.toEntity(submission)));
+  }
 
-    @Override
-    public Optional<Submission> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
-        return repository.findByTeamIdAndRoundNo(teamId, roundNo).map(mapper::toDomain);
-    }
+  @Override
+  public Optional<Submission> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
+    return repository.findByTeamIdAndRoundNo(teamId, roundNo).map(mapper::toDomain);
+  }
 
-    @Override
-    public List<Submission> findByRoundNo(Integer roundNo) {
-        return repository.findByRoundNo(roundNo).stream()
-                .map(mapper::toDomain)
-                .toList();
-    }
+  @Override
+  public List<Submission> findByRoundNo(Integer roundNo) {
+    return repository.findByRoundNo(roundNo).stream().map(mapper::toDomain).toList();
+  }
 }

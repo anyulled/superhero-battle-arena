@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface SubmissionMapper {
-    Submission toDomain(SubmissionEntity entity);
+  Submission toDomain(SubmissionEntity entity);
 
-    SubmissionEntity toEntity(Submission domain);
+  SubmissionEntity toEntity(Submission domain);
 }

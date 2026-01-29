@@ -5,8 +5,4 @@ import java.util.Map;
 import java.util.UUID;
 
 public record BatchSimulationResult(
-        List<UUID> matchIds,
-        Map<UUID, UUID> winners,
-        int totalMatches,
-        int successfulSimulations) {
-}
+    List<UUID> matchIds, Map<UUID, UUID> winners, int totalMatches, int successfulSimulations) {}
