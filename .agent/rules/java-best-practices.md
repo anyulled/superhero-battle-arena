@@ -30,6 +30,8 @@ Coding Standards:
 - **Immutability**: 
   - Prefer `List.of()`, `Set.of()`, `Map.of()` for unmodifiable collections.
   - Return unmodifiable views where possible.
+- **Static Imports**:
+  - Use static imports for constants, enums, and static utility methods to avoid verbose fully qualified names in the code (e.g., `HttpStatus.BAD_REQUEST`, `ProblemDetail.forStatusAndDetail`).
 - **Error Handling**: Use Try-with-resources (`AutoCloseable`) and validate inputs using `Objects.requireNonNull`.
 
 Specific Patterns:

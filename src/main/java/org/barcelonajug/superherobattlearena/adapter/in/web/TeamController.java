@@ -1,11 +1,15 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.ProblemDetail.forStatusAndDetail;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponseException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -53,11 +57,9 @@ public class TeamController {
       @RequestParam List<String> members,
       @RequestParam(required = false) UUID sessionId) {
     if (teamRepository.existsByName(name)) {
-      throw new org.springframework.web.ErrorResponseException(
-          org.springframework.http.HttpStatus.BAD_REQUEST,
-          org.springframework.http.ProblemDetail.forStatusAndDetail(
-              org.springframework.http.HttpStatus.BAD_REQUEST,
-              "Team name '" + name + "' already exists"),
+      throw new ErrorResponseException(
+          BAD_REQUEST,
+          forStatusAndDetail(BAD_REQUEST, "Team name '" + name + "' already exists"),
           null);
     }
 
@@ -65,11 +67,8 @@ public class TeamController {
     if (targetSessionId == null) {
       var activeSession = sessionService.getActiveSession();
       if (activeSession.isEmpty()) {
-        throw new org.springframework.web.ErrorResponseException(
-            org.springframework.http.HttpStatus.BAD_REQUEST,
-            org.springframework.http.ProblemDetail.forStatusAndDetail(
-                org.springframework.http.HttpStatus.BAD_REQUEST, "No active session found"),
-            null);
+        throw new ErrorResponseException(
+            BAD_REQUEST, forStatusAndDetail(BAD_REQUEST, "No active session found"), null);
       }
       targetSessionId = activeSession.get().getSessionId();
     }
