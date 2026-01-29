@@ -6,7 +6,7 @@
 
 | | |
 | :---: | :---: |
-| ![Barcelona JUG](src/main/resources/static/images/barcelonajug.png) | ![Talent Arena](src/main/resources/static/images/talentarena.png) |
+| [![Barcelona JUG](src/main/resources/static/images/barcelonajug.png)](https://barcelonajug.org) | [![Talent Arena](src/main/resources/static/images/talentArena.png)](https://talentarena.tech) |
 
 A Spring Boot application built with Hexagonal Architecture that simulates battles between teams of superheroes.
 
