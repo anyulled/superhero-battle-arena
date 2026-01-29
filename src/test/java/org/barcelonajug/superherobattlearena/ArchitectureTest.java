@@ -156,4 +156,23 @@ public class ArchitectureTest {
           .dependOnClassesThat()
           .resideInAPackage(ADAPTER)
           .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule web_adapters_should_not_depend_on_ports =
+      noClasses()
+          .that()
+          .resideInAPackage(ADAPTER_IN_WEB)
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage(PORT_IN, PORT_OUT)
+          .allowEmptyShould(true);
+
+  @ArchTest
+  static final ArchRule use_cases_should_end_with_UseCase =
+      classes()
+          .that()
+          .resideInAPackage(APPLICATION + "usecase")
+          .should()
+          .haveSimpleNameEndingWith("UseCase")
+          .allowEmptyShould(true);
 }

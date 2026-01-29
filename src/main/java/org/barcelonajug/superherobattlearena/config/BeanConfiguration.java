@@ -4,5 +4,5 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class BeanConfiguration {
-  // Services are now auto-wired using @Service / @Component
+  // Use cases are now auto-wired using @Service / @Component
 }

@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
@@ -12,7 +13,7 @@ import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.springframework.stereotype.Service;
 
 @Service
-public class BattleEngine {
+public class BattleEngineUseCase {
 
   private static final int MAX_TURNS = 50;
   private static final double DAMAGE_DEF_FACTOR = 0.6;
@@ -27,13 +28,12 @@ public class BattleEngine {
       RoundSpec roundSpec) {
     Random random = new Random(roundSeed + matchId.hashCode());
 
-    List<BattleHero> allHeroes = new ArrayList<>();
-    teamAHeroes.forEach(h -> allHeroes.add(new BattleHero(h, teamAId)));
-    teamBHeroes.forEach(h -> allHeroes.add(new BattleHero(h, teamBId)));
+    List<BattleHeroUseCase> allHeroes = new ArrayList<>();
+    teamAHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamAId)));
+    teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
 
     List<MatchEvent> events = new ArrayList<>();
-    java.util.concurrent.atomic.AtomicLong logicalTime =
-        new java.util.concurrent.atomic.AtomicLong(0);
+    java.util.concurrent.atomic.AtomicLong logicalTime = new java.util.concurrent.atomic.AtomicLong(0);
 
     events.add(
         new MatchEvent(
@@ -81,14 +81,14 @@ public class BattleEngine {
   }
 
   private UUID executeTurn(
-      List<BattleHero> allHeroes,
+      List<BattleHeroUseCase> allHeroes,
       UUID teamAId,
       UUID teamBId,
       RoundSpec roundSpec,
       Random random,
       List<MatchEvent> events,
       java.util.concurrent.atomic.AtomicLong logicalTime) {
-    for (BattleHero attacker : allHeroes) {
+    for (BattleHeroUseCase attacker : allHeroes) {
       if (!attacker.isAlive()) {
         continue;
       }
@@ -98,7 +98,7 @@ public class BattleEngine {
         return winnerId;
       }
 
-      BattleHero target = findTarget(attacker, allHeroes, teamAId, teamBId, random);
+      BattleHeroUseCase target = findTarget(attacker, allHeroes, teamAId, teamBId, random);
       if (target == null) {
         return attacker.teamId;
       }
@@ -109,8 +109,8 @@ public class BattleEngine {
   }
 
   private void performAttack(
-      BattleHero attacker,
-      BattleHero target,
+      BattleHeroUseCase attacker,
+      BattleHeroUseCase target,
       RoundSpec roundSpec,
       List<MatchEvent> events,
       java.util.concurrent.atomic.AtomicLong logicalTime) {
@@ -139,14 +139,14 @@ public class BattleEngine {
     }
   }
 
-  private void sortHeroesBySpeed(List<BattleHero> heroes) {
+  private void sortHeroesBySpeed(List<BattleHeroUseCase> heroes) {
     heroes.sort(
-        Comparator.comparingInt((BattleHero bh) -> bh.hero.powerstats().speed())
+        Comparator.comparingInt((BattleHeroUseCase bh) -> bh.hero.powerstats().speed())
             .reversed()
             .thenComparingInt(bh -> bh.hero.id()));
   }
 
-  private UUID checkWinCondition(List<BattleHero> allHeroes, UUID teamAId, UUID teamBId) {
+  private UUID checkWinCondition(List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
     boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
     boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
 
@@ -161,11 +161,15 @@ public class BattleEngine {
     return null; // Battle continues
   }
 
-  private BattleHero findTarget(
-      BattleHero attacker, List<BattleHero> allHeroes, UUID teamAId, UUID teamBId, Random random) {
+  private BattleHeroUseCase findTarget(
+      BattleHeroUseCase attacker,
+      List<BattleHeroUseCase> allHeroes,
+      UUID teamAId,
+      UUID teamBId,
+      Random random) {
     UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
-    List<BattleHero> targets =
-        allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive()).toList();
+    List<BattleHeroUseCase> targets = allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
+        .toList();
 
     if (targets.isEmpty()) {
       return null;
@@ -173,20 +177,10 @@ public class BattleEngine {
     return selectTarget(targets, random);
   }
 
-  private BattleHero selectTarget(List<BattleHero> targets, Random random) {
-    List<BattleHero> lowestHpTargets = new ArrayList<>();
-    int minHp = Integer.MAX_VALUE;
-
-    for (BattleHero hero : targets) {
-      if (hero.currentHp < minHp) {
-        minHp = hero.currentHp;
-        lowestHpTargets.clear();
-      }
-
-      if (hero.currentHp == minHp) {
-        lowestHpTargets.add(hero);
-      }
-    }
+  private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
+    // Find min HP
+    int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
+    List<BattleHeroUseCase> lowestHpTargets = targets.stream().filter(h -> h.currentHp == minHp).toList();
 
     if (lowestHpTargets.size() == 1) {
       return lowestHpTargets.get(0);
@@ -195,7 +189,8 @@ public class BattleEngine {
     return lowestHpTargets.get(random.nextInt(lowestHpTargets.size()));
   }
 
-  private int calculateDamage(BattleHero attacker, BattleHero target, RoundSpec roundSpec) {
+  private int calculateDamage(
+      BattleHeroUseCase attacker, BattleHeroUseCase target, RoundSpec roundSpec) {
     double multiplier = 1.0;
 
     // Apply Tag Modifiers
@@ -214,16 +209,18 @@ public class BattleEngine {
     return Math.max(1, rawDamage);
   }
 
-  private boolean isTeamWipedOut(List<BattleHero> allHeroes, UUID teamId) {
-    return allHeroes.stream().filter(h -> h.teamId.equals(teamId)).noneMatch(BattleHero::isAlive);
+  private boolean isTeamWipedOut(List<BattleHeroUseCase> allHeroes, UUID teamId) {
+    return allHeroes.stream()
+        .filter(h -> h.teamId.equals(teamId))
+        .noneMatch(BattleHeroUseCase::isAlive);
   }
 
-  private static class BattleHero {
+  private static class BattleHeroUseCase {
     Hero hero;
     UUID teamId;
     int currentHp;
 
-    public BattleHero(Hero hero, UUID teamId) {
+    public BattleHeroUseCase(Hero hero, UUID teamId) {
       this.hero = hero;
       this.teamId = teamId;
       this.currentHp = hero.powerstats().durability();

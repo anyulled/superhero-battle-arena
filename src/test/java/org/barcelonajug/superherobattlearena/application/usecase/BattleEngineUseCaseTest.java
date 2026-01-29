@@ -10,9 +10,9 @@ import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.junit.jupiter.api.Test;
 
-class BattleEngineTest {
+class BattleEngineUseCaseTest {
 
-  private final BattleEngine battleEngine = new BattleEngine();
+  private final BattleEngineUseCase battleEngineUseCase = new BattleEngineUseCase();
 
   @Test
   void shouldBeDeterministic() {
@@ -52,9 +52,9 @@ class BattleEngineTest {
     RoundSpec spec = new RoundSpec("Test", 1, 100, null, null, null, null, "Arena");
 
     SimulationResult result1 =
-        battleEngine.simulate(matchId, List.of(h1), List.of(h2), seed, teamA, teamB, spec);
+        battleEngineUseCase.simulate(matchId, List.of(h1), List.of(h2), seed, teamA, teamB, spec);
     SimulationResult result2 =
-        battleEngine.simulate(matchId, List.of(h1), List.of(h2), seed, teamA, teamB, spec);
+        battleEngineUseCase.simulate(matchId, List.of(h1), List.of(h2), seed, teamA, teamB, spec);
 
     assertThat(result1.events()).hasSameSizeAs(result2.events());
     assertThat(result1.winnerTeamId()).isEqualTo(result2.winnerTeamId());
@@ -106,7 +106,7 @@ class BattleEngineTest {
 
     // Team A has Slow, Team B has Fast.
     SimulationResult result =
-        battleEngine.simulate(matchId, List.of(h1), List.of(h2), 1L, teamA, teamB, spec);
+        battleEngineUseCase.simulate(matchId, List.of(h1), List.of(h2), 1L, teamA, teamB, spec);
 
     // Find first HIT event
     var firstHit = result.events().stream().filter(e -> "HIT".equals(e.type())).findFirst();
@@ -160,7 +160,7 @@ class BattleEngineTest {
     // Without modifier: 10 - 6 = 4.
 
     SimulationResult result =
-        battleEngine.simulate(matchId, List.of(h1), List.of(h2), 1L, teamA, teamB, spec);
+        battleEngineUseCase.simulate(matchId, List.of(h1), List.of(h2), 1L, teamA, teamB, spec);
 
     // Find first HIT from Pyro (Team A, ID 1)
     var hit =

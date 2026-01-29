@@ -23,14 +23,14 @@ import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class SubmissionValidatorTest {
+class SubmissionValidatorUseCaseTest {
 
-  private RosterService rosterService;
-  private SubmissionValidator validator;
+  private RosterUseCase rosterUseCase;
+  private SubmissionValidatorUseCase validator;
 
   @BeforeEach
   void setUp() {
-    rosterService = mock(RosterService.class);
+    rosterUseCase = mock(RosterUseCase.class);
 
     // Create validation rules
     List<ValidationRule> validationRules =
@@ -39,7 +39,7 @@ class SubmissionValidatorTest {
             new BannedTagValidationRule(),
             new RoleCompositionValidationRule());
 
-    validator = new SubmissionValidator(rosterService, validationRules);
+    validator = new SubmissionValidatorUseCase(rosterUseCase, validationRules);
 
     Hero h1 =
         new Hero(
@@ -86,7 +86,7 @@ class SubmissionValidatorTest {
 
     List<Hero> allHeroes = List.of(h1, h2, h3);
 
-    when(rosterService.getHeroes(anyList()))
+    when(rosterUseCase.getHeroes(anyList()))
         .thenAnswer(
             invocation -> {
               List<Integer> ids = invocation.getArgument(0);

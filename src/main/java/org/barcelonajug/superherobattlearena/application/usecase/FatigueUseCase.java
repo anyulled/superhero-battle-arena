@@ -11,11 +11,11 @@ import org.barcelonajug.superherobattlearena.domain.HeroUsage;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FatigueService {
+public class FatigueUseCase {
 
   private final HeroUsageRepositoryPort heroUsageRepository;
 
-  public FatigueService(HeroUsageRepositoryPort heroUsageRepository) {
+  public FatigueUseCase(HeroUsageRepositoryPort heroUsageRepository) {
     this.heroUsageRepository = heroUsageRepository;
   }
 

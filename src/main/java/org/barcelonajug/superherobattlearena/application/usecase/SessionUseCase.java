@@ -11,13 +11,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class SessionService {
+public class SessionUseCase {
 
-  private static final Logger log = LoggerFactory.getLogger(SessionService.class);
+  private static final Logger log = LoggerFactory.getLogger(SessionUseCase.class);
 
   private final SessionRepositoryPort sessionRepository;
 
-  public SessionService(SessionRepositoryPort sessionRepository) {
+  public SessionUseCase(SessionRepositoryPort sessionRepository) {
     this.sessionRepository = sessionRepository;
   }
 
@@ -49,5 +49,22 @@ public class SessionService {
         session -> log.debug("Found active session: {}", session.getSessionId()),
         () -> log.debug("No active session found"));
     return activeSession;
+  }
+
+  @Transactional(readOnly = true)
+  public java.util.List<Session> listSessions() {
+    return sessionRepository.findAll();
+  }
+
+  @Transactional
+  public Session startSession(UUID sessionId) {
+    UUID id = (sessionId != null) ? sessionId : UUID.randomUUID();
+    Session session = new Session(id, OffsetDateTime.now(), true);
+    return sessionRepository.save(session);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<Session> getSession(UUID sessionId) {
+    return sessionRepository.findById(sessionId);
   }
 }

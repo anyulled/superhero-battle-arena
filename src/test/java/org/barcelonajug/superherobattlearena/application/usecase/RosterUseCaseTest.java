@@ -11,15 +11,15 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class RosterServiceTest {
+class RosterUseCaseTest {
 
-  private RosterService rosterService;
+  private RosterUseCase rosterUseCase;
   private SuperheroRepositoryPort repository;
 
   @BeforeEach
   void setUp() {
     repository = mock(SuperheroRepositoryPort.class);
-    rosterService = new RosterService(repository);
+    rosterUseCase = new RosterUseCase(repository);
   }
 
   @Test
@@ -30,7 +30,7 @@ class RosterServiceTest {
                 new Hero(
                     1, "Test", "test", null, "Fighter", 10, "good", "Marvel", null, null, List.of(),
                     null)));
-    assertThat(rosterService.getAllHeroes()).isNotEmpty();
+    assertThat(rosterUseCase.getAllHeroes()).isNotEmpty();
   }
 
   @Test
@@ -51,7 +51,7 @@ class RosterServiceTest {
             null);
     when(repository.findById(1)).thenReturn(Optional.of(mockHero));
 
-    Optional<Hero> hero = rosterService.getHero(1);
+    Optional<Hero> hero = rosterUseCase.getHero(1);
     assertThat(hero).isPresent();
     assertThat(hero.get().name()).isEqualTo("A-Bomb");
     assertThat(hero.get().powerstats().durability()).isGreaterThan(0);
@@ -60,6 +60,6 @@ class RosterServiceTest {
   @Test
   void shouldReturnEmptyForUnknownId() {
     when(repository.findById(999)).thenReturn(Optional.empty());
-    assertThat(rosterService.getHero(999)).isEmpty();
+    assertThat(rosterUseCase.getHero(999)).isEmpty();
   }
 }

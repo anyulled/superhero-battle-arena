@@ -13,15 +13,15 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class FatigueServiceTest {
+class FatigueUseCaseTest {
 
   private HeroUsageRepositoryPort heroUsageRepository;
-  private FatigueService fatigueService;
+  private FatigueUseCase fatigueUseCase;
 
   @BeforeEach
   void setUp() {
     heroUsageRepository = mock(HeroUsageRepositoryPort.class);
-    fatigueService = new FatigueService(heroUsageRepository);
+    fatigueUseCase = new FatigueUseCase(heroUsageRepository);
   }
 
   @Test
@@ -45,7 +45,7 @@ class FatigueServiceTest {
     when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
         .thenReturn(Collections.emptyList());
 
-    Hero result = fatigueService.applyFatigue(teamId, hero, 1);
+    Hero result = fatigueUseCase.applyFatigue(teamId, hero, 1);
 
     assertThat(result.powerstats().durability()).isEqualTo(100);
     assertThat(result.powerstats().strength()).isEqualTo(10);

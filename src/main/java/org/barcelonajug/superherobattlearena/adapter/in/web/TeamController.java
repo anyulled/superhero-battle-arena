@@ -1,11 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
-import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.usecase.RosterService;
-import org.barcelonajug.superherobattlearena.application.usecase.SessionService;
+import org.barcelonajug.superherobattlearena.application.usecase.RosterUseCase;
+import org.barcelonajug.superherobattlearena.application.usecase.TeamUseCase;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.springframework.http.ResponseEntity;
@@ -19,34 +17,22 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/teams")
 public class TeamController {
 
-  private final TeamRepositoryPort teamRepository;
-  private final RosterService rosterService;
-  private final SessionService sessionService;
+  private final TeamUseCase teamUseCase;
+  private final RosterUseCase rosterUseCase;
 
-  public TeamController(
-      TeamRepositoryPort teamRepository,
-      RosterService rosterService,
-      SessionService sessionService) {
-    this.teamRepository = teamRepository;
-    this.rosterService = rosterService;
-    this.sessionService = sessionService;
+  public TeamController(TeamUseCase teamUseCase, RosterUseCase rosterUseCase) {
+    this.teamUseCase = teamUseCase;
+    this.rosterUseCase = rosterUseCase;
   }
 
   @GetMapping("/heroes")
   public List<Hero> getHeroes() {
-    return rosterService.getAllHeroes();
+    return rosterUseCase.getAllHeroes();
   }
 
   @GetMapping
   public ResponseEntity<List<Team>> getTeams(@RequestParam(required = false) UUID sessionId) {
-    if (sessionId != null) {
-      return ResponseEntity.ok(teamRepository.findBySessionId(sessionId));
-    }
-
-    return sessionService
-        .getActiveSession()
-        .map(session -> ResponseEntity.ok(teamRepository.findBySessionId(session.getSessionId())))
-        .orElse(ResponseEntity.ok(List.of()));
+    return ResponseEntity.ok(teamUseCase.getTeams(sessionId));
   }
 
   @PostMapping("/register")
@@ -54,22 +40,6 @@ public class TeamController {
       @RequestParam String name,
       @RequestParam List<String> members,
       @RequestParam(required = false) UUID sessionId) {
-    if (teamRepository.existsByName(name)) {
-      throw new IllegalArgumentException("Team name '" + name + "' already exists");
-    }
-
-    UUID targetSessionId = sessionId;
-    if (targetSessionId == null) {
-      var activeSession = sessionService.getActiveSession();
-      if (activeSession.isEmpty()) {
-        throw new IllegalStateException("No active session found");
-      }
-      targetSessionId = activeSession.get().getSessionId();
-    }
-
-    Team team = new Team(UUID.randomUUID(), targetSessionId, name, OffsetDateTime.now(), members);
-    teamRepository.save(team);
-
-    return ResponseEntity.ok(team.teamId());
+    return ResponseEntity.ok(teamUseCase.registerTeam(name, members, sessionId));
   }
 }

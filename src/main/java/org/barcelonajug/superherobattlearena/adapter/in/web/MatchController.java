@@ -1,27 +1,12 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.usecase.BattleEngine;
-import org.barcelonajug.superherobattlearena.application.usecase.FatigueService;
-import org.barcelonajug.superherobattlearena.application.usecase.MatchCreationService;
-import org.barcelonajug.superherobattlearena.application.usecase.RosterService;
-import org.barcelonajug.superherobattlearena.domain.Hero;
+
+import org.barcelonajug.superherobattlearena.application.usecase.MatchUseCase;
 import org.barcelonajug.superherobattlearena.domain.Match;
-import org.barcelonajug.superherobattlearena.domain.MatchEvent;
-import org.barcelonajug.superherobattlearena.domain.MatchStatus;
-import org.barcelonajug.superherobattlearena.domain.Round;
-import org.barcelonajug.superherobattlearena.domain.SimulationResult;
-import org.barcelonajug.superherobattlearena.domain.Submission;
-import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
-import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,40 +14,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/matches")
 public class MatchController {
 
-  private final MatchRepositoryPort matchRepository;
-  private final MatchEventRepositoryPort matchEventRepository;
-  private final SubmissionRepositoryPort submissionRepository;
-  private final RoundRepositoryPort roundRepository;
-  private final BattleEngine battleEngine;
-  private final RosterService rosterService;
-  private final FatigueService fatigueService;
-  private final MatchCreationService matchCreationService;
+  private final MatchUseCase matchUseCase;
 
   // A simple executor for async simulation (demo purpose)
   private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-  public MatchController(
-      MatchRepositoryPort matchRepository,
-      MatchEventRepositoryPort matchEventRepository,
-      SubmissionRepositoryPort submissionRepository,
-      RoundRepositoryPort roundRepository,
-      BattleEngine battleEngine,
-      RosterService rosterService,
-      FatigueService fatigueService,
-      MatchCreationService matchCreationService) {
-    this.matchRepository = matchRepository;
-    this.matchEventRepository = matchEventRepository;
-    this.submissionRepository = submissionRepository;
-    this.roundRepository = roundRepository;
-    this.battleEngine = battleEngine;
-    this.rosterService = rosterService;
-    this.fatigueService = fatigueService;
-    this.matchCreationService = matchCreationService;
+  public MatchController(MatchUseCase matchUseCase) {
+    this.matchUseCase = matchUseCase;
   }
 
   @PostMapping("/create")
@@ -71,142 +35,48 @@ public class MatchController {
       @RequestParam UUID teamB,
       @RequestParam(defaultValue = "1") Integer roundNo,
       @RequestParam(required = false) UUID sessionId) {
-    Match match = new Match();
-    match.setMatchId(UUID.randomUUID());
-    match.setSessionId(sessionId);
-    match.setTeamA(teamA);
-    match.setTeamB(teamB);
-    match.setRoundNo(roundNo);
-    match.setStatus(MatchStatus.PENDING);
-    matchRepository.save(match);
-    return ResponseEntity.ok(match.getMatchId());
+    return ResponseEntity.ok(matchUseCase.createMatch(teamA, teamB, roundNo, sessionId));
   }
 
   @PostMapping("/auto-match")
   public ResponseEntity<List<UUID>> createMatchesForRound(
       @RequestParam(required = false) UUID sessionId, @RequestParam Integer roundNo) {
-    List<UUID> matchIds = matchCreationService.autoMatch(sessionId, roundNo);
-    return ResponseEntity.ok(matchIds);
+    return ResponseEntity.ok(matchUseCase.autoMatch(sessionId, roundNo));
   }
 
   @PostMapping("/{matchId}/run")
   public ResponseEntity<String> runMatch(@PathVariable UUID matchId) {
-    Match match =
-        matchRepository
-            .findById(matchId)
-            .orElseThrow(() -> new IllegalArgumentException("Match not found"));
-
-    if (match.getStatus() != MatchStatus.PENDING) {
-      throw new IllegalStateException("Match already run or running");
-    }
-
-    // 1. Get Submissions
-    Optional<Submission> subA =
-        submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-    Optional<Submission> subB =
-        submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
-
-    if (subA.isEmpty() || subB.isEmpty()) {
-      throw new IllegalStateException("Submissions missing for one or both teams");
-    }
-
-    // 2. Build Teams (Apply Fatigue)
-    List<Hero> teamAHeroes =
-        buildBattleTeam(match.getTeamA(), subA.get().getSubmissionJson(), match.getRoundNo());
-    List<Hero> teamBHeroes =
-        buildBattleTeam(match.getTeamB(), subB.get().getSubmissionJson(), match.getRoundNo());
-
-    // 3. Get Round context
-    Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
-
-    // 4. Simulate
-    SimulationResult result =
-        battleEngine.simulate(
-            matchId,
-            teamAHeroes,
-            teamBHeroes,
-            round.getSeed(),
-            match.getTeamA(),
-            match.getTeamB(),
-            round.getSpecJson());
-
-    // 5. Persist Result
-    match.setStatus(MatchStatus.COMPLETED);
-    match.setWinnerTeam(result.winnerTeamId());
-    match.setResultJson(
-        new MatchResult(
-            result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW",
-            result.totalTurns(),
-            0));
-    matchRepository.save(match);
-
-    // 6. Persist Events
-    int seq = 1;
-    for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
-      MatchEvent matchEvent = new MatchEvent(matchId, seq++, evt);
-      matchEventRepository.save(matchEvent);
-    }
-
-    // 7. Update Hero Usage (for Fatigue next round)
-    updateHeroUsage(match.getTeamA(), match.getRoundNo(), subA.get().getSubmissionJson().heroIds());
-    updateHeroUsage(match.getTeamB(), match.getRoundNo(), subB.get().getSubmissionJson().heroIds());
-
-    return ResponseEntity.ok("Match completed. Winner: " + result.winnerTeamId());
-  }
-
-  private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
-    List<Hero> baseHeroes =
-        submission.heroIds().stream()
-            .map(
-                heroId ->
-                    rosterService
-                        .getHero(heroId)
-                        .orElseThrow(
-                            () ->
-                                new IllegalArgumentException(
-                                    "Hero not found in roster: " + heroId)))
-            .toList();
-    return fatigueService.applyFatigue(teamId, baseHeroes, roundNo);
-  }
-
-  private void updateHeroUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
-    fatigueService.recordUsage(teamId, roundNo, heroIds);
+    return ResponseEntity.ok("Match completed. Winner: " + matchUseCase.runMatch(matchId));
   }
 
   @GetMapping("/{matchId}/events")
   public List<org.barcelonajug.superherobattlearena.domain.json.MatchEvent> getEvents(
       @PathVariable UUID matchId) {
-    return matchEventRepository.findByMatchId(matchId).stream().map(MatchEvent::eventJson).toList();
+    return matchUseCase.getMatchEvents(matchId);
   }
 
   @GetMapping
   public ResponseEntity<List<Match>> getAllMatches() {
-    return ResponseEntity.ok(matchRepository.findAll());
+    return ResponseEntity.ok(matchUseCase.getAllMatches());
   }
 
   @GetMapping("/{matchId}")
   public ResponseEntity<Match> getMatch(@PathVariable UUID matchId) {
-    return matchRepository
-        .findById(matchId)
+    return matchUseCase
+        .getMatch(matchId)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
 
   @GetMapping("/{matchId}/events/stream")
-  public org.springframework.web.servlet.mvc.method.annotation.SseEmitter streamEvents(
-      @PathVariable UUID matchId) {
-    org.springframework.web.servlet.mvc.method.annotation.SseEmitter emitter =
-        new org.springframework.web.servlet.mvc.method.annotation.SseEmitter(
-            600000L); // 10 min timeout
+  public SseEmitter streamEvents(@PathVariable UUID matchId) {
+    SseEmitter emitter = new SseEmitter(600000L); // 10 min timeout
     executor.submit(
         () -> {
           try {
-            // If match is still pending or running, we might need to wait or poll.
-            // But for now, we assume we stream what is available or replay.
-            // In a real scenario, this would subscribe to a live event bus.
-            // Here we just dump existing events with a slight delay to simulate replay.
-            List<MatchEvent> events = matchEventRepository.findByMatchId(matchId);
-            for (MatchEvent event : events) {
+            List<org.barcelonajug.superherobattlearena.domain.MatchEvent> events = matchUseCase
+                .getMatchEventEntities(matchId);
+            for (org.barcelonajug.superherobattlearena.domain.MatchEvent event : events) {
               emitter.send(event.eventJson());
               Thread.sleep(500);
             }

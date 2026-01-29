@@ -10,11 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
-public class RosterService {
+public class RosterUseCase {
 
   private final SuperheroRepositoryPort superheroRepository;
 
-  public RosterService(SuperheroRepositoryPort superheroRepository) {
+  public RosterUseCase(SuperheroRepositoryPort superheroRepository) {
     this.superheroRepository = superheroRepository;
   }
 

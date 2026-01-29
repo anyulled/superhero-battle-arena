@@ -1,6 +1,6 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import org.barcelonajug.superherobattlearena.application.usecase.SessionService;
+import org.barcelonajug.superherobattlearena.application.usecase.SessionUseCase;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,20 +12,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/sessions")
 public class SessionController {
 
-  private final SessionService sessionService;
+  private final SessionUseCase sessionUseCase;
 
-  public SessionController(SessionService sessionService) {
-    this.sessionService = sessionService;
+  public SessionController(SessionUseCase sessionUseCase) {
+    this.sessionUseCase = sessionUseCase;
   }
 
   @PostMapping
   public ResponseEntity<Session> createSession() {
-    return ResponseEntity.ok(sessionService.createSession());
+    return ResponseEntity.ok(sessionUseCase.createSession());
   }
 
   @GetMapping("/active")
   public ResponseEntity<Session> getActiveSession() {
-    return sessionService
+    return sessionUseCase
         .getActiveSession()
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());

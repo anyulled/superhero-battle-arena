@@ -14,13 +14,14 @@ import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.springframework.stereotype.Component;
 
 @Component
-public class SubmissionValidator {
+public class SubmissionValidatorUseCase {
 
-  private final RosterService rosterService;
+  private final RosterUseCase rosterUseCase;
   private final List<ValidationRule> validationRules;
 
-  public SubmissionValidator(RosterService rosterService, List<ValidationRule> validationRules) {
-    this.rosterService = rosterService;
+  public SubmissionValidatorUseCase(
+      RosterUseCase rosterUseCase, List<ValidationRule> validationRules) {
+    this.rosterUseCase = rosterUseCase;
     this.validationRules = validationRules;
   }
 
@@ -50,7 +51,7 @@ public class SubmissionValidator {
   }
 
   private List<Hero> resolveHeroes(List<Integer> heroIds) {
-    List<Hero> heroes = rosterService.getHeroes(heroIds);
+    List<Hero> heroes = rosterUseCase.getHeroes(heroIds);
     if (heroes.size() != heroIds.size()) {
       Set<Integer> foundIds = heroes.stream().map(Hero::id).collect(Collectors.toSet());
       for (Integer id : heroIds) {
