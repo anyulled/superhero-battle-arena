@@ -2,6 +2,8 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Map;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.BannedTagValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.CostValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.RoleCompositionValidationRule;
+import org.barcelonajug.superherobattlearena.application.usecase.validation.ValidationRule;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.exception.BannedTagException;
 import org.barcelonajug.superherobattlearena.domain.exception.BudgetExceededException;
@@ -20,7 +23,6 @@ import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 class SubmissionValidatorTest {
 
@@ -29,10 +31,10 @@ class SubmissionValidatorTest {
 
         @BeforeEach
         void setUp() {
-                rosterService = Mockito.mock(RosterService.class);
+                rosterService = mock(RosterService.class);
 
                 // Create validation rules
-                List<org.barcelonajug.superherobattlearena.application.usecase.validation.ValidationRule> validationRules = List
+                List<ValidationRule> validationRules = List
                                 .of(
                                                 new CostValidationRule(),
                                                 new BannedTagValidationRule(),
@@ -52,7 +54,7 @@ class SubmissionValidatorTest {
 
                 List<Hero> allHeroes = List.of(h1, h2, h3);
 
-                when(rosterService.getHeroes(Mockito.anyList())).thenAnswer(invocation -> {
+                when(rosterService.getHeroes(anyList())).thenAnswer(invocation -> {
                         List<Integer> ids = invocation.getArgument(0);
                         return allHeroes.stream()
                                         .filter(h -> ids.contains(h.id()))

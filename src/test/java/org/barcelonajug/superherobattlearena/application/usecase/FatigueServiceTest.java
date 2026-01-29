@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -35,7 +36,7 @@ class FatigueServiceTest {
 
         Hero result = fatigueService.applyFatigue(teamId, hero, 1);
 
-        org.assertj.core.api.Assertions.assertThat(result.powerstats().durability()).isEqualTo(100);
-        org.assertj.core.api.Assertions.assertThat(result.powerstats().strength()).isEqualTo(10);
+        assertThat(result.powerstats().durability()).isEqualTo(100);
+        assertThat(result.powerstats().strength()).isEqualTo(10);
     }
 }

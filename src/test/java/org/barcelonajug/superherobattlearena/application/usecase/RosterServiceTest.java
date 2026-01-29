@@ -1,15 +1,16 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
-import java.util.Optional;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
+import java.util.Optional;
+
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 class RosterServiceTest {
 
@@ -18,7 +19,7 @@ class RosterServiceTest {
 
     @BeforeEach
     void setUp() {
-        repository = Mockito.mock(SuperheroRepositoryPort.class);
+        repository = mock(SuperheroRepositoryPort.class);
         rosterService = new RosterService(repository);
     }
 

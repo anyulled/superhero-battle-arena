@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+          "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+          "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="error"/>
+    <property name="fileExtensions" value="java, xml, properties"/>
+
+    <module name="TreeWalker">
+        <!-- Enforce static imports for common test libraries in test classes -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="requireStaticImportMockito"/>
+            <property name="format" value="^(?!\s*import).*\bMockito\.(mock|when|verify|any|eq|times|never|atLeast|atMost)"/>
+            <property name="message" value="Use static imports for Mockito methods instead of calling Mockito explicitly."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="requireStaticImportAssertions"/>
+            <property name="format" value="^(?!\s*import).*\bAssertions\.(assertThat|assertThatThrownBy|assertThatCode|assertEquals|assertTrue|assertFalse|assertNotNull|assertThrows)"/>
+            <property name="message" value="Use static imports for Assertions methods instead of calling Assertions explicitly."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <module name="AvoidStarImport">
+            <property name="allowClassImports" value="false"/>
+            <property name="allowStaticMemberImports" value="true"/>
+        </module>
+        
+        <module name="UnusedImports"/>
+    </module>
+</module>
