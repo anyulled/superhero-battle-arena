@@ -147,11 +147,12 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.13.0</version>
 				<configuration>
-					<release>25</release>
+					<release>21</release>
 					<fork>true</fork>
 					<compilerArgs>
 						<arg>-XDcompilePolicy=simple</arg>
-						<!-- ErrorProne is currently unstable on JDK 25. Enable at your own risk. -->
+						<!-- ErrorProne and Spotless are currently incompatible with JDK 25. 
+						     Enable them once compatible versions are available. -->
 						<!-- <arg>-Xplugin:ErrorProne</arg> -->
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
@@ -185,15 +186,14 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+			<!-- Spotless is currently incompatible with JDK 25. Disabling until a fix is available.
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
 				<version>2.44.2</version>
 				<configuration>
 					<java>
-						<!-- Google Java Format 1.25.2+ is required for JDK 21+, but may have issues on JDK 25 -->
 						<googleJavaFormat/>
-						<removeUnusedImports/>
 					</java>
 				</configuration>
 				<executions>
@@ -205,6 +205,7 @@
 					</execution>
 				</executions>
 			</plugin>
+			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>

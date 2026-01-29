@@ -1,13 +1,15 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Objects;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.UUID;
 
 @Entity
 @Table(name = "hero_usage")
@@ -36,6 +38,23 @@ public class HeroUsageEntity {
         private Integer roundNo;
 
         public HeroUsageId() {
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            HeroUsageId that = (HeroUsageId) o;
+            return Objects.equals(teamId, that.teamId)
+                    && Objects.equals(heroId, that.heroId)
+                    && Objects.equals(roundNo, that.roundNo);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(teamId, heroId, roundNo);
         }
     }
 
