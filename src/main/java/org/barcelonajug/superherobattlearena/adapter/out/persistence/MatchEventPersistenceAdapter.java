@@ -43,8 +43,7 @@ public final class MatchEventPersistenceAdapter implements MatchEventRepositoryP
 
   @Override
   public List<MatchEvent> findByMatchId(final UUID matchId) {
-    return repository.findByMatchIdOrderBySeqAsc(matchId).stream()
-        .map(mapper::toDomain)
-        .toList();
+    var entities = repository.findByMatchIdOrderBySeqAsc(matchId);
+    return entities.stream().map(mapper::toDomain).toList();
   }
 }
