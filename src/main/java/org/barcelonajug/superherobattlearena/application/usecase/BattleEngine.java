@@ -43,6 +43,7 @@ public class BattleEngine {
     UUID winnerId = null;
 
     sortHeroesBySpeed(allHeroes);
+    allHeroes = List.copyOf(allHeroes);
 
     while (turn < MAX_TURNS && winnerId == null) {
       turn++;
