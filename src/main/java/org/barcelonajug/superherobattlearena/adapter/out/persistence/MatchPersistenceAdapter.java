@@ -27,6 +27,11 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   }
 
   @Override
+  public List<Match> saveAll(List<Match> matches) {
+    return mapper.toDomain(repository.saveAll(mapper.toEntity(matches)));
+  }
+
+  @Override
   public Optional<Match> findById(UUID matchId) {
     return repository.findById(matchId).map(mapper::toDomain);
   }
