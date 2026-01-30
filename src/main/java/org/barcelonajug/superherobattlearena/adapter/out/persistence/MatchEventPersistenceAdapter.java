@@ -36,9 +36,9 @@ public final class MatchEventPersistenceAdapter implements MatchEventRepositoryP
   }
 
   @Override
-  public void saveAll(final List<MatchEvent> matchEvents) {
+  public List<MatchEvent> saveAll(final List<MatchEvent> matchEvents) {
     var entities = matchEvents.stream().map(mapper::toEntity).toList();
-    repository.saveAll(entities);
+    return repository.saveAll(entities).stream().map(mapper::toDomain).toList();
   }
 
   @Override
