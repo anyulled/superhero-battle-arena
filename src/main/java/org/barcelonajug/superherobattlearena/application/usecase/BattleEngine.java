@@ -180,8 +180,9 @@ public class BattleEngine {
       if (hero.currentHp < minHp) {
         minHp = hero.currentHp;
         lowestHpTargets.clear();
-        lowestHpTargets.add(hero);
-      } else if (hero.currentHp == minHp) {
+      }
+
+      if (hero.currentHp == minHp) {
         lowestHpTargets.add(hero);
       }
     }
