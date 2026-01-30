@@ -2,6 +2,9 @@
 
 ![Superhero Battle Arena Hero Image](src/main/resources/static/images/hero-image.png)
 
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/anyulled/superhero-battle-arena)
+
 A Spring Boot application built with Hexagonal Architecture that simulates battles between teams of superheroes.
 
 ## Features
