@@ -133,12 +133,7 @@ public class AdminController {
       @RequestParam final Integer roundNo, @RequestParam(required = false) final UUID sessionId) {
 
     // Find all pending matches for this round
-    List<Match> pendingMatches =
-        matchRepository.findAll().stream()
-            .filter(m -> m.getRoundNo().equals(roundNo))
-            .filter(m -> m.getStatus() == MatchStatus.PENDING)
-            .filter(m -> sessionId == null || sessionId.equals(m.getSessionId()))
-            .toList();
+    List<Match> pendingMatches = matchRepository.findPendingMatches(roundNo, sessionId);
 
     List<UUID> matchIds = new ArrayList<>();
     Map<UUID, UUID> winners = new HashMap<>();

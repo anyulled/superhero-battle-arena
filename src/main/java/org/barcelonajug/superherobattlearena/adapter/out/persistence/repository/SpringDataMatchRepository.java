@@ -10,4 +10,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, UUID> {
   List<MatchEntity> findByStatus(MatchStatus status);
+
+  List<MatchEntity> findByRoundNoAndStatus(Integer roundNo, MatchStatus status);
+
+  List<MatchEntity> findByRoundNoAndStatusAndSessionId(
+      Integer roundNo, MatchStatus status, UUID sessionId);
 }
