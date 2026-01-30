@@ -1,6 +1,5 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -156,15 +155,17 @@ public class MatchController {
   }
 
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
-    List<Hero> baseHeroes = new ArrayList<>();
-    for (Integer heroId : submission.heroIds()) {
-      Hero baseHero =
-          rosterService
-              .getHero(heroId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
-      baseHeroes.add(baseHero);
-    }
+    List<Hero> baseHeroes =
+        submission.heroIds().stream()
+            .map(
+                heroId ->
+                    rosterService
+                        .getHero(heroId)
+                        .orElseThrow(
+                            () ->
+                                new IllegalArgumentException(
+                                    "Hero not found in roster: " + heroId)))
+            .toList();
     return fatigueService.applyFatigue(teamId, baseHeroes, roundNo);
   }
 
