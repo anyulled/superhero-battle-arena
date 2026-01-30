@@ -40,4 +40,19 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   public List<Match> findAll() {
     return repository.findAll().stream().map(mapper::toDomain).toList();
   }
+
+  @Override
+  public List<Match> findPendingMatches(Integer roundNo, UUID sessionId) {
+    if (sessionId == null) {
+      return repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING).stream()
+          .map(mapper::toDomain)
+          .toList();
+    } else {
+      return repository
+          .findByRoundNoAndStatusAndSessionId(roundNo, MatchStatus.PENDING, sessionId)
+          .stream()
+          .map(mapper::toDomain)
+          .toList();
+    }
+  }
 }

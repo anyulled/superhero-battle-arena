@@ -14,4 +14,6 @@ public interface MatchRepositoryPort {
   List<Match> findByStatus(MatchStatus status);
 
   List<Match> findAll();
+
+  List<Match> findPendingMatches(Integer roundNo, UUID sessionId);
 }
