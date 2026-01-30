@@ -26,6 +26,11 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
   }
 
   @Override
+  public void saveAll(final List<HeroUsage> heroUsages) {
+    repository.saveAll(heroUsages.stream().map(mapper::toEntity).toList());
+  }
+
+  @Override
   public List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
     return repository.findByTeamIdAndRoundNo(teamId, roundNo).stream()
         .map(mapper::toDomain)
