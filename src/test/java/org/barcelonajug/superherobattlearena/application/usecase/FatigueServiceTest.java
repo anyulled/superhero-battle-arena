@@ -2,6 +2,7 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,7 +42,8 @@ class FatigueServiceTest {
             Collections.emptyList(),
             new Hero.Images(null, null, null, null));
 
-    when(heroUsageRepository.findByTeamId(any())).thenReturn(Collections.emptyList());
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
+        .thenReturn(Collections.emptyList());
 
     Hero result = fatigueService.applyFatigue(teamId, hero, 1);
 

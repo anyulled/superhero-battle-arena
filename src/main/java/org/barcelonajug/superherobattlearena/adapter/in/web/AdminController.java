@@ -222,16 +222,17 @@ public class AdminController {
   }
 
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
-    List<Hero> battleHeroes = new ArrayList<>();
-    for (Integer heroId : submission.heroIds()) {
-      Hero baseHero =
-          rosterService
-              .getHero(heroId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
-      Hero fatiguedHero = fatigueService.applyFatigue(teamId, baseHero, roundNo);
-      battleHeroes.add(fatiguedHero);
-    }
-    return battleHeroes;
+    List<Hero> baseHeroes =
+        submission.heroIds().stream()
+            .map(
+                heroId ->
+                    rosterService
+                        .getHero(heroId)
+                        .orElseThrow(
+                            () ->
+                                new IllegalArgumentException(
+                                    "Hero not found in roster: " + heroId)))
+            .toList();
+    return fatigueService.applyFatigue(teamId, baseHeroes, roundNo);
   }
 }

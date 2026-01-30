@@ -19,9 +19,20 @@ public class FatigueService {
     this.heroUsageRepository = heroUsageRepository;
   }
 
-  public Hero applyFatigue(UUID teamId, Hero hero, int currentRoundNo) {
-    List<HeroUsage> usageHistory = heroUsageRepository.findByTeamId(teamId);
+  public List<Hero> applyFatigue(UUID teamId, List<Hero> heroes, int currentRoundNo) {
+    List<HeroUsage> previousRoundUsage =
+        heroUsageRepository.findByTeamIdAndRoundNo(teamId, currentRoundNo - 1);
+    return heroes.stream()
+        .map(hero -> applyFatigueWithHistory(hero, previousRoundUsage, currentRoundNo))
+        .toList();
+  }
 
+  public Hero applyFatigue(UUID teamId, Hero hero, int currentRoundNo) {
+    return applyFatigue(teamId, List.of(hero), currentRoundNo).get(0);
+  }
+
+  private Hero applyFatigueWithHistory(
+      Hero hero, List<HeroUsage> usageHistory, int currentRoundNo) {
     // Find current streak by looking at the previous round's usage
     int currentStreak = calculateStreak(usageHistory, hero.id(), currentRoundNo);
 
