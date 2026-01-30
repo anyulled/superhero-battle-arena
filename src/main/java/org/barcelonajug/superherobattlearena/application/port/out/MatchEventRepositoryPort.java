@@ -17,6 +17,7 @@ public interface MatchEventRepositoryPort {
    * Save a list of match events.
    *
    * @param matchEvents the list of events to save
+   * @return the list of saved events
    */
   List<MatchEvent> saveAll(List<MatchEvent> matchEvents);
 

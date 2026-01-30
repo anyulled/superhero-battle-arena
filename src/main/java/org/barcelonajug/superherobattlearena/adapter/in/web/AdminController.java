@@ -189,11 +189,11 @@ public class AdminController {
         matchRepository.save(match);
 
         // Persist events
-        int seq = 1;
-        List<MatchEvent> matchEvents = new ArrayList<>();
-        for (var evt : result.events()) {
-          matchEvents.add(new MatchEvent(match.getMatchId(), seq++, evt));
-        }
+        var events = result.events();
+        List<MatchEvent> matchEvents =
+            java.util.stream.IntStream.range(0, events.size())
+                .mapToObj(i -> new MatchEvent(match.getMatchId(), i + 1, events.get(i)))
+                .toList();
         matchEventRepository.saveAll(matchEvents);
 
         // Update hero usage
