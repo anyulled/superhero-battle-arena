@@ -27,6 +27,11 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   }
 
   @Override
+  public List<Match> saveAll(List<Match> matches) {
+    return mapper.toDomain(repository.saveAll(mapper.toEntity(matches)));
+  }
+
+  @Override
   public Optional<Match> findById(UUID matchId) {
     return repository.findById(matchId).map(mapper::toDomain);
   }
@@ -39,5 +44,14 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   @Override
   public List<Match> findAll() {
     return repository.findAll().stream().map(mapper::toDomain).toList();
+  }
+
+  @Override
+  public List<Match> findPendingMatches(Integer roundNo, UUID sessionId) {
+    return (sessionId == null
+            ? repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING)
+            : repository.findByRoundNoAndStatusAndSessionId(
+                roundNo, MatchStatus.PENDING, sessionId))
+        .stream().map(mapper::toDomain).toList();
   }
 }

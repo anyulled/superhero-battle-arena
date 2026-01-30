@@ -8,25 +8,42 @@ import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepo
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.springframework.stereotype.Component;
 
+/** Persistence adapter for match events. */
 @Component
-public class MatchEventPersistenceAdapter implements MatchEventRepositoryPort {
+public final class MatchEventPersistenceAdapter implements MatchEventRepositoryPort {
 
+  /** The repository. */
   private final SpringDataMatchEventRepository repository;
+
+  /** The mapper. */
   private final MatchEventMapper mapper;
 
+  /**
+   * Constructor.
+   *
+   * @param repo the repository
+   * @param map the mapper
+   */
   public MatchEventPersistenceAdapter(
-      SpringDataMatchEventRepository repository, MatchEventMapper mapper) {
-    this.repository = repository;
-    this.mapper = mapper;
+      final SpringDataMatchEventRepository repo, final MatchEventMapper map) {
+    this.repository = repo;
+    this.mapper = map;
   }
 
   @Override
-  public MatchEvent save(MatchEvent matchEvent) {
+  public MatchEvent save(final MatchEvent matchEvent) {
     return mapper.toDomain(repository.save(mapper.toEntity(matchEvent)));
   }
 
   @Override
-  public List<MatchEvent> findByMatchId(UUID matchId) {
-    return repository.findByMatchIdOrderBySeqAsc(matchId).stream().map(mapper::toDomain).toList();
+  public List<MatchEvent> saveAll(final List<MatchEvent> matchEvents) {
+    var entities = matchEvents.stream().map(mapper::toEntity).toList();
+    return repository.saveAll(entities).stream().map(mapper::toDomain).toList();
+  }
+
+  @Override
+  public List<MatchEvent> findByMatchId(final UUID matchId) {
+    var entities = repository.findByMatchIdOrderBySeqAsc(matchId);
+    return entities.stream().map(mapper::toDomain).toList();
   }
 }

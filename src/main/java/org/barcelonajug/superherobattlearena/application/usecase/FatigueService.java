@@ -2,7 +2,9 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
@@ -77,16 +79,24 @@ public class FatigueService {
   }
 
   public void recordUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
-    List<HeroUsage> previousRoundUsage =
+    List<HeroUsage> previousRoundHistory =
         heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
 
-    for (Integer heroId : heroIds) {
-      int previousStreak = calculateStreak(previousRoundUsage, heroId, roundNo);
-      int newStreak = previousStreak + 1;
-      BigDecimal multiplier = calculateMultiplier(newStreak);
+    Map<Integer, Integer> heroIdToStreakMap =
+        previousRoundHistory.stream()
+            .collect(Collectors.toMap(HeroUsage::heroId, HeroUsage::streak));
 
-      HeroUsage usage = new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
-      heroUsageRepository.save(usage);
-    }
+    List<HeroUsage> usages =
+        heroIds.stream()
+            .map(
+                heroId -> {
+                  int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
+                  int newStreak = previousStreak + 1;
+                  BigDecimal multiplier = calculateMultiplier(newStreak);
+                  return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+                })
+            .toList();
+
+    heroUsageRepository.saveAll(usages);
   }
 }
