@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper;
 
+import java.util.List;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.MatchEntity;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.mapstruct.Mapper;
@@ -10,4 +11,8 @@ public interface MatchMapper {
   Match toDomain(MatchEntity entity);
 
   MatchEntity toEntity(Match domain);
+
+  List<Match> toDomain(List<MatchEntity> entities);
+
+  List<MatchEntity> toEntity(List<Match> domains);
 }

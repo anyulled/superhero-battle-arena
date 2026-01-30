@@ -24,14 +24,14 @@ public class MatchCreationService {
 
   public List<UUID> autoMatch(UUID sessionId, Integer roundNo) {
     List<Submission> submissions = submissionRepository.findByRoundNo(roundNo);
-    List<UUID> matchIds = new ArrayList<>();
+    List<Match> matches = new ArrayList<>();
 
     // Simple pairing logic: pair adjacent submissions
     for (int i = 0; i < submissions.size() - 1; i += 2) {
       Submission subA = submissions.get(i);
       Submission subB = submissions.get(i + 1);
 
-      Match match =
+      matches.add(
           Match.builder()
               .matchId(UUID.randomUUID())
               .sessionId(sessionId)
@@ -39,12 +39,11 @@ public class MatchCreationService {
               .teamB(subB.getTeamId())
               .roundNo(roundNo)
               .status(MatchStatus.PENDING)
-              .build();
-
-      matchRepository.save(match);
-      matchIds.add(match.getMatchId());
+              .build());
     }
 
-    return matchIds;
+    matchRepository.saveAll(matches);
+
+    return matches.stream().map(Match::getMatchId).toList();
   }
 }

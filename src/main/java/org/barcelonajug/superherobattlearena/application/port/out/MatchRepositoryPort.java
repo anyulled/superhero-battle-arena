@@ -9,6 +9,8 @@ import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 public interface MatchRepositoryPort {
   Match save(Match match);
 
+  List<Match> saveAll(List<Match> matches);
+
   Optional<Match> findById(UUID matchId);
 
   List<Match> findByStatus(MatchStatus status);
