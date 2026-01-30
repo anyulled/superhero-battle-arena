@@ -42,6 +42,8 @@ public class BattleEngine {
     int turn = 0;
     UUID winnerId = null;
 
+    sortHeroesBySpeed(allHeroes);
+
     while (turn < MAX_TURNS && winnerId == null) {
       turn++;
       events.add(
@@ -53,7 +55,6 @@ public class BattleEngine {
               null,
               turn));
 
-      sortHeroesBySpeed(allHeroes);
       winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
 
       if (winnerId == null) {
