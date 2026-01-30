@@ -1,6 +1,7 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
@@ -68,13 +69,15 @@ public class FatigueService {
   public void recordUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
     List<HeroUsage> history = heroUsageRepository.findByTeamId(teamId);
 
+    List<HeroUsage> usages = new ArrayList<>();
     for (Integer heroId : heroIds) {
       int previousStreak = calculateStreak(history, heroId, roundNo);
       int newStreak = previousStreak + 1;
       BigDecimal multiplier = calculateMultiplier(newStreak);
 
       HeroUsage usage = new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
-      heroUsageRepository.save(usage);
+      usages.add(usage);
     }
+    heroUsageRepository.saveAll(usages);
   }
 }
