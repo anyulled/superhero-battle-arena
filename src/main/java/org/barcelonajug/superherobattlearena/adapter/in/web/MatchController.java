@@ -156,18 +156,16 @@ public class MatchController {
   }
 
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
-    List<Hero> battleHeroes = new ArrayList<>();
+    List<Hero> baseHeroes = new ArrayList<>();
     for (Integer heroId : submission.heroIds()) {
       Hero baseHero =
           rosterService
               .getHero(heroId)
               .orElseThrow(
                   () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
-      // Apply Fatigue
-      Hero fatiguedHero = fatigueService.applyFatigue(teamId, baseHero, roundNo);
-      battleHeroes.add(fatiguedHero);
+      baseHeroes.add(baseHero);
     }
-    return battleHeroes;
+    return fatigueService.applyFatigue(teamId, baseHeroes, roundNo);
   }
 
   private void updateHeroUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
