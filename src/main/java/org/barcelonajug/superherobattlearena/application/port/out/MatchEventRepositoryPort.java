@@ -18,7 +18,7 @@ public interface MatchEventRepositoryPort {
    *
    * @param matchEvents the list of events to save
    */
-  void saveAll(List<MatchEvent> matchEvents);
+  List<MatchEvent> saveAll(List<MatchEvent> matchEvents);
 
   /**
    * Find events by match ID.
