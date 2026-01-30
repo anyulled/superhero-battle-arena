@@ -121,10 +121,16 @@ public class AdminController {
     return ResponseEntity.ok(matchIds);
   }
 
-  /** Run all pending matches for a round */
+  /**
+   * Run all pending matches for a round.
+   *
+   * @param roundNo the round number
+   * @param sessionId the session ID (optional)
+   * @return the batch simulation result
+   */
   @PostMapping("/matches/run-all")
   public ResponseEntity<BatchSimulationResult> runAllBattles(
-      @RequestParam Integer roundNo, @RequestParam(required = false) UUID sessionId) {
+      @RequestParam final Integer roundNo, @RequestParam(required = false) final UUID sessionId) {
 
     // Find all pending matches for this round
     List<Match> pendingMatches =
@@ -184,10 +190,11 @@ public class AdminController {
 
         // Persist events
         int seq = 1;
-        for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
-          MatchEvent matchEvent = new MatchEvent(match.getMatchId(), seq++, evt);
-          matchEventRepository.save(matchEvent);
+        List<MatchEvent> matchEvents = new ArrayList<>();
+        for (var evt : result.events()) {
+          matchEvents.add(new MatchEvent(match.getMatchId(), seq++, evt));
         }
+        matchEventRepository.saveAll(matchEvents);
 
         // Update hero usage
         fatigueService.recordUsage(
