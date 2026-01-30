@@ -44,6 +44,6 @@ public class MatchCreationService {
 
     matchRepository.saveAll(matches);
 
-    return matches.stream().map(Match::getMatchId).toList();
+    return matchRepository.saveAll(matches).stream().map(Match::getMatchId).toList();
   }
 }
