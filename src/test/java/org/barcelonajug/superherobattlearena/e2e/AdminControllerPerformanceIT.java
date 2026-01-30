@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.e2e;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,52 +41,39 @@ public class AdminControllerPerformanceIT {
     UUID sessionId = UUID.randomUUID();
     Integer roundNo = 1;
 
-    // Persist Session (needed for controller validation if any, though run-all checks filtering)
-    // Actually AdminController checks session validation in other methods but run-all takes
-    // optional sessionId.
-    // However, if we pass sessionId, let's make sure it exists just in case.
-    // SessionRepositoryPort interface is likely simple.
-    // Let's assume we can save a dummy session.
-    // Checking SessionRepositoryPort interface:
-    // It's not fully visible but based on usage in AdminController:
-    // sessionRepository.save(session);
-    // Session constructor: public Session(UUID sessionId, OffsetDateTime created, boolean active)
+    createRound(roundNo, sessionId);
+    generateNoiseData(roundNo, sessionId);
+    generateTargetData(roundNo, sessionId);
 
-    // We'll skip session persistence for now unless it fails, as the filter logic in controller
-    // doesn't seem to validate session existence for run-all.
-    // Wait, the run-all logic:
-    /*
-     Round round = roundRepository.findById(roundNo)
-            .orElseThrow(() -> new IllegalArgumentException("Round not found: " + roundNo));
-    */
-    // So we MUST persist a round.
+    // 4. Measure
+    long startTime = System.nanoTime();
+
+    mockMvc
+        .perform(
+            post("/api/admin/matches/run-all")
+                .param("roundNo", roundNo.toString())
+                .param("sessionId", sessionId.toString())
+                .with(httpBasic(ADMIN_USER, ADMIN_PASS)))
+        .andExpect(status().isOk());
+
+    long endTime = System.nanoTime();
+    long durationMs = (endTime - startTime) / 1_000_000;
+
+    log.info("Execution time for run-all matches: {} ms", durationMs);
+    assertThat(durationMs).isLessThan(2000L);
+  }
+
+  private void createRound(Integer roundNo, UUID sessionId) {
     Round round = new Round();
     round.setRoundNo(roundNo);
     round.setSessionId(sessionId);
     round.setStatus(org.barcelonajug.superherobattlearena.domain.RoundStatus.OPEN);
-    // SpecJson is needed if simulation runs, but we plan to fail fast or just measure filtering.
-    // Ideally we want to avoid simulation crash.
-    // But simulation happens INSIDE the loop over pending matches.
-    // If we have pending matches, simulation is attempted.
-    // If we provide matches with random team IDs and no submissions, `buildBattleTeam` or
-    // `submissionRepository.findByTeamIdAndRoundNo` will fail or return empty.
-    // Code:
-    /*
-        Optional<Submission> subA = submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-        if (subA.isEmpty() || subB.isEmpty()) { continue; }
-    */
-    // Perfect. If no submission, it continues. This is the fastest path and measures loop overhead
-    // + fetching overhead.
-
     roundRepository.save(round);
+  }
 
-    // 2. Create Noise Data
-    // 2000 matches that should NOT be selected.
-    // Mix of:
-    // - Different Round No
-    // - Different Session ID (if filtering by session)
-    // - Status != PENDING
+  private void generateNoiseData(Integer roundNo, UUID sessionId) {
     log.info("Generating noise data...");
+    // 2000 matches that should NOT be selected.
     for (int i = 0; i < 2000; i++) {
       Match match =
           Match.builder()
@@ -112,10 +100,11 @@ public class AdminControllerPerformanceIT {
               .build();
       matchRepository.save(match);
     }
+  }
 
-    // 3. Create Target Data
-    // 20 matches that SHOULD be selected.
+  private void generateTargetData(Integer roundNo, UUID sessionId) {
     log.info("Generating target data...");
+    // 20 matches that SHOULD be selected.
     for (int i = 0; i < 20; i++) {
       Match match =
           Match.builder()
@@ -128,21 +117,5 @@ public class AdminControllerPerformanceIT {
               .build();
       matchRepository.save(match);
     }
-
-    // 4. Measure
-    long startTime = System.nanoTime();
-
-    mockMvc
-        .perform(
-            post("/api/admin/matches/run-all")
-                .param("roundNo", roundNo.toString())
-                .param("sessionId", sessionId.toString())
-                .with(httpBasic(ADMIN_USER, ADMIN_PASS)))
-        .andExpect(status().isOk());
-
-    long endTime = System.nanoTime();
-    long durationMs = (endTime - startTime) / 1_000_000;
-
-    log.info("Execution time for run-all matches: {} ms", durationMs);
   }
 }
