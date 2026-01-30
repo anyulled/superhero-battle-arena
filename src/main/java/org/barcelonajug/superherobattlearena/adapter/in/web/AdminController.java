@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.BatchSimulationResult;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
@@ -144,23 +146,25 @@ public class AdminController {
             .findById(roundNo)
             .orElseThrow(() -> new IllegalArgumentException("Round not found: " + roundNo));
 
+    Map<UUID, Submission> submissionsByTeam =
+        submissionRepository.findByRoundNo(roundNo).stream()
+            .collect(Collectors.toMap(Submission::getTeamId, Function.identity()));
+
     for (Match match : pendingMatches) {
       try {
         // Get submissions
-        Optional<Submission> subA =
-            submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-        Optional<Submission> subB =
-            submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
+        Submission subA = submissionsByTeam.get(match.getTeamA());
+        Submission subB = submissionsByTeam.get(match.getTeamB());
 
-        if (subA.isEmpty() || subB.isEmpty()) {
+        if (subA == null || subB == null) {
           continue; // Skip matches without submissions
         }
 
         // Build teams with fatigue
         List<Hero> teamAHeroes =
-            buildBattleTeam(match.getTeamA(), subA.get().getSubmissionJson(), match.getRoundNo());
+            buildBattleTeam(match.getTeamA(), subA.getSubmissionJson(), match.getRoundNo());
         List<Hero> teamBHeroes =
-            buildBattleTeam(match.getTeamB(), subB.get().getSubmissionJson(), match.getRoundNo());
+            buildBattleTeam(match.getTeamB(), subB.getSubmissionJson(), match.getRoundNo());
 
         // Simulate
         SimulationResult result =
@@ -193,9 +197,9 @@ public class AdminController {
 
         // Update hero usage
         fatigueService.recordUsage(
-            match.getTeamA(), match.getRoundNo(), subA.get().getSubmissionJson().heroIds());
+            match.getTeamA(), match.getRoundNo(), subA.getSubmissionJson().heroIds());
         fatigueService.recordUsage(
-            match.getTeamB(), match.getRoundNo(), subB.get().getSubmissionJson().heroIds());
+            match.getTeamB(), match.getRoundNo(), subB.getSubmissionJson().heroIds());
 
         matchIds.add(match.getMatchId());
         winners.put(match.getMatchId(), result.winnerTeamId());
