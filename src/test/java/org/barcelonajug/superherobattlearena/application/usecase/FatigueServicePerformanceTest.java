@@ -1,6 +1,7 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -49,7 +50,8 @@ class FatigueServicePerformanceTest {
                         new Hero.Images(null, null, null, null)))
             .toList();
 
-    when(heroUsageRepository.findByTeamId(any())).thenReturn(Collections.emptyList());
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
+        .thenReturn(Collections.emptyList());
 
     // Simulate usage in MatchController
     for (Hero hero : heroes) {
@@ -57,7 +59,7 @@ class FatigueServicePerformanceTest {
     }
 
     // Verify repository was called N times
-    verify(heroUsageRepository, times(teamSize)).findByTeamId(teamId);
+    verify(heroUsageRepository, times(teamSize)).findByTeamIdAndRoundNo(any(), anyInt());
   }
 
   @Test
@@ -83,12 +85,13 @@ class FatigueServicePerformanceTest {
                         new Hero.Images(null, null, null, null)))
             .toList();
 
-    when(heroUsageRepository.findByTeamId(any())).thenReturn(Collections.emptyList());
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
+        .thenReturn(Collections.emptyList());
 
     // Use the batch method
     fatigueService.applyFatigue(teamId, heroes, 1);
 
     // Verify repository was called 1 time
-    verify(heroUsageRepository, times(1)).findByTeamId(teamId);
+    verify(heroUsageRepository, times(1)).findByTeamIdAndRoundNo(any(), anyInt());
   }
 }

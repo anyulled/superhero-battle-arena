@@ -18,9 +18,10 @@ public class FatigueService {
   }
 
   public List<Hero> applyFatigue(UUID teamId, List<Hero> heroes, int currentRoundNo) {
-    List<HeroUsage> usageHistory = heroUsageRepository.findByTeamId(teamId);
+    List<HeroUsage> previousRoundUsage =
+        heroUsageRepository.findByTeamIdAndRoundNo(teamId, currentRoundNo - 1);
     return heroes.stream()
-        .map(hero -> applyFatigueWithHistory(hero, usageHistory, currentRoundNo))
+        .map(hero -> applyFatigueWithHistory(hero, previousRoundUsage, currentRoundNo))
         .toList();
   }
 
@@ -76,10 +77,11 @@ public class FatigueService {
   }
 
   public void recordUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
-    List<HeroUsage> history = heroUsageRepository.findByTeamId(teamId);
+    List<HeroUsage> previousRoundUsage =
+        heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
 
     for (Integer heroId : heroIds) {
-      int previousStreak = calculateStreak(history, heroId, roundNo);
+      int previousStreak = calculateStreak(previousRoundUsage, heroId, roundNo);
       int newStreak = previousStreak + 1;
       BigDecimal multiplier = calculateMultiplier(newStreak);
 
