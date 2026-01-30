@@ -173,9 +173,19 @@ public class BattleEngine {
   }
 
   private BattleHero selectTarget(List<BattleHero> targets, Random random) {
-    // Find min HP
-    int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
-    List<BattleHero> lowestHpTargets = targets.stream().filter(h -> h.currentHp == minHp).toList();
+    List<BattleHero> lowestHpTargets = new ArrayList<>();
+    int minHp = Integer.MAX_VALUE;
+
+    for (BattleHero hero : targets) {
+      if (hero.currentHp < minHp) {
+        minHp = hero.currentHp;
+        lowestHpTargets.clear();
+      }
+
+      if (hero.currentHp == minHp) {
+        lowestHpTargets.add(hero);
+      }
+    }
 
     if (lowestHpTargets.size() == 1) {
       return lowestHpTargets.get(0);
