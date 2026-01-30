@@ -148,7 +148,7 @@ public class AdminController {
 
     Map<UUID, Submission> submissionsByTeam =
         submissionRepository.findByRoundNo(roundNo).stream()
-            .collect(Collectors.toMap(Submission::getTeamId, Function.identity()));
+            .collect(Collectors.toMap(Submission::getTeamId, Function.identity(), (existing, replacement) -> replacement));
 
     for (Match match : pendingMatches) {
       try {
