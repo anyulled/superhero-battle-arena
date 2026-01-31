@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
@@ -25,21 +24,17 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles({ "postgres-test", "test" })
+@ActiveProfiles({"postgres-test", "test"})
 class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
 
   private static final Logger log = LoggerFactory.getLogger(AdminControllerPerformanceIT.class);
   private static final String ADMIN_USER = "admin";
   private static final String ADMIN_PASS = "test";
 
-  @Autowired
-  private MockMvc mockMvc;
-  @Autowired
-  private MatchRepositoryPort matchRepository;
-  @Autowired
-  private SessionRepositoryPort sessionRepository;
-  @Autowired
-  private RoundRepositoryPort roundRepository;
+  @Autowired private MockMvc mockMvc;
+  @Autowired private MatchRepositoryPort matchRepository;
+  @Autowired private SessionRepositoryPort sessionRepository;
+  @Autowired private RoundRepositoryPort roundRepository;
 
   @Test
   void measureRunAllBattlesPerformance() throws Exception {
@@ -81,27 +76,29 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
     log.info("Generating noise data...");
     // 2000 matches that should NOT be selected.
     for (int i = 0; i < 2000; i++) {
-      Match match = Match.builder()
-          .matchId(UUID.randomUUID())
-          .sessionId(UUID.randomUUID()) // Random session
-          .roundNo(roundNo + 1) // Different round
-          .teamA(UUID.randomUUID())
-          .teamB(UUID.randomUUID())
-          .status(MatchStatus.COMPLETED)
-          .build();
+      Match match =
+          Match.builder()
+              .matchId(UUID.randomUUID())
+              .sessionId(UUID.randomUUID()) // Random session
+              .roundNo(roundNo + 1) // Different round
+              .teamA(UUID.randomUUID())
+              .teamB(UUID.randomUUID())
+              .status(MatchStatus.COMPLETED)
+              .build();
       matchRepository.save(match);
     }
 
     // Add some matches that are in the same round but WRONG status
     for (int i = 0; i < 500; i++) {
-      Match match = Match.builder()
-          .matchId(UUID.randomUUID())
-          .sessionId(sessionId)
-          .roundNo(roundNo)
-          .teamA(UUID.randomUUID())
-          .teamB(UUID.randomUUID())
-          .status(MatchStatus.COMPLETED)
-          .build();
+      Match match =
+          Match.builder()
+              .matchId(UUID.randomUUID())
+              .sessionId(sessionId)
+              .roundNo(roundNo)
+              .teamA(UUID.randomUUID())
+              .teamB(UUID.randomUUID())
+              .status(MatchStatus.COMPLETED)
+              .build();
       matchRepository.save(match);
     }
   }
@@ -110,14 +107,15 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
     log.info("Generating target data...");
     // 20 matches that SHOULD be selected.
     for (int i = 0; i < 20; i++) {
-      Match match = Match.builder()
-          .matchId(UUID.randomUUID())
-          .sessionId(sessionId)
-          .roundNo(roundNo)
-          .teamA(UUID.randomUUID())
-          .teamB(UUID.randomUUID())
-          .status(MatchStatus.PENDING)
-          .build();
+      Match match =
+          Match.builder()
+              .matchId(UUID.randomUUID())
+              .sessionId(sessionId)
+              .roundNo(roundNo)
+              .teamA(UUID.randomUUID())
+              .teamB(UUID.randomUUID())
+              .status(MatchStatus.PENDING)
+              .build();
       matchRepository.save(match);
     }
   }
