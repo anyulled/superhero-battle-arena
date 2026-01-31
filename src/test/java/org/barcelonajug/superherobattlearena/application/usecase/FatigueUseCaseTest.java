@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,23 +27,24 @@ class FatigueUseCaseTest {
   @Test
   void shouldReturnOriginalHeroIfNoStreak() {
     UUID teamId = UUID.randomUUID();
-    Hero hero = Hero.builder()
-        .id(1)
-        .name("Hero")
-        .slug("hero")
-        .powerstats(
-            Hero.PowerStats.builder()
-                .durability(100)
-                .strength(10)
-                .power(10)
-                .speed(10)
-                .intelligence(10)
-                .combat(10)
-                .build())
-        .role("Fighter")
-        .alignment("good")
-        .publisher("Marvel")
-        .build();
+    Hero hero =
+        Hero.builder()
+            .id(1)
+            .name("Hero")
+            .slug("hero")
+            .powerstats(
+                Hero.PowerStats.builder()
+                    .durability(100)
+                    .strength(10)
+                    .power(10)
+                    .speed(10)
+                    .intelligence(10)
+                    .combat(10)
+                    .build())
+            .role("Fighter")
+            .alignment("good")
+            .publisher("Marvel")
+            .build();
 
     when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
         .thenReturn(Collections.emptyList());

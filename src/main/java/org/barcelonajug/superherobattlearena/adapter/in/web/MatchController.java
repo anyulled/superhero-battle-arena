@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import org.barcelonajug.superherobattlearena.application.usecase.MatchUseCase;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.springframework.http.ResponseEntity;
@@ -74,8 +73,8 @@ public class MatchController {
     executor.submit(
         () -> {
           try {
-            List<org.barcelonajug.superherobattlearena.domain.MatchEvent> events = matchUseCase
-                .getMatchEventEntities(matchId);
+            List<org.barcelonajug.superherobattlearena.domain.MatchEvent> events =
+                matchUseCase.getMatchEventEntities(matchId);
             for (org.barcelonajug.superherobattlearena.domain.MatchEvent event : events) {
               emitter.send(event.eventJson());
               Thread.sleep(500);

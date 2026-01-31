@@ -3,7 +3,6 @@ package org.barcelonajug.superherobattlearena.adapter.in.web;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.BatchSimulationResult;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.application.usecase.AdminUseCase;
@@ -57,7 +56,7 @@ public class AdminController {
   /**
    * Run all pending matches for a round.
    *
-   * @param roundNo   the round number
+   * @param roundNo the round number
    * @param sessionId the session ID (optional)
    * @return the batch simulation result
    */
@@ -67,11 +66,12 @@ public class AdminController {
       @RequestParam Integer roundNo, @RequestParam(required = false) UUID sessionId) {
     Map<String, Object> result = adminUseCase.runAllBattles(roundNo, sessionId);
 
-    BatchSimulationResult batchResult = new BatchSimulationResult(
-        (List<UUID>) result.get("matchIds"),
-        (Map<UUID, UUID>) result.get("winners"),
-        (Integer) result.get("total"),
-        (Integer) result.get("successCount"));
+    BatchSimulationResult batchResult =
+        new BatchSimulationResult(
+            (List<UUID>) result.get("matchIds"),
+            (Map<UUID, UUID>) result.get("winners"),
+            (Integer) result.get("total"),
+            (Integer) result.get("successCount"));
 
     return ResponseEntity.ok(batchResult);
   }

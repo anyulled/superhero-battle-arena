@@ -1,18 +1,17 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "sessions")
 public class SessionEntity {
-  @Id
-  private UUID sessionId;
+  @Id private UUID sessionId;
+
   @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 

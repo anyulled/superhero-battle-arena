@@ -1,18 +1,16 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
-import java.util.UUID;
-
-import org.barcelonajug.superherobattlearena.domain.MatchStatus;
-import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.UUID;
+import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "matches")

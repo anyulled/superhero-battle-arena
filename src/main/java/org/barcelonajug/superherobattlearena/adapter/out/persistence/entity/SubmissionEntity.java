@@ -1,19 +1,17 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
-import java.io.Serializable;
-import java.time.OffsetDateTime;
-import java.util.Objects;
-import java.util.UUID;
-
-import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.time.OffsetDateTime;
+import java.util.Objects;
+import java.util.UUID;
+import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "submissions")
@@ -45,8 +43,7 @@ public class SubmissionEntity {
     private UUID teamId;
     private Integer roundNo;
 
-    public SubmissionId() {
-    }
+    public SubmissionId() {}
 
     public SubmissionId(UUID teamId, Integer roundNo) {
       this.teamId = teamId;
@@ -55,10 +52,8 @@ public class SubmissionEntity {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
       SubmissionId that = (SubmissionId) o;
       return Objects.equals(teamId, that.teamId) && Objects.equals(roundNo, that.roundNo);
     }
