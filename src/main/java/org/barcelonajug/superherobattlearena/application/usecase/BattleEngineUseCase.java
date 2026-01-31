@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
@@ -51,12 +52,9 @@ public class BattleEngineUseCase {
       teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
 
       List<MatchEvent> events = new ArrayList<>();
-      java.util.concurrent.atomic.AtomicLong logicalTime =
-          new java.util.concurrent.atomic.AtomicLong(0);
+      java.util.concurrent.atomic.AtomicLong logicalTime = new java.util.concurrent.atomic.AtomicLong(0);
 
-      events.add(
-          new MatchEvent(
-              "MATCH_START", logicalTime.getAndIncrement(), "Match started", null, null, 0));
+      events.add(MatchEvent.matchStart(logicalTime.getAndIncrement()));
 
       int turn = 0;
       UUID winnerId = null;
@@ -65,14 +63,7 @@ public class BattleEngineUseCase {
 
       while (turn < MAX_TURNS && winnerId == null) {
         turn++;
-        events.add(
-            new MatchEvent(
-                "TURN_START",
-                logicalTime.getAndIncrement(),
-                "Turn " + turn + " started",
-                null,
-                null,
-                turn));
+        events.add(MatchEvent.turnStart(turn, logicalTime.getAndIncrement()));
 
         winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
 
@@ -86,19 +77,10 @@ public class BattleEngineUseCase {
       }
 
       if (winnerId != null) {
-        events.add(
-            new MatchEvent(
-                "MATCH_END", logicalTime.getAndIncrement(), "Winner: " + winnerId, null, null, 0));
+        events.add(MatchEvent.matchEnd(winnerId, logicalTime.getAndIncrement()));
         log.info("Battle completed - winner={}, turns={}", winnerId, turn);
       } else {
-        events.add(
-            new MatchEvent(
-                "MATCH_END",
-                logicalTime.getAndIncrement(),
-                "Draw - Max turns reached",
-                null,
-                null,
-                0));
+        events.add(MatchEvent.draw(logicalTime.getAndIncrement()));
         log.info("Battle completed - result=DRAW, turns={}", turn);
       }
 
@@ -150,24 +132,22 @@ public class BattleEngineUseCase {
     target.currentHp -= damage;
 
     events.add(
-        new MatchEvent(
-            "HIT",
-            logicalTime.getAndIncrement(),
-            attacker.hero.name() + " hits " + target.hero.name() + " for " + damage,
+        MatchEvent.hit(
+            attacker.hero.name(),
+            target.hero.name(),
             attacker.getUniqueId(),
             target.getUniqueId(),
-            damage));
+            damage,
+            logicalTime.getAndIncrement()));
 
     if (target.currentHp <= 0) {
       target.currentHp = 0;
       events.add(
-          new MatchEvent(
-              "KO",
-              logicalTime.getAndIncrement(),
-              target.hero.name() + " is KO!",
+          MatchEvent.ko(
+              target.hero.name(),
               attacker.getUniqueId(),
               target.getUniqueId(),
-              0));
+              logicalTime.getAndIncrement()));
     }
   }
 
@@ -183,15 +163,12 @@ public class BattleEngineUseCase {
     boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
     boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
 
-    if (teamADead && teamBDead) {
-      // Simultaneous KO case (unlikely with current serial logic, but safe handling)
-      return null;
-    } else if (teamADead) {
-      return teamBId;
-    } else if (teamBDead) {
-      return teamAId;
-    }
-    return null; // Battle continues
+    return switch ((teamADead ? 1 : 0) | (teamBDead ? 2 : 0)) {
+      case 3 -> null; // Both teams dead (simultaneous KO - unlikely with serial logic)
+      case 1 -> teamBId; // Team A dead, Team B wins
+      case 2 -> teamAId; // Team B dead, Team A wins
+      default -> null; // Battle continues
+    };
   }
 
   private @org.jspecify.annotations.Nullable BattleHeroUseCase findTarget(
@@ -201,8 +178,8 @@ public class BattleEngineUseCase {
       UUID teamBId,
       Random random) {
     UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
-    List<BattleHeroUseCase> targets =
-        allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive()).toList();
+    List<BattleHeroUseCase> targets = allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
+        .toList();
 
     if (targets.isEmpty()) {
       return null;
@@ -213,8 +190,7 @@ public class BattleEngineUseCase {
   private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
     // Find min HP
     int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
-    List<BattleHeroUseCase> lowestHpTargets =
-        targets.stream().filter(h -> h.currentHp == minHp).toList();
+    List<BattleHeroUseCase> lowestHpTargets = targets.stream().filter(h -> h.currentHp == minHp).toList();
 
     if (lowestHpTargets.size() == 1) {
       return lowestHpTargets.get(0);

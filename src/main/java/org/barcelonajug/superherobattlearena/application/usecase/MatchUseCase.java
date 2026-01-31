@@ -1,9 +1,12 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
@@ -18,14 +21,13 @@ import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MatchUseCase {
 
-  private static final Logger log = LoggerFactory.getLogger(MatchUseCase.class);
+  private static final Logger log = getLogger(MatchUseCase.class);
 
   private final SubmissionRepositoryPort submissionRepository;
   private final MatchRepositoryPort matchRepository;
@@ -67,15 +69,14 @@ public class MatchUseCase {
         Submission subA = submissions.get(i);
         Submission subB = submissions.get(i + 1);
 
-        Match match =
-            Match.builder()
-                .matchId(UUID.randomUUID())
-                .sessionId(sessionId)
-                .teamA(subA.getTeamId())
-                .teamB(subB.getTeamId())
-                .roundNo(roundNo)
-                .status(MatchStatus.PENDING)
-                .build();
+        Match match = Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .teamA(subA.getTeamId())
+            .teamB(subB.getTeamId())
+            .roundNo(roundNo)
+            .status(MatchStatus.PENDING)
+            .build();
 
         matchRepository.save(match);
         matchIds.add(match.getMatchId());
@@ -113,14 +114,13 @@ public class MatchUseCase {
     try {
       log.info("Starting match execution - matchId={}", matchId);
 
-      Match match =
-          matchRepository
-              .findById(matchId)
-              .orElseThrow(
-                  () -> {
-                    log.error("Match not found - matchId={}", matchId);
-                    return new IllegalArgumentException("Match not found");
-                  });
+      Match match = matchRepository
+          .findById(matchId)
+          .orElseThrow(
+              () -> {
+                log.error("Match not found - matchId={}", matchId);
+                return new IllegalArgumentException("Match not found");
+              });
 
       MDC.put("roundNo", match.getRoundNo().toString());
       log.debug(
@@ -134,10 +134,8 @@ public class MatchUseCase {
         throw new IllegalStateException("Match already run or running");
       }
 
-      Optional<Submission> subA =
-          submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-      Optional<Submission> subB =
-          submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
+      Optional<Submission> subA = submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
+      Optional<Submission> subB = submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
 
       if (subA.isEmpty() || subB.isEmpty()) {
         log.error(
@@ -149,29 +147,26 @@ public class MatchUseCase {
       }
 
       log.debug("Building battle teams with fatigue applied");
-      List<Hero> teamAHeroes =
-          buildBattleTeam(
-              match.getTeamA(),
-              java.util.Objects.requireNonNull(subA.get().getSubmissionJson()),
-              match.getRoundNo());
-      List<Hero> teamBHeroes =
-          buildBattleTeam(
-              match.getTeamB(),
-              java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
-              match.getRoundNo());
+      List<Hero> teamAHeroes = buildBattleTeam(
+          match.getTeamA(),
+          java.util.Objects.requireNonNull(subA.get().getSubmissionJson()),
+          match.getRoundNo());
+      List<Hero> teamBHeroes = buildBattleTeam(
+          match.getTeamB(),
+          java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
+          match.getRoundNo());
 
       Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
 
       log.debug("Delegating to battle engine for simulation");
-      SimulationResult result =
-          battleEngineUseCase.simulate(
-              matchId,
-              teamAHeroes,
-              teamBHeroes,
-              java.util.Objects.requireNonNullElse(round.getSeed(), 0L),
-              match.getTeamA(),
-              match.getTeamB(),
-              java.util.Objects.requireNonNull(round.getSpecJson()));
+      SimulationResult result = battleEngineUseCase.simulate(
+          matchId,
+          teamAHeroes,
+          teamBHeroes,
+          java.util.Objects.requireNonNullElse(round.getSeed(), 0L),
+          match.getTeamA(),
+          match.getTeamB(),
+          java.util.Objects.requireNonNull(round.getSpecJson()));
 
       match.setStatus(MatchStatus.COMPLETED);
       match.setWinnerTeam(result.winnerTeamId());
@@ -261,11 +256,10 @@ public class MatchUseCase {
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
     List<Hero> battleHeroes = new ArrayList<>();
     for (Integer heroId : submission.heroIds()) {
-      Hero baseHero =
-          rosterUseCase
-              .getHero(heroId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
+      Hero baseHero = rosterUseCase
+          .getHero(heroId)
+          .orElseThrow(
+              () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
       Hero fatiguedHero = fatigueUseCase.applyFatigue(teamId, baseHero, roundNo);
       battleHeroes.add(fatiguedHero);
     }
