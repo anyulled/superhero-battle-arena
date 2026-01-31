@@ -11,10 +11,15 @@ import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RoundUseCase {
+
+  private static final Logger log = LoggerFactory.getLogger(RoundUseCase.class);
 
   private final RoundRepositoryPort roundRepository;
   private final SubmissionRepositoryPort submissionRepository;
@@ -26,26 +31,37 @@ public class RoundUseCase {
   }
 
   public Integer createRound(UUID sessionId, Integer roundNo) {
-    Round round = new Round();
-    round.setRoundNo(roundNo);
-    round.setSessionId(sessionId);
-    round.setSeed(System.currentTimeMillis());
-    round.setStatus(RoundStatus.OPEN);
+    MDC.put("sessionId", sessionId.toString());
+    MDC.put("roundNo", roundNo.toString());
 
-    RoundSpec spec =
-        new RoundSpec(
-            "Default Round",
-            5,
-            100,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            Collections.emptyList(),
-            Collections.emptyMap(),
-            "ARENA_1");
-    round.setSpecJson(spec);
+    try {
+      log.info("Creating round - sessionId={}, roundNo={}", sessionId, roundNo);
 
-    roundRepository.save(round);
-    return round.getRoundNo();
+      Round round = new Round();
+      round.setRoundNo(roundNo);
+      round.setSessionId(sessionId);
+      round.setSeed(System.currentTimeMillis());
+      round.setStatus(RoundStatus.OPEN);
+
+      RoundSpec spec =
+          new RoundSpec(
+              "Default Round",
+              5,
+              100,
+              Collections.emptyMap(),
+              Collections.emptyMap(),
+              Collections.emptyList(),
+              Collections.emptyMap(),
+              "ARENA_1");
+      round.setSpecJson(spec);
+
+      roundRepository.save(round);
+      log.info("Round created successfully - roundNo={}, seed={}", roundNo, round.getSeed());
+      return round.getRoundNo();
+    } finally {
+      MDC.remove("sessionId");
+      MDC.remove("roundNo");
+    }
   }
 
   public Optional<RoundSpec> getRoundSpec(Integer roundNo) {
@@ -53,22 +69,47 @@ public class RoundUseCase {
   }
 
   public void submitTeam(Integer roundNo, UUID teamId, DraftSubmission draft) {
-    if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
-      throw new IllegalStateException("Team " + teamId + " already submitted for round " + roundNo);
+    MDC.put("roundNo", roundNo.toString());
+    MDC.put("teamId", teamId.toString());
+
+    try {
+      log.info(
+          "Submitting team - teamId={}, roundNo={}, heroes={}",
+          teamId,
+          roundNo,
+          draft.heroIds().size());
+
+      if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
+        log.warn("Team already submitted - teamId={}, roundNo={}", teamId, roundNo);
+        throw new IllegalStateException(
+            "Team " + teamId + " already submitted for round " + roundNo);
+      }
+
+      if (draft.heroIds().size() != 5) {
+        log.error(
+            "Invalid team size - teamId={}, roundNo={}, size={}",
+            teamId,
+            roundNo,
+            draft.heroIds().size());
+        throw new IllegalArgumentException("Team must have exactly 5 heroes");
+      }
+
+      Submission submission = new Submission();
+      submission.setTeamId(teamId);
+      submission.setRoundNo(roundNo);
+      submission.setSubmissionJson(draft);
+      submission.setAccepted(true);
+      submission.setSubmittedAt(OffsetDateTime.now());
+
+      submissionRepository.save(submission);
+      log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
+    } catch (Exception e) {
+      log.error("Team submission failed - teamId={}, roundNo={}", teamId, roundNo, e);
+      throw e;
+    } finally {
+      MDC.remove("roundNo");
+      MDC.remove("teamId");
     }
-
-    if (draft.heroIds().size() != 5) {
-      throw new IllegalArgumentException("Team must have exactly 5 heroes");
-    }
-
-    Submission submission = new Submission();
-    submission.setTeamId(teamId);
-    submission.setRoundNo(roundNo);
-    submission.setSubmissionJson(draft);
-    submission.setAccepted(true);
-    submission.setSubmittedAt(OffsetDateTime.now());
-
-    submissionRepository.save(submission);
   }
 
   public Optional<DraftSubmission> getSubmission(Integer roundNo, UUID teamId) {

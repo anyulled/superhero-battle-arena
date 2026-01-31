@@ -9,11 +9,15 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BattleEngineUseCase {
 
+  private static final Logger log = LoggerFactory.getLogger(BattleEngineUseCase.class);
   private static final int MAX_TURNS = 50;
   private static final double DAMAGE_DEF_FACTOR = 0.6;
 
@@ -25,59 +29,87 @@ public class BattleEngineUseCase {
       final UUID teamAId,
       final UUID teamBId,
       RoundSpec roundSpec) {
-    Random random = new Random(roundSeed + matchId.hashCode());
+    long startTime = System.currentTimeMillis();
+    MDC.put("matchId", matchId.toString());
 
-    List<BattleHeroUseCase> allHeroes = new ArrayList<>();
-    teamAHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamAId)));
-    teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
+    try {
+      log.info(
+          "Starting battle simulation - matchId={}, teamA={}, teamB={}, seed={}",
+          matchId,
+          teamAId,
+          teamBId,
+          roundSeed);
+      log.debug(
+          "Team compositions - teamA: {} heroes, teamB: {} heroes",
+          teamAHeroes.size(),
+          teamBHeroes.size());
 
-    List<MatchEvent> events = new ArrayList<>();
-    java.util.concurrent.atomic.AtomicLong logicalTime =
-        new java.util.concurrent.atomic.AtomicLong(0);
+      Random random = new Random(roundSeed + matchId.hashCode());
 
-    events.add(
-        new MatchEvent(
-            "MATCH_START", logicalTime.getAndIncrement(), "Match started", null, null, 0));
+      List<BattleHeroUseCase> allHeroes = new ArrayList<>();
+      teamAHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamAId)));
+      teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
 
-    int turn = 0;
-    UUID winnerId = null;
+      List<MatchEvent> events = new ArrayList<>();
+      java.util.concurrent.atomic.AtomicLong logicalTime =
+          new java.util.concurrent.atomic.AtomicLong(0);
 
-    sortHeroesBySpeed(allHeroes);
-
-    while (turn < MAX_TURNS && winnerId == null) {
-      turn++;
       events.add(
           new MatchEvent(
-              "TURN_START",
-              logicalTime.getAndIncrement(),
-              "Turn " + turn + " started",
-              null,
-              null,
-              turn));
+              "MATCH_START", logicalTime.getAndIncrement(), "Match started", null, null, 0));
 
-      winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
+      int turn = 0;
+      UUID winnerId = null;
 
-      if (winnerId == null) {
-        winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
+      sortHeroesBySpeed(allHeroes);
+
+      while (turn < MAX_TURNS && winnerId == null) {
+        turn++;
+        events.add(
+            new MatchEvent(
+                "TURN_START",
+                logicalTime.getAndIncrement(),
+                "Turn " + turn + " started",
+                null,
+                null,
+                turn));
+
+        winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
+
+        if (winnerId == null) {
+          winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
+        }
+
+        if (turn % 10 == 0) {
+          log.debug("Battle progress - turn {}/{}", turn, MAX_TURNS);
+        }
       }
-    }
 
-    if (winnerId != null) {
-      events.add(
-          new MatchEvent(
-              "MATCH_END", logicalTime.getAndIncrement(), "Winner: " + winnerId, null, null, 0));
-    } else {
-      events.add(
-          new MatchEvent(
-              "MATCH_END",
-              logicalTime.getAndIncrement(),
-              "Draw - Max turns reached",
-              null,
-              null,
-              0));
-    }
+      if (winnerId != null) {
+        events.add(
+            new MatchEvent(
+                "MATCH_END", logicalTime.getAndIncrement(), "Winner: " + winnerId, null, null, 0));
+        log.info("Battle completed - winner={}, turns={}", winnerId, turn);
+      } else {
+        events.add(
+            new MatchEvent(
+                "MATCH_END",
+                logicalTime.getAndIncrement(),
+                "Draw - Max turns reached",
+                null,
+                null,
+                0));
+        log.info("Battle completed - result=DRAW, turns={}", turn);
+      }
 
-    return new SimulationResult(winnerId, turn, events);
+      long duration = System.currentTimeMillis() - startTime;
+      log.info(
+          "Battle simulation completed in {}ms - {} events generated", duration, events.size());
+
+      return new SimulationResult(winnerId, turn, events);
+    } finally {
+      MDC.remove("matchId");
+    }
   }
 
   private @org.jspecify.annotations.Nullable UUID executeTurn(

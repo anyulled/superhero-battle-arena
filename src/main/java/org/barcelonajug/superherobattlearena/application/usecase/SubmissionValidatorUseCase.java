@@ -11,10 +11,14 @@ import org.barcelonajug.superherobattlearena.domain.exception.HeroNotFoundExcept
 import org.barcelonajug.superherobattlearena.domain.exception.TeamSizeException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SubmissionValidatorUseCase {
+
+  private static final Logger log = LoggerFactory.getLogger(SubmissionValidatorUseCase.class);
 
   private final RosterUseCase rosterUseCase;
   private final List<ValidationRule> validationRules;
@@ -26,19 +30,35 @@ public class SubmissionValidatorUseCase {
   }
 
   public void validate(DraftSubmission submission, RoundSpec roundSpec) {
-    List<Integer> heroIds = submission.heroIds();
+    log.debug(
+        "Validating submission - heroIds={}, roundSpec={}",
+        submission.heroIds(),
+        roundSpec.description());
 
-    validateTeamSize(heroIds, roundSpec);
-    validateDuplicates(heroIds);
+    try {
+      List<Integer> heroIds = submission.heroIds();
 
-    List<Hero> heroes = resolveHeroes(heroIds);
+      validateTeamSize(heroIds, roundSpec);
+      validateDuplicates(heroIds);
 
-    // Apply all validation rules using strategy pattern
-    validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
+      List<Hero> heroes = resolveHeroes(heroIds);
+
+      // Apply all validation rules using strategy pattern
+      validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
+
+      log.info("Submission validation successful - {} heroes validated", heroIds.size());
+    } catch (Exception e) {
+      log.error("Submission validation failed - heroIds={}", submission.heroIds(), e);
+      throw e;
+    }
   }
 
   private void validateTeamSize(List<Integer> heroIds, RoundSpec roundSpec) {
     if (heroIds.size() != roundSpec.teamSize()) {
+      log.warn(
+          "Team size validation failed - expected={}, actual={}",
+          roundSpec.teamSize(),
+          heroIds.size());
       throw new TeamSizeException(roundSpec.teamSize(), heroIds.size());
     }
   }
@@ -46,6 +66,7 @@ public class SubmissionValidatorUseCase {
   private void validateDuplicates(List<Integer> heroIds) {
     Set<Integer> uniqueIds = new HashSet<>(heroIds);
     if (uniqueIds.size() != heroIds.size()) {
+      log.warn("Duplicate heroes detected in submission - heroIds={}", heroIds);
       throw new DuplicateHeroException();
     }
   }

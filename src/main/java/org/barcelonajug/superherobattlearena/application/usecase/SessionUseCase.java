@@ -7,6 +7,7 @@ import org.barcelonajug.superherobattlearena.application.port.out.SessionReposit
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +39,10 @@ public class SessionUseCase {
     Session newSession = new Session(UUID.randomUUID(), OffsetDateTime.now(), true);
     Session savedSession = sessionRepository.save(newSession);
 
+    MDC.put("sessionId", savedSession.getSessionId().toString());
     log.info("Created new session: {}", savedSession.getSessionId());
+    MDC.remove("sessionId");
+
     return savedSession;
   }
 
@@ -59,8 +63,17 @@ public class SessionUseCase {
   @Transactional
   public Session startSession(UUID sessionId) {
     UUID id = (sessionId != null) ? sessionId : UUID.randomUUID();
-    Session session = new Session(id, OffsetDateTime.now(), true);
-    return sessionRepository.save(session);
+    MDC.put("sessionId", id.toString());
+
+    try {
+      log.info("Starting session - sessionId={}", id);
+      Session session = new Session(id, OffsetDateTime.now(), true);
+      Session savedSession = sessionRepository.save(session);
+      log.info("Session started successfully - sessionId={}", id);
+      return savedSession;
+    } finally {
+      MDC.remove("sessionId");
+    }
   }
 
   @Transactional(readOnly = true)

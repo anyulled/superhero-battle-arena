@@ -8,10 +8,15 @@ import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
 public class FatigueUseCase {
+
+  private static final Logger log = LoggerFactory.getLogger(FatigueUseCase.class);
 
   private final HeroUsageRepositoryPort heroUsageRepository;
 
@@ -28,6 +33,11 @@ public class FatigueUseCase {
   }
 
   public Hero applyFatigue(UUID teamId, Hero hero, int currentRoundNo) {
+    log.debug(
+        "Applying fatigue to single hero - teamId={}, heroId={}, roundNo={}",
+        teamId,
+        hero.id(),
+        currentRoundNo);
     return applyFatigue(teamId, List.of(hero), currentRoundNo).get(0);
   }
 
@@ -37,10 +47,16 @@ public class FatigueUseCase {
     int currentStreak = calculateStreak(usageHistory, hero.id(), currentRoundNo);
 
     if (currentStreak == 0) {
+      log.debug("No fatigue for hero {} - no previous usage", hero.id());
       return hero;
     }
 
     BigDecimal multiplier = calculateMultiplier(currentStreak);
+    log.debug(
+        "Applying fatigue to hero {} - streak={}, multiplier={}",
+        hero.id(),
+        currentStreak,
+        multiplier);
 
     return new Hero(
         hero.id(),
@@ -79,24 +95,46 @@ public class FatigueUseCase {
   }
 
   public void recordUsage(UUID teamId, int roundNo, List<Integer> heroIds) {
-    List<HeroUsage> previousRoundHistory =
-        heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
+    MDC.put("teamId", teamId.toString());
+    MDC.put("roundNo", String.valueOf(roundNo));
 
-    Map<Integer, Integer> heroIdToStreakMap =
-        previousRoundHistory.stream()
-            .collect(Collectors.toMap(HeroUsage::heroId, HeroUsage::streak));
+    try {
+      log.debug(
+          "Recording hero usage - teamId={}, roundNo={}, heroes={}",
+          teamId,
+          roundNo,
+          heroIds.size());
 
-    List<HeroUsage> usages =
-        heroIds.stream()
-            .map(
-                heroId -> {
-                  int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
-                  int newStreak = previousStreak + 1;
-                  BigDecimal multiplier = calculateMultiplier(newStreak);
-                  return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
-                })
-            .toList();
+      List<HeroUsage> previousRoundHistory =
+          heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
 
-    heroUsageRepository.saveAll(usages);
+      Map<Integer, Integer> heroIdToStreakMap =
+          previousRoundHistory.stream()
+              .collect(Collectors.toMap(HeroUsage::heroId, HeroUsage::streak));
+
+      List<HeroUsage> usages =
+          heroIds.stream()
+              .map(
+                  heroId -> {
+                    int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
+                    int newStreak = previousStreak + 1;
+                    BigDecimal multiplier = calculateMultiplier(newStreak);
+                    log.debug(
+                        "Hero {} usage - previousStreak={}, newStreak={}, multiplier={}",
+                        heroId,
+                        previousStreak,
+                        newStreak,
+                        multiplier);
+                    return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+                  })
+              .toList();
+
+      heroUsageRepository.saveAll(usages);
+      log.info(
+          "Recorded usage for {} heroes - teamId={}, roundNo={}", usages.size(), teamId, roundNo);
+    } finally {
+      MDC.remove("teamId");
+      MDC.remove("roundNo");
+    }
   }
 }

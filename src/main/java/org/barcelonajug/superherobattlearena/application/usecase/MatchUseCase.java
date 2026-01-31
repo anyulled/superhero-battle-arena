@@ -17,10 +17,15 @@ import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MatchUseCase {
+
+  private static final Logger log = LoggerFactory.getLogger(MatchUseCase.class);
 
   private final SubmissionRepositoryPort submissionRepository;
   private final MatchRepositoryPort matchRepository;
@@ -48,28 +53,45 @@ public class MatchUseCase {
   }
 
   public List<UUID> autoMatch(UUID sessionId, Integer roundNo) {
-    List<Submission> submissions = submissionRepository.findByRoundNo(roundNo);
-    List<UUID> matchIds = new ArrayList<>();
+    MDC.put("roundNo", roundNo.toString());
+    MDC.put("sessionId", sessionId.toString());
 
-    for (int i = 0; i < submissions.size() - 1; i += 2) {
-      Submission subA = submissions.get(i);
-      Submission subB = submissions.get(i + 1);
+    try {
+      log.info("Starting auto-match for round {} in session {}", roundNo, sessionId);
+      List<Submission> submissions = submissionRepository.findByRoundNo(roundNo);
+      log.debug("Found {} submissions for round {}", submissions.size(), roundNo);
 
-      Match match =
-          Match.builder()
-              .matchId(UUID.randomUUID())
-              .sessionId(sessionId)
-              .teamA(subA.getTeamId())
-              .teamB(subB.getTeamId())
-              .roundNo(roundNo)
-              .status(MatchStatus.PENDING)
-              .build();
+      List<UUID> matchIds = new ArrayList<>();
 
-      matchRepository.save(match);
-      matchIds.add(match.getMatchId());
+      for (int i = 0; i < submissions.size() - 1; i += 2) {
+        Submission subA = submissions.get(i);
+        Submission subB = submissions.get(i + 1);
+
+        Match match =
+            Match.builder()
+                .matchId(UUID.randomUUID())
+                .sessionId(sessionId)
+                .teamA(subA.getTeamId())
+                .teamB(subB.getTeamId())
+                .roundNo(roundNo)
+                .status(MatchStatus.PENDING)
+                .build();
+
+        matchRepository.save(match);
+        matchIds.add(match.getMatchId());
+        log.debug(
+            "Created match {} between teams {} and {}",
+            match.getMatchId(),
+            subA.getTeamId(),
+            subB.getTeamId());
+      }
+
+      log.info("Auto-match completed - created {} matches for round {}", matchIds.size(), roundNo);
+      return matchIds;
+    } finally {
+      MDC.remove("roundNo");
+      MDC.remove("sessionId");
     }
-
-    return matchIds;
   }
 
   public UUID createMatch(UUID teamA, UUID teamB, Integer roundNo, UUID sessionId) {
@@ -85,72 +107,114 @@ public class MatchUseCase {
   }
 
   public String runMatch(UUID matchId) {
-    Match match =
-        matchRepository
-            .findById(matchId)
-            .orElseThrow(() -> new IllegalArgumentException("Match not found"));
+    long startTime = System.currentTimeMillis();
+    MDC.put("matchId", matchId.toString());
 
-    if (match.getStatus() != MatchStatus.PENDING) {
-      throw new IllegalStateException("Match already run or running");
-    }
+    try {
+      log.info("Starting match execution - matchId={}", matchId);
 
-    Optional<Submission> subA =
-        submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-    Optional<Submission> subB =
-        submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
+      Match match =
+          matchRepository
+              .findById(matchId)
+              .orElseThrow(
+                  () -> {
+                    log.error("Match not found - matchId={}", matchId);
+                    return new IllegalArgumentException("Match not found");
+                  });
 
-    if (subA.isEmpty() || subB.isEmpty()) {
-      throw new IllegalStateException("Submissions missing for one or both teams");
-    }
+      MDC.put("roundNo", match.getRoundNo().toString());
+      log.debug(
+          "Match details - teamA={}, teamB={}, roundNo={}",
+          match.getTeamA(),
+          match.getTeamB(),
+          match.getRoundNo());
 
-    List<Hero> teamAHeroes =
-        buildBattleTeam(
-            match.getTeamA(),
-            java.util.Objects.requireNonNull(subA.get().getSubmissionJson()),
-            match.getRoundNo());
-    List<Hero> teamBHeroes =
-        buildBattleTeam(
-            match.getTeamB(),
-            java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
-            match.getRoundNo());
+      if (match.getStatus() != MatchStatus.PENDING) {
+        log.warn("Match already processed - matchId={}, status={}", matchId, match.getStatus());
+        throw new IllegalStateException("Match already run or running");
+      }
 
-    Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
+      Optional<Submission> subA =
+          submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
+      Optional<Submission> subB =
+          submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
 
-    SimulationResult result =
-        battleEngineUseCase.simulate(
+      if (subA.isEmpty() || subB.isEmpty()) {
+        log.error(
+            "Missing submissions - matchId={}, teamA_submitted={}, teamB_submitted={}",
             matchId,
-            teamAHeroes,
-            teamBHeroes,
-            java.util.Objects.requireNonNullElse(round.getSeed(), 0L),
-            match.getTeamA(),
-            match.getTeamB(),
-            java.util.Objects.requireNonNull(round.getSpecJson()));
+            subA.isPresent(),
+            subB.isPresent());
+        throw new IllegalStateException("Submissions missing for one or both teams");
+      }
 
-    match.setStatus(MatchStatus.COMPLETED);
-    match.setWinnerTeam(result.winnerTeamId());
-    match.setResultJson(
-        new MatchResult(
-            result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW",
-            result.totalTurns(),
-            0));
-    matchRepository.save(match);
+      log.debug("Building battle teams with fatigue applied");
+      List<Hero> teamAHeroes =
+          buildBattleTeam(
+              match.getTeamA(),
+              java.util.Objects.requireNonNull(subA.get().getSubmissionJson()),
+              match.getRoundNo());
+      List<Hero> teamBHeroes =
+          buildBattleTeam(
+              match.getTeamB(),
+              java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
+              match.getRoundNo());
 
-    int seq = 1;
-    for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
-      MatchEvent matchEvent = new MatchEvent(matchId, seq++, evt);
-      matchEventRepository.save(matchEvent);
+      Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
+
+      log.debug("Delegating to battle engine for simulation");
+      SimulationResult result =
+          battleEngineUseCase.simulate(
+              matchId,
+              teamAHeroes,
+              teamBHeroes,
+              java.util.Objects.requireNonNullElse(round.getSeed(), 0L),
+              match.getTeamA(),
+              match.getTeamB(),
+              java.util.Objects.requireNonNull(round.getSpecJson()));
+
+      match.setStatus(MatchStatus.COMPLETED);
+      match.setWinnerTeam(result.winnerTeamId());
+      match.setResultJson(
+          new MatchResult(
+              result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW",
+              result.totalTurns(),
+              0));
+      matchRepository.save(match);
+
+      log.debug("Persisting {} match events", result.events().size());
+      int seq = 1;
+      for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
+        MatchEvent matchEvent = new MatchEvent(matchId, seq++, evt);
+        matchEventRepository.save(matchEvent);
+      }
+
+      log.debug("Recording hero usage for both teams");
+      updateHeroUsage(
+          match.getTeamA(),
+          match.getRoundNo(),
+          java.util.Objects.requireNonNull(subA.get().getSubmissionJson()).heroIds());
+      updateHeroUsage(
+          match.getTeamB(),
+          match.getRoundNo(),
+          java.util.Objects.requireNonNull(subB.get().getSubmissionJson()).heroIds());
+
+      String resultStr = result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW";
+      long duration = System.currentTimeMillis() - startTime;
+      log.info(
+          "Match execution completed - matchId={}, result={}, duration={}ms",
+          matchId,
+          resultStr,
+          duration);
+
+      return resultStr;
+    } catch (Exception e) {
+      log.error("Match execution failed - matchId={}", matchId, e);
+      throw e;
+    } finally {
+      MDC.remove("matchId");
+      MDC.remove("roundNo");
     }
-
-    updateHeroUsage(
-        match.getTeamA(),
-        match.getRoundNo(),
-        java.util.Objects.requireNonNull(subA.get().getSubmissionJson()).heroIds());
-    updateHeroUsage(
-        match.getTeamB(),
-        match.getRoundNo(),
-        java.util.Objects.requireNonNull(subB.get().getSubmissionJson()).heroIds());
-
-    return result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW";
   }
 
   public List<org.barcelonajug.superherobattlearena.domain.json.MatchEvent> getMatchEvents(
