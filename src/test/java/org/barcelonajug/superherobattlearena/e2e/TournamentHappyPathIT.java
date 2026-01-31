@@ -15,6 +15,7 @@ import net.datafaker.Faker;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -27,13 +28,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * End-to-end integration test for the complete tournament happy path. Tests the full workflow from
- * session creation to battle completion using H2 database.
+ * session creation to battle completion using PostgreSQL via Testcontainers.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles({"h2", "test"})
+@ActiveProfiles({"postgres-test", "test"})
 @Transactional
-class TournamentHappyPathIT {
+class TournamentHappyPathIT extends PostgresTestContainerConfig {
 
   private static final String ADMIN_USER = "admin";
   private static final String ADMIN_PASS = "test";

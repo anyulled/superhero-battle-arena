@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
@@ -26,7 +25,8 @@ public class FatigueUseCase {
   }
 
   public List<Hero> applyFatigue(UUID teamId, List<Hero> heroes, int currentRoundNo) {
-    List<HeroUsage> previousRoundUsage = heroUsageRepository.findByTeamIdAndRoundNo(teamId, currentRoundNo - 1);
+    List<HeroUsage> previousRoundUsage =
+        heroUsageRepository.findByTeamIdAndRoundNo(teamId, currentRoundNo - 1);
     return heroes.stream()
         .map(hero -> applyFatigueWithHistory(hero, previousRoundUsage, currentRoundNo))
         .toList();
@@ -108,26 +108,29 @@ public class FatigueUseCase {
           roundNo,
           heroIds.size());
 
-      List<HeroUsage> previousRoundHistory = heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
+      List<HeroUsage> previousRoundHistory =
+          heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
 
-      Map<Integer, Integer> heroIdToStreakMap = previousRoundHistory.stream()
-          .collect(Collectors.toMap(HeroUsage::heroId, HeroUsage::streak));
+      Map<Integer, Integer> heroIdToStreakMap =
+          previousRoundHistory.stream()
+              .collect(Collectors.toMap(HeroUsage::heroId, HeroUsage::streak));
 
-      List<HeroUsage> usages = heroIds.stream()
-          .map(
-              heroId -> {
-                int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
-                int newStreak = previousStreak + 1;
-                BigDecimal multiplier = calculateMultiplier(newStreak);
-                log.debug(
-                    "Hero {} usage - previousStreak={}, newStreak={}, multiplier={}",
-                    heroId,
-                    previousStreak,
-                    newStreak,
-                    multiplier);
-                return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
-              })
-          .toList();
+      List<HeroUsage> usages =
+          heroIds.stream()
+              .map(
+                  heroId -> {
+                    int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
+                    int newStreak = previousStreak + 1;
+                    BigDecimal multiplier = calculateMultiplier(newStreak);
+                    log.debug(
+                        "Hero {} usage - previousStreak={}, newStreak={}, multiplier={}",
+                        heroId,
+                        previousStreak,
+                        newStreak,
+                        multiplier);
+                    return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+                  })
+              .toList();
 
       heroUsageRepository.saveAll(usages);
       log.info(

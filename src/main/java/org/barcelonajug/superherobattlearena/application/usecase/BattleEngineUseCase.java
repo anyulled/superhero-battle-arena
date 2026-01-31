@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
@@ -52,7 +51,8 @@ public class BattleEngineUseCase {
       teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
 
       List<MatchEvent> events = new ArrayList<>();
-      java.util.concurrent.atomic.AtomicLong logicalTime = new java.util.concurrent.atomic.AtomicLong(0);
+      java.util.concurrent.atomic.AtomicLong logicalTime =
+          new java.util.concurrent.atomic.AtomicLong(0);
 
       events.add(MatchEvent.matchStart(logicalTime.getAndIncrement()));
 
@@ -178,8 +178,8 @@ public class BattleEngineUseCase {
       UUID teamBId,
       Random random) {
     UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
-    List<BattleHeroUseCase> targets = allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
-        .toList();
+    List<BattleHeroUseCase> targets =
+        allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive()).toList();
 
     if (targets.isEmpty()) {
       return null;
@@ -190,7 +190,8 @@ public class BattleEngineUseCase {
   private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
     // Find min HP
     int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
-    List<BattleHeroUseCase> lowestHpTargets = targets.stream().filter(h -> h.currentHp == minHp).toList();
+    List<BattleHeroUseCase> lowestHpTargets =
+        targets.stream().filter(h -> h.currentHp == minHp).toList();
 
     if (lowestHpTargets.size() == 1) {
       return lowestHpTargets.get(0);

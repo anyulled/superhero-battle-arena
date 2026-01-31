@@ -7,9 +7,14 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [unit, integration]
+    
+    name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests (PostgreSQL)' }}
 
     steps:
     - uses: actions/checkout@v4
@@ -21,5 +26,19 @@ jobs:
         distribution: 'temurin'
         cache: 'maven'
 
-    - name: Build and Test with Maven
-      run: ./mvnw -B clean verify
+    - name: Run Unit Tests
+      if: matrix.test-type == 'unit'
+      run: ./mvnw -B clean test
+
+    - name: Run Integration Tests with Testcontainers
+      if: matrix.test-type == 'integration'
+      run: ./mvnw -B clean verify -Ppostgres-tests
+
+    - name: Publish Test Report
+      uses: dorny/test-reporter@v1
+      if: always()
+      with:
+        name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
+        path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/*.xml' || 'target/failsafe-reports/*.xml' }}
+        reporter: java-junit
+        fail-on-error: true
