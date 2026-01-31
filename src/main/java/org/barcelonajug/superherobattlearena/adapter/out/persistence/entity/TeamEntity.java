@@ -1,5 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -7,22 +11,23 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
 
 @Entity
 @Table(name = "teams")
 public class TeamEntity {
 
-  @Id private UUID teamId;
+  @Id
+  private UUID teamId;
   private UUID sessionId;
+  @Column(nullable = false)
   private String name;
+
+  @Column(name = "created_at", nullable = false)
   private OffsetDateTime createdAt;
 
   @ElementCollection
   @CollectionTable(name = "team_members", joinColumns = @JoinColumn(name = "team_id"))
-  @Column(name = "member_name")
+  @Column(name = "member_name", nullable = false)
   private List<String> members;
 
   public UUID getTeamId() {

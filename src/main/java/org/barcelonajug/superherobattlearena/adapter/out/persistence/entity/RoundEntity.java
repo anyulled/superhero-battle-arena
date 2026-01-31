@@ -1,17 +1,19 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+import org.barcelonajug.superherobattlearena.domain.RoundStatus;
+import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-import org.barcelonajug.superherobattlearena.domain.RoundStatus;
-import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "rounds")
@@ -29,6 +31,7 @@ public class RoundEntity {
   private RoundSpec specJson;
 
   @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private RoundStatus status;
 
   @Column(name = "submission_deadline")

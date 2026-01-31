@@ -34,9 +34,56 @@ A Spring Boot application built with Hexagonal Architecture that simulates battl
    ./mvnw spring-boot:run
    ```
 
-3. **Access the Application**:
+### Spring Profiles
+
+The application supports different environments through Spring profiles:
+
+- **`h2` (Default)**: Uses an in-memory H2 database. Perfect for local development and testing without any infrastructure requirements.
+
+  ```bash
+  ./mvnw spring-boot:run -Dspring-boot.run.profiles=h2
+  ```
+
+- **`postgres`**: Uses an external PostgreSQL database managed by **Docker Compose**. Spring Boot will automatically start a PostgreSQL container using `docker-compose.yml`.
+
+  ```bash
+  ./mvnw spring-boot:run -Dspring-boot.run.profiles=postgres
+  ```
+
+#### Troubleshooting Podman
+
+If you are using **Podman** instead of Docker, the `spring-boot-docker-compose` module may fail to find the `docker` command. You can resolve this by:
+
+1. **Creating a symlink** (recommended):
+
+   ```bash
+   sudo ln -s $(which podman) /usr/local/bin/docker
+   ```
+
+2. **Ensuring the Podman machine is running**:
+
+   ```bash
+   podman machine start
+   ```
+
+3. **Setting the `DOCKER_HOST`** if necessary:
+
+   ```bash
+   export DOCKER_HOST="unix://$(podman machine inspect --format '{{.RuntimeDirectories.Internal}}' | jq -r '.[0]')/podman.sock"
+   ```
+
+4. **Fixing Credential Helper Errors**:
+
+   If you see an error like `exec: "docker-credential-desktop": executable file not found`, it's because your `~/.docker/config.json` is configured to use Docker Desktop's credential store. Fix it by removing the `credsStore` line:
+
+   ```bash
+   sed -i '' '/"credsStore": "desktop"/d' ~/.docker/config.json
+   ```
+
+5. **Access the Application**:
+
    Open your browser to [http://localhost:8080/lobby.html](http://localhost:8080/lobby.html)
-4. **API Documentation**:
+6. **API Documentation**:
    - Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
    - OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
 
