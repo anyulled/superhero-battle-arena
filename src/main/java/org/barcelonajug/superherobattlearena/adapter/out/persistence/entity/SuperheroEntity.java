@@ -14,33 +14,44 @@ import java.time.OffsetDateTime;
 @Table(name = "superheroes")
 public class SuperheroEntity {
 
-  @Id private Integer id;
+  @Id
+  @SuppressWarnings("NullAway.Init")
+  private Integer id;
 
+  @SuppressWarnings("NullAway.Init")
   @Column(nullable = false)
   private String name;
 
+  @SuppressWarnings("NullAway.Init")
   @Column(nullable = false, unique = true)
   private String slug;
 
+  @SuppressWarnings("NullAway.Init")
   private String alignment;
 
+  @SuppressWarnings("NullAway.Init")
   private String publisher;
 
+  @SuppressWarnings("NullAway.Init")
   @Column(name = "created_at")
   private OffsetDateTime createdAt;
 
+  @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
   private SuperheroPowerStatsEntity powerStats;
 
+  @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
   private SuperheroAppearanceEntity appearance;
 
+  @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
   private SuperheroBiographyEntity biography;
 
+  @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
   private SuperheroImagesEntity images;

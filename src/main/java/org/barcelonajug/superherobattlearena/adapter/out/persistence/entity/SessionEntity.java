@@ -10,9 +10,12 @@ import java.util.UUID;
 @Entity
 @Table(name = "sessions")
 public class SessionEntity {
-  @Id private UUID sessionId;
+  @Id
+  @SuppressWarnings("NullAway.Init")
+  private UUID sessionId;
 
   @Column(name = "created_at", nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private OffsetDateTime createdAt;
 
   @Column(nullable = false)

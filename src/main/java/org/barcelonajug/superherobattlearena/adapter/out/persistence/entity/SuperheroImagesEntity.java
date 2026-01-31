@@ -7,6 +7,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "superhero_images")
@@ -14,23 +15,25 @@ public class SuperheroImagesEntity {
 
   @Id
   @Column(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private Integer superheroId;
 
   @Column(name = "xs_url")
-  private String xsUrl;
+  private @Nullable String xsUrl;
 
   @Column(name = "sm_url")
-  private String smUrl;
+  private @Nullable String smUrl;
 
   @Column(name = "md_url")
-  private String mdUrl;
+  private @Nullable String mdUrl;
 
   @Column(name = "lg_url")
-  private String lgUrl;
+  private @Nullable String lgUrl;
 
   @OneToOne
   @MapsId
   @JoinColumn(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private SuperheroEntity superhero;
 
   public SuperheroImagesEntity() {}
@@ -43,35 +46,35 @@ public class SuperheroImagesEntity {
     this.superheroId = superheroId;
   }
 
-  public String getXsUrl() {
+  public @Nullable String getXsUrl() {
     return xsUrl;
   }
 
-  public void setXsUrl(String xsUrl) {
+  public void setXsUrl(@Nullable String xsUrl) {
     this.xsUrl = xsUrl;
   }
 
-  public String getSmUrl() {
+  public @Nullable String getSmUrl() {
     return smUrl;
   }
 
-  public void setSmUrl(String smUrl) {
+  public void setSmUrl(@Nullable String smUrl) {
     this.smUrl = smUrl;
   }
 
-  public String getMdUrl() {
+  public @Nullable String getMdUrl() {
     return mdUrl;
   }
 
-  public void setMdUrl(String mdUrl) {
+  public void setMdUrl(@Nullable String mdUrl) {
     this.mdUrl = mdUrl;
   }
 
-  public String getLgUrl() {
+  public @Nullable String getLgUrl() {
     return lgUrl;
   }
 
-  public void setLgUrl(String lgUrl) {
+  public void setLgUrl(@Nullable String lgUrl) {
     this.lgUrl = lgUrl;
   }
 

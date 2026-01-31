@@ -17,25 +17,35 @@ public class HeroUsageEntity {
 
   @Id
   @Column(name = "team_id")
+  @SuppressWarnings("NullAway.Init")
   private UUID teamId;
 
   @Id
   @Column(name = "hero_id")
+  @SuppressWarnings("NullAway.Init")
   private Integer heroId;
 
   @Id
   @Column(name = "round_no")
+  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
 
   @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private Integer streak;
 
   @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private BigDecimal multiplier;
 
   public static class HeroUsageId implements Serializable {
+    @SuppressWarnings("NullAway.Init")
     private UUID teamId;
+
+    @SuppressWarnings("NullAway.Init")
     private Integer heroId;
+
+    @SuppressWarnings("NullAway.Init")
     private Integer roundNo;
 
     public HeroUsageId() {}

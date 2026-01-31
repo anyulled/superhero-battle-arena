@@ -11,6 +11,7 @@ import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "matches")
@@ -18,30 +19,35 @@ public class MatchEntity {
 
   @Id
   @Column(name = "match_id")
+  @SuppressWarnings("NullAway.Init")
   private UUID matchId;
 
   @Column(name = "session_id")
-  private UUID sessionId;
+  private @Nullable UUID sessionId;
 
   @Column(name = "round_no", nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
 
   @Column(name = "team_a", nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private UUID teamA;
 
   @Column(name = "team_b", nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private UUID teamB;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private MatchStatus status;
 
   @Column(name = "winner_team")
-  private UUID winnerTeam;
+  private @Nullable UUID winnerTeam;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "result_json")
-  private MatchResult resultJson;
+  private @Nullable MatchResult resultJson;
 
   public UUID getMatchId() {
     return matchId;
@@ -51,11 +57,11 @@ public class MatchEntity {
     this.matchId = matchId;
   }
 
-  public UUID getSessionId() {
+  public @Nullable UUID getSessionId() {
     return sessionId;
   }
 
-  public void setSessionId(UUID sessionId) {
+  public void setSessionId(@Nullable UUID sessionId) {
     this.sessionId = sessionId;
   }
 
@@ -91,19 +97,19 @@ public class MatchEntity {
     this.status = status;
   }
 
-  public UUID getWinnerTeam() {
+  public @Nullable UUID getWinnerTeam() {
     return winnerTeam;
   }
 
-  public void setWinnerTeam(UUID winnerTeam) {
+  public void setWinnerTeam(@Nullable UUID winnerTeam) {
     this.winnerTeam = winnerTeam;
   }
 
-  public MatchResult getResultJson() {
+  public @Nullable MatchResult getResultJson() {
     return resultJson;
   }
 
-  public void setResultJson(MatchResult resultJson) {
+  public void setResultJson(@Nullable MatchResult resultJson) {
     this.resultJson = resultJson;
   }
 }

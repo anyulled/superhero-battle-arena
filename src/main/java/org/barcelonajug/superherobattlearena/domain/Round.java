@@ -2,15 +2,23 @@ package org.barcelonajug.superherobattlearena.domain;
 
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.jspecify.annotations.Nullable;
 
 /** Represents a round in a tournament session. */
 public class Round {
+  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
+
+  @SuppressWarnings("NullAway.Init")
   private UUID sessionId;
-  private Long seed;
-  private RoundSpec specJson;
+
+  private @Nullable Long seed;
+  private @Nullable RoundSpec specJson;
+
+  @SuppressWarnings("NullAway.Init")
   private RoundStatus status;
-  private java.time.OffsetDateTime submissionDeadline;
+
+  private java.time.@Nullable OffsetDateTime submissionDeadline;
 
   public Integer getRoundNo() {
     return roundNo;
@@ -28,19 +36,19 @@ public class Round {
     this.sessionId = sessionId;
   }
 
-  public Long getSeed() {
+  public @Nullable Long getSeed() {
     return seed;
   }
 
-  public void setSeed(Long seed) {
+  public void setSeed(@Nullable Long seed) {
     this.seed = seed;
   }
 
-  public RoundSpec getSpecJson() {
+  public @Nullable RoundSpec getSpecJson() {
     return specJson;
   }
 
-  public void setSpecJson(RoundSpec specJson) {
+  public void setSpecJson(@Nullable RoundSpec specJson) {
     this.specJson = specJson;
   }
 
@@ -52,11 +60,11 @@ public class Round {
     this.status = status;
   }
 
-  public java.time.OffsetDateTime getSubmissionDeadline() {
+  public java.time.@Nullable OffsetDateTime getSubmissionDeadline() {
     return submissionDeadline;
   }
 
-  public void setSubmissionDeadline(java.time.OffsetDateTime submissionDeadline) {
+  public void setSubmissionDeadline(java.time.@Nullable OffsetDateTime submissionDeadline) {
     this.submissionDeadline = submissionDeadline;
   }
 }

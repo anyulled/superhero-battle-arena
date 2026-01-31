@@ -34,6 +34,9 @@ class RosterUseCaseTest {
                     .role("Fighter")
                     .alignment("good")
                     .publisher("Marvel")
+                    .powerstats(Hero.PowerStats.builder().build())
+                    .tags(List.of())
+                    .images(Hero.Images.builder().build())
                     .build()));
     assertThat(rosterUseCase.getAllHeroes()).isNotEmpty();
   }
@@ -58,6 +61,8 @@ class RosterUseCaseTest {
             .cost(15)
             .alignment("good")
             .publisher("Marvel Comics")
+            .tags(List.of())
+            .images(Hero.Images.builder().build())
             .build();
     when(repository.findById(1)).thenReturn(Optional.of(mockHero));
 

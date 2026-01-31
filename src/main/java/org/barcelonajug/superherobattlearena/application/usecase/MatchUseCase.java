@@ -104,9 +104,15 @@ public class MatchUseCase {
     }
 
     List<Hero> teamAHeroes =
-        buildBattleTeam(match.getTeamA(), subA.get().getSubmissionJson(), match.getRoundNo());
+        buildBattleTeam(
+            match.getTeamA(),
+            java.util.Objects.requireNonNull(subA.get().getSubmissionJson()),
+            match.getRoundNo());
     List<Hero> teamBHeroes =
-        buildBattleTeam(match.getTeamB(), subB.get().getSubmissionJson(), match.getRoundNo());
+        buildBattleTeam(
+            match.getTeamB(),
+            java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
+            match.getRoundNo());
 
     Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
 
@@ -115,10 +121,10 @@ public class MatchUseCase {
             matchId,
             teamAHeroes,
             teamBHeroes,
-            round.getSeed(),
+            java.util.Objects.requireNonNullElse(round.getSeed(), 0L),
             match.getTeamA(),
             match.getTeamB(),
-            round.getSpecJson());
+            java.util.Objects.requireNonNull(round.getSpecJson()));
 
     match.setStatus(MatchStatus.COMPLETED);
     match.setWinnerTeam(result.winnerTeamId());
@@ -135,8 +141,14 @@ public class MatchUseCase {
       matchEventRepository.save(matchEvent);
     }
 
-    updateHeroUsage(match.getTeamA(), match.getRoundNo(), subA.get().getSubmissionJson().heroIds());
-    updateHeroUsage(match.getTeamB(), match.getRoundNo(), subB.get().getSubmissionJson().heroIds());
+    updateHeroUsage(
+        match.getTeamA(),
+        match.getRoundNo(),
+        java.util.Objects.requireNonNull(subA.get().getSubmissionJson()).heroIds());
+    updateHeroUsage(
+        match.getTeamB(),
+        match.getRoundNo(),
+        java.util.Objects.requireNonNull(subB.get().getSubmissionJson()).heroIds());
 
     return result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW";
   }

@@ -1,5 +1,7 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Optional;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.RoundMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataRoundRepository;
@@ -25,6 +27,6 @@ public class RoundPersistenceAdapter implements RoundRepositoryPort {
 
   @Override
   public Round save(Round round) {
-    return mapper.toDomain(repository.save(mapper.toEntity(round)));
+    return requireNonNull(mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(round)))));
   }
 }

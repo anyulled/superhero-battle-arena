@@ -18,16 +18,23 @@ public class MatchEventEntity {
 
   @Id
   @Column(name = "match_id")
+  @SuppressWarnings("NullAway.Init")
   private UUID matchId;
 
-  @Id private Integer seq;
+  @Id
+  @SuppressWarnings("NullAway.Init")
+  private Integer seq;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "event_json")
+  @SuppressWarnings("NullAway.Init")
   private org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson;
 
   public static class MatchEventId implements Serializable {
+    @SuppressWarnings("NullAway.Init")
     private UUID matchId;
+
+    @SuppressWarnings("NullAway.Init")
     private Integer seq;
 
     public MatchEventId() {}

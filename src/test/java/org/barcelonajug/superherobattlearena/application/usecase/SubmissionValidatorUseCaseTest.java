@@ -96,7 +96,8 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldValidateValidSubmission() {
-    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of("Tank", 1), null, null, null, "Basic");
+    RoundSpec spec =
+        new RoundSpec("Test", 2, 50, Map.of("Tank", 1), Map.of(), List.of(), Map.of(), "Basic");
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
     assertThatCode(() -> validator.validate(submission, spec)).doesNotThrowAnyException();
@@ -104,7 +105,7 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailWrongTeamSize() {
-    RoundSpec spec = new RoundSpec("Test", 3, 50, null, null, null, null, "Basic");
+    RoundSpec spec = new RoundSpec("Test", 3, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -114,7 +115,7 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailBudgetExceeded() {
-    RoundSpec spec = new RoundSpec("Test", 2, 25, null, null, null, null, "Basic");
+    RoundSpec spec = new RoundSpec("Test", 2, 25, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Cost 10+20=30 > 25
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -124,7 +125,8 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailMissingRole() {
-    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of("Heal", 1), null, null, null, "Basic");
+    RoundSpec spec =
+        new RoundSpec("Test", 2, 50, Map.of("Heal", 1), Map.of(), List.of(), Map.of(), "Basic");
     DraftSubmission submission =
         new DraftSubmission(List.of(1, 2), "Attack"); // Tank, Dps. Missing Heal.
 
@@ -135,7 +137,8 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailBannedTag() {
-    RoundSpec spec = new RoundSpec("Test", 1, 50, null, null, List.of("Banned"), null, "Basic");
+    RoundSpec spec =
+        new RoundSpec("Test", 1, 50, Map.of(), Map.of(), List.of("Banned"), Map.of(), "Basic");
     DraftSubmission submission = new DraftSubmission(List.of(3), "Attack"); // Has "Banned" tag
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -145,7 +148,7 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailDuplicates() {
-    RoundSpec spec = new RoundSpec("Test", 2, 50, null, null, null, null, "Basic");
+    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
     DraftSubmission submission = new DraftSubmission(List.of(1, 1), "Attack");
 
     assertThatThrownBy(() -> validator.validate(submission, spec))

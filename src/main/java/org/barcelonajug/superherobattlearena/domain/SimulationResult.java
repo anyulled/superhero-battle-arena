@@ -5,4 +5,7 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
 
 /** Represents the result of a match simulation. */
-public record SimulationResult(UUID winnerTeamId, int totalTurns, List<MatchEvent> events) {}
+public record SimulationResult(
+    @org.jspecify.annotations.Nullable UUID winnerTeamId,
+    int totalTurns,
+    List<MatchEvent> events) {}

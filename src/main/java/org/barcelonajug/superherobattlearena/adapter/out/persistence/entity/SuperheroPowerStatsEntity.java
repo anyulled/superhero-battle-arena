@@ -14,16 +14,31 @@ public class SuperheroPowerStatsEntity {
 
   @Id
   @Column(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private Integer superheroId;
 
+  @SuppressWarnings("NullAway.Init")
   private Integer intelligence;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer strength;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer speed;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer durability;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer power;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer combat;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer cost;
 
+  @SuppressWarnings("NullAway.Init")
   @OneToOne
   @MapsId
   @JoinColumn(name = "superhero_id")

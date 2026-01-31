@@ -57,7 +57,8 @@ class BattleEngineUseCaseTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
     long seed = 12345L;
-    RoundSpec spec = new RoundSpec("Test", 1, 100, null, null, null, null, "Arena");
+    RoundSpec spec =
+        new RoundSpec("Test", 1, 100, Map.of(), Map.of(), List.of(), Map.of(), "Arena");
 
     SimulationResult result1 =
         battleEngineUseCase.simulate(matchId, List.of(h1), List.of(h2), seed, teamA, teamB, spec);
@@ -118,7 +119,8 @@ class BattleEngineUseCaseTest {
     UUID matchId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
-    RoundSpec spec = new RoundSpec("Test", 1, 100, null, null, null, null, "Arena");
+    RoundSpec spec =
+        new RoundSpec("Test", 1, 100, Map.of(), Map.of(), List.of(), Map.of(), "Arena");
 
     // Team A has Slow, Team B has Fast.
     SimulationResult result =
@@ -176,7 +178,8 @@ class BattleEngineUseCaseTest {
     UUID matchId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
-    RoundSpec spec = new RoundSpec("Test", 1, 100, null, null, null, Map.of("Fire", 10.0), "Arena");
+    RoundSpec spec =
+        new RoundSpec("Test", 1, 100, Map.of(), Map.of(), List.of(), Map.of("Fire", 10.0), "Arena");
 
     // Pyro hits Dummy.
     // Base Damage: 10 + modifier?

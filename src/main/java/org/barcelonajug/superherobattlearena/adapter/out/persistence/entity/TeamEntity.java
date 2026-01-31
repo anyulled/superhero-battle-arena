@@ -10,23 +10,30 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "teams")
 public class TeamEntity {
 
-  @Id private UUID teamId;
-  private UUID sessionId;
+  @Id
+  @SuppressWarnings("NullAway.Init")
+  private UUID teamId;
+
+  private @Nullable UUID sessionId;
 
   @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private String name;
 
   @Column(name = "created_at", nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private OffsetDateTime createdAt;
 
   @ElementCollection
   @CollectionTable(name = "team_members", joinColumns = @JoinColumn(name = "team_id"))
   @Column(name = "member_name", nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private List<String> members;
 
   public UUID getTeamId() {
@@ -37,11 +44,11 @@ public class TeamEntity {
     this.teamId = teamId;
   }
 
-  public UUID getSessionId() {
+  public @Nullable UUID getSessionId() {
     return sessionId;
   }
 
-  public void setSessionId(UUID sessionId) {
+  public void setSessionId(@Nullable UUID sessionId) {
     this.sessionId = sessionId;
   }
 

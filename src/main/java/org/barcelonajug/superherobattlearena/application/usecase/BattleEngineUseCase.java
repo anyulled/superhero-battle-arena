@@ -80,7 +80,7 @@ public class BattleEngineUseCase {
     return new SimulationResult(winnerId, turn, events);
   }
 
-  private UUID executeTurn(
+  private @org.jspecify.annotations.Nullable UUID executeTurn(
       List<BattleHeroUseCase> allHeroes,
       UUID teamAId,
       UUID teamBId,
@@ -146,7 +146,8 @@ public class BattleEngineUseCase {
             .thenComparingInt(bh -> bh.hero.id()));
   }
 
-  private UUID checkWinCondition(List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
+  private @org.jspecify.annotations.Nullable UUID checkWinCondition(
+      List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
     boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
     boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
 
@@ -161,7 +162,7 @@ public class BattleEngineUseCase {
     return null; // Battle continues
   }
 
-  private BattleHeroUseCase findTarget(
+  private @org.jspecify.annotations.Nullable BattleHeroUseCase findTarget(
       BattleHeroUseCase attacker,
       List<BattleHeroUseCase> allHeroes,
       UUID teamAId,

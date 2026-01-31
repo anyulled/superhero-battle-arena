@@ -23,7 +23,9 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
 
   @Override
   public Submission save(Submission submission) {
-    return mapper.toDomain(repository.save(mapper.toEntity(submission)));
+    return java.util.Objects.requireNonNull(
+        mapper.toDomain(
+            repository.save(java.util.Objects.requireNonNull(mapper.toEntity(submission)))));
   }
 
   @Override
@@ -33,6 +35,10 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
 
   @Override
   public List<Submission> findByRoundNo(Integer roundNo) {
-    return repository.findByRoundNo(roundNo).stream().map(mapper::toDomain).toList();
+    return repository.findByRoundNo(roundNo).stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 }

@@ -7,6 +7,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "superhero_appearance")
@@ -14,26 +15,28 @@ public class SuperheroAppearanceEntity {
 
   @Id
   @Column(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private Integer superheroId;
 
-  private String gender;
-  private String race;
+  private @Nullable String gender;
+  private @Nullable String race;
 
   @Column(name = "height_cm")
-  private Integer heightCm;
+  private @Nullable Integer heightCm;
 
   @Column(name = "weight_kg")
-  private Integer weightKg;
+  private @Nullable Integer weightKg;
 
   @Column(name = "eye_color")
-  private String eyeColor;
+  private @Nullable String eyeColor;
 
   @Column(name = "hair_color")
-  private String hairColor;
+  private @Nullable String hairColor;
 
   @OneToOne
   @MapsId
   @JoinColumn(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private SuperheroEntity superhero;
 
   public SuperheroAppearanceEntity() {}
@@ -46,51 +49,51 @@ public class SuperheroAppearanceEntity {
     this.superheroId = superheroId;
   }
 
-  public String getGender() {
+  public @Nullable String getGender() {
     return gender;
   }
 
-  public void setGender(String gender) {
+  public void setGender(@Nullable String gender) {
     this.gender = gender;
   }
 
-  public String getRace() {
+  public @Nullable String getRace() {
     return race;
   }
 
-  public void setRace(String race) {
+  public void setRace(@Nullable String race) {
     this.race = race;
   }
 
-  public Integer getHeightCm() {
+  public @Nullable Integer getHeightCm() {
     return heightCm;
   }
 
-  public void setHeightCm(Integer heightCm) {
+  public void setHeightCm(@Nullable Integer heightCm) {
     this.heightCm = heightCm;
   }
 
-  public Integer getWeightKg() {
+  public @Nullable Integer getWeightKg() {
     return weightKg;
   }
 
-  public void setWeightKg(Integer weightKg) {
+  public void setWeightKg(@Nullable Integer weightKg) {
     this.weightKg = weightKg;
   }
 
-  public String getEyeColor() {
+  public @Nullable String getEyeColor() {
     return eyeColor;
   }
 
-  public void setEyeColor(String eyeColor) {
+  public void setEyeColor(@Nullable String eyeColor) {
     this.eyeColor = eyeColor;
   }
 
-  public String getHairColor() {
+  public @Nullable String getHairColor() {
     return hairColor;
   }
 
-  public void setHairColor(String hairColor) {
+  public void setHairColor(@Nullable String hairColor) {
     this.hairColor = hairColor;
   }
 

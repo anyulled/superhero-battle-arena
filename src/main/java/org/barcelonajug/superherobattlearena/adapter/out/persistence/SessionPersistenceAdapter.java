@@ -21,9 +21,9 @@ public class SessionPersistenceAdapter implements SessionRepositoryPort {
 
   @Override
   public Session save(Session session) {
-    SessionEntity entity = mapper.toEntity(session);
+    SessionEntity entity = java.util.Objects.requireNonNull(mapper.toEntity(session));
     SessionEntity savedEntity = repository.save(entity);
-    return mapper.toDomain(savedEntity);
+    return java.util.Objects.requireNonNull(mapper.toDomain(savedEntity));
   }
 
   @Override
@@ -33,7 +33,11 @@ public class SessionPersistenceAdapter implements SessionRepositoryPort {
 
   @Override
   public java.util.List<Session> findAll() {
-    return repository.findAll().stream().map(mapper::toDomain).toList();
+    return repository.findAll().stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 
   @Override

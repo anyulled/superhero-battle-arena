@@ -1,5 +1,7 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.MatchEventMapper;
@@ -32,18 +34,32 @@ public final class MatchEventPersistenceAdapter implements MatchEventRepositoryP
 
   @Override
   public MatchEvent save(final MatchEvent matchEvent) {
-    return mapper.toDomain(repository.save(mapper.toEntity(matchEvent)));
+    return requireNonNull(
+        mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(matchEvent)))));
   }
 
   @Override
   public List<MatchEvent> saveAll(final List<MatchEvent> matchEvents) {
-    var entities = matchEvents.stream().map(mapper::toEntity).toList();
-    return repository.saveAll(entities).stream().map(mapper::toDomain).toList();
+    var entities =
+        matchEvents.stream()
+            .map(mapper::toEntity)
+            .filter(java.util.Objects::nonNull)
+            .map(java.util.Objects::requireNonNull)
+            .toList();
+    return repository.saveAll(entities).stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 
   @Override
   public List<MatchEvent> findByMatchId(final UUID matchId) {
     var entities = repository.findByMatchIdOrderBySeqAsc(matchId);
-    return entities.stream().map(mapper::toDomain).toList();
+    return entities.stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 }

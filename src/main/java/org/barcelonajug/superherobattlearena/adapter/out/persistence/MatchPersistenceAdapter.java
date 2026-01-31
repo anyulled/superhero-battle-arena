@@ -23,12 +23,25 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
 
   @Override
   public Match save(Match match) {
-    return mapper.toDomain(repository.save(mapper.toEntity(match)));
+    return java.util.Objects.requireNonNull(
+        mapper.toDomain(repository.save(java.util.Objects.requireNonNull(mapper.toEntity(match)))));
   }
 
   @Override
   public List<Match> saveAll(List<Match> matches) {
-    return mapper.toDomain(repository.saveAll(mapper.toEntity(matches)));
+    java.util.List<org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.MatchEntity>
+        entities =
+            matches.stream()
+                .map(mapper::toEntity)
+                .filter(java.util.Objects::nonNull)
+                .map(java.util.Objects::requireNonNull)
+                .toList();
+
+    return repository.saveAll(entities).stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 
   @Override
@@ -38,12 +51,20 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
 
   @Override
   public List<Match> findByStatus(MatchStatus status) {
-    return repository.findByStatus(status).stream().map(mapper::toDomain).toList();
+    return repository.findByStatus(status).stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 
   @Override
   public List<Match> findAll() {
-    return repository.findAll().stream().map(mapper::toDomain).toList();
+    return repository.findAll().stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 
   @Override
@@ -52,6 +73,10 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
             ? repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING)
             : repository.findByRoundNoAndStatusAndSessionId(
                 roundNo, MatchStatus.PENDING, sessionId))
-        .stream().map(mapper::toDomain).toList();
+        .stream()
+            .map(mapper::toDomain)
+            .filter(java.util.Objects::nonNull)
+            .map(java.util.Objects::requireNonNull)
+            .toList();
   }
 }

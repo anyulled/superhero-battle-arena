@@ -22,23 +22,36 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
 
   @Override
   public HeroUsage save(HeroUsage heroUsage) {
-    return mapper.toDomain(repository.save(mapper.toEntity(heroUsage)));
+    return java.util.Objects.requireNonNull(
+        mapper.toDomain(
+            repository.save(java.util.Objects.requireNonNull(mapper.toEntity(heroUsage)))));
   }
 
   @Override
   public void saveAll(final List<HeroUsage> heroUsages) {
-    repository.saveAll(heroUsages.stream().map(mapper::toEntity).toList());
+    repository.saveAll(
+        heroUsages.stream()
+            .map(mapper::toEntity)
+            .filter(java.util.Objects::nonNull)
+            .map(java.util.Objects::requireNonNull)
+            .toList());
   }
 
   @Override
   public List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
     return repository.findByTeamIdAndRoundNo(teamId, roundNo).stream()
         .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
         .toList();
   }
 
   @Override
   public List<HeroUsage> findByTeamId(UUID teamId) {
-    return repository.findByTeamId(teamId).stream().map(mapper::toDomain).toList();
+    return repository.findByTeamId(teamId).stream()
+        .map(mapper::toDomain)
+        .filter(java.util.Objects::nonNull)
+        .map(java.util.Objects::requireNonNull)
+        .toList();
   }
 }

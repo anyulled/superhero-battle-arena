@@ -20,9 +20,11 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
   @Value("${admin.username}")
+  @SuppressWarnings("NullAway.Init")
   private String adminUsername;
 
   @Value("${admin.password}")
+  @SuppressWarnings("NullAway.Init")
   private String adminPassword;
 
   @Bean

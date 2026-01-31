@@ -1,6 +1,9 @@
 package org.barcelonajug.superherobattlearena.domain;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 /** Represents a superhero with stats and role. */
 public record Hero(
@@ -10,12 +13,12 @@ public record Hero(
     PowerStats powerstats,
     String role,
     Integer cost,
-    String alignment,
-    String publisher,
-    Appearance appearance,
-    Biography biography,
+    @org.jspecify.annotations.Nullable String alignment,
+    @org.jspecify.annotations.Nullable String publisher,
+    @org.jspecify.annotations.Nullable Appearance appearance,
+    @org.jspecify.annotations.Nullable Biography biography,
     List<String> tags,
-    Images images) {
+    @org.jspecify.annotations.Nullable Images images) {
   /** Constructs a new Hero with default values if needed. */
   public Hero {
     if (role == null) {
@@ -35,17 +38,17 @@ public record Hero(
 
   public static class Builder {
     private int id;
-    private String name;
-    private String slug;
-    private PowerStats powerstats;
-    private String role;
-    private Integer cost;
-    private String alignment;
-    private String publisher;
-    private Appearance appearance;
-    private Biography biography;
-    private List<String> tags;
-    private Images images;
+    private @Nullable String name;
+    private @Nullable String slug;
+    private @Nullable PowerStats powerstats;
+    private @Nullable String role;
+    private @Nullable Integer cost;
+    private @Nullable String alignment;
+    private @Nullable String publisher;
+    private @Nullable Appearance appearance;
+    private @Nullable Biography biography;
+    private @Nullable List<String> tags;
+    private @Nullable Images images;
 
     public Builder id(int id) {
       this.id = id;
@@ -72,37 +75,37 @@ public record Hero(
       return this;
     }
 
-    public Builder cost(Integer cost) {
+    public Builder cost(@Nullable Integer cost) {
       this.cost = cost;
       return this;
     }
 
-    public Builder alignment(String alignment) {
+    public Builder alignment(@Nullable String alignment) {
       this.alignment = alignment;
       return this;
     }
 
-    public Builder publisher(String publisher) {
+    public Builder publisher(@Nullable String publisher) {
       this.publisher = publisher;
       return this;
     }
 
-    public Builder appearance(Appearance appearance) {
+    public Builder appearance(@Nullable Appearance appearance) {
       this.appearance = appearance;
       return this;
     }
 
-    public Builder biography(Biography biography) {
+    public Builder biography(@Nullable Biography biography) {
       this.biography = biography;
       return this;
     }
 
-    public Builder tags(List<String> tags) {
+    public Builder tags(@Nullable List<String> tags) {
       this.tags = tags;
       return this;
     }
 
-    public Builder images(Images images) {
+    public Builder images(@Nullable Images images) {
       this.images = images;
       return this;
     }
@@ -110,16 +113,16 @@ public record Hero(
     public Hero build() {
       return new Hero(
           id,
-          name,
-          slug,
-          powerstats,
-          role,
-          cost,
+          requireNonNull(name),
+          requireNonNull(slug),
+          requireNonNull(powerstats),
+          requireNonNull(role),
+          cost != null ? cost : 10,
           alignment,
           publisher,
           appearance,
           biography,
-          tags,
+          tags != null ? tags : java.util.Collections.emptyList(),
           images);
     }
   }
@@ -175,50 +178,50 @@ public record Hero(
   }
 
   public record Appearance(
-      String gender,
-      String race,
-      Integer heightCm,
-      Integer weightKg,
-      String eyeColor,
-      String hairColor) {
+      @Nullable String gender,
+      @Nullable String race,
+      @Nullable Integer heightCm,
+      @Nullable Integer weightKg,
+      @Nullable String eyeColor,
+      @Nullable String hairColor) {
     public static Builder builder() {
       return new Builder();
     }
 
     public static class Builder {
-      private String gender;
-      private String race;
-      private Integer heightCm;
-      private Integer weightKg;
-      private String eyeColor;
-      private String hairColor;
+      private @Nullable String gender;
+      private @Nullable String race;
+      private @Nullable Integer heightCm;
+      private @Nullable Integer weightKg;
+      private @Nullable String eyeColor;
+      private @Nullable String hairColor;
 
-      public Builder gender(String gender) {
+      public Builder gender(@Nullable String gender) {
         this.gender = gender;
         return this;
       }
 
-      public Builder race(String race) {
+      public Builder race(@Nullable String race) {
         this.race = race;
         return this;
       }
 
-      public Builder heightCm(Integer heightCm) {
+      public Builder heightCm(@Nullable Integer heightCm) {
         this.heightCm = heightCm;
         return this;
       }
 
-      public Builder weightKg(Integer weightKg) {
+      public Builder weightKg(@Nullable Integer weightKg) {
         this.weightKg = weightKg;
         return this;
       }
 
-      public Builder eyeColor(String eyeColor) {
+      public Builder eyeColor(@Nullable String eyeColor) {
         this.eyeColor = eyeColor;
         return this;
       }
 
-      public Builder hairColor(String hairColor) {
+      public Builder hairColor(@Nullable String hairColor) {
         this.hairColor = hairColor;
         return this;
       }
@@ -230,33 +233,36 @@ public record Hero(
   }
 
   public record Biography(
-      String fullName, String placeOfBirth, String firstAppearance, List<String> aliases) {
+      @Nullable String fullName,
+      @Nullable String placeOfBirth,
+      @Nullable String firstAppearance,
+      @Nullable List<String> aliases) {
     public static Builder builder() {
       return new Builder();
     }
 
     public static class Builder {
-      private String fullName;
-      private String placeOfBirth;
-      private String firstAppearance;
-      private List<String> aliases;
+      private @Nullable String fullName;
+      private @Nullable String placeOfBirth;
+      private @Nullable String firstAppearance;
+      private @Nullable List<String> aliases;
 
-      public Builder fullName(String fullName) {
+      public Builder fullName(@Nullable String fullName) {
         this.fullName = fullName;
         return this;
       }
 
-      public Builder placeOfBirth(String placeOfBirth) {
+      public Builder placeOfBirth(@Nullable String placeOfBirth) {
         this.placeOfBirth = placeOfBirth;
         return this;
       }
 
-      public Builder firstAppearance(String firstAppearance) {
+      public Builder firstAppearance(@Nullable String firstAppearance) {
         this.firstAppearance = firstAppearance;
         return this;
       }
 
-      public Builder aliases(List<String> aliases) {
+      public Builder aliases(@Nullable List<String> aliases) {
         this.aliases = aliases;
         return this;
       }
@@ -267,33 +273,34 @@ public record Hero(
     }
   }
 
-  public record Images(String xs, String sm, String md, String lg) {
+  public record Images(
+      @Nullable String xs, @Nullable String sm, @Nullable String md, @Nullable String lg) {
     public static Builder builder() {
       return new Builder();
     }
 
     public static class Builder {
-      private String xs;
-      private String sm;
-      private String md;
-      private String lg;
+      private @Nullable String xs;
+      private @Nullable String sm;
+      private @Nullable String md;
+      private @Nullable String lg;
 
-      public Builder xs(String xs) {
+      public Builder xs(@Nullable String xs) {
         this.xs = xs;
         return this;
       }
 
-      public Builder sm(String sm) {
+      public Builder sm(@Nullable String sm) {
         this.sm = sm;
         return this;
       }
 
-      public Builder md(String md) {
+      public Builder md(@Nullable String md) {
         this.md = md;
         return this;
       }
 
-      public Builder lg(String lg) {
+      public Builder lg(@Nullable String lg) {
         this.lg = lg;
         return this;
       }

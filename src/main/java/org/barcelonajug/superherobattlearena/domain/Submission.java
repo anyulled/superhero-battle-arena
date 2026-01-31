@@ -3,15 +3,26 @@ package org.barcelonajug.superherobattlearena.domain;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
+import org.jspecify.annotations.Nullable;
 
 /** Represents a team's submission for a round. */
 public class Submission {
+  @SuppressWarnings("NullAway.Init")
   private UUID teamId;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
-  private DraftSubmission submissionJson;
+
+  private @Nullable DraftSubmission submissionJson;
+
+  // accepted is primitive boolean in DB (not null), so Boolean here is fine
+  // (non-null)
+  // Assuming strict domain
+  @SuppressWarnings("NullAway.Init")
   private Boolean accepted;
-  private String rejectedReason;
-  private OffsetDateTime submittedAt;
+
+  private @Nullable String rejectedReason;
+  private @Nullable OffsetDateTime submittedAt;
 
   public UUID getTeamId() {
     return teamId;
@@ -29,11 +40,11 @@ public class Submission {
     this.roundNo = roundNo;
   }
 
-  public DraftSubmission getSubmissionJson() {
+  public @Nullable DraftSubmission getSubmissionJson() {
     return submissionJson;
   }
 
-  public void setSubmissionJson(DraftSubmission submissionJson) {
+  public void setSubmissionJson(@Nullable DraftSubmission submissionJson) {
     this.submissionJson = submissionJson;
   }
 
@@ -45,19 +56,19 @@ public class Submission {
     this.accepted = accepted;
   }
 
-  public String getRejectedReason() {
+  public @Nullable String getRejectedReason() {
     return rejectedReason;
   }
 
-  public void setRejectedReason(String rejectedReason) {
+  public void setRejectedReason(@Nullable String rejectedReason) {
     this.rejectedReason = rejectedReason;
   }
 
-  public OffsetDateTime getSubmittedAt() {
+  public @Nullable OffsetDateTime getSubmittedAt() {
     return submittedAt;
   }
 
-  public void setSubmittedAt(OffsetDateTime submittedAt) {
+  public void setSubmittedAt(@Nullable OffsetDateTime submittedAt) {
     this.submittedAt = submittedAt;
   }
 }

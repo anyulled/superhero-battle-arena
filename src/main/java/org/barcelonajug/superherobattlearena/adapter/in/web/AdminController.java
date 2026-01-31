@@ -1,5 +1,7 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -68,10 +70,10 @@ public class AdminController {
 
     BatchSimulationResult batchResult =
         new BatchSimulationResult(
-            (List<UUID>) result.get("matchIds"),
-            (Map<UUID, UUID>) result.get("winners"),
-            (Integer) result.get("total"),
-            (Integer) result.get("successCount"));
+            requireNonNull((List<UUID>) result.get("matchIds")),
+            requireNonNull((Map<UUID, UUID>) result.get("winners")),
+            requireNonNull((Integer) result.get("total")),
+            requireNonNull((Integer) result.get("successCount")));
 
     return ResponseEntity.ok(batchResult);
   }

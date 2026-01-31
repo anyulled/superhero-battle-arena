@@ -12,6 +12,7 @@ import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "rounds")
@@ -19,23 +20,25 @@ public class RoundEntity {
 
   @Id
   @Column(name = "round_no")
+  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
 
   @Column(name = "session_id")
-  private UUID sessionId;
+  private @Nullable UUID sessionId;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "spec_json")
-  private RoundSpec specJson;
+  private @Nullable RoundSpec specJson;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
   private RoundStatus status;
 
   @Column(name = "submission_deadline")
-  private OffsetDateTime submissionDeadline;
+  private @Nullable OffsetDateTime submissionDeadline;
 
-  private Long seed;
+  private @Nullable Long seed;
 
   public Integer getRoundNo() {
     return roundNo;
@@ -45,19 +48,19 @@ public class RoundEntity {
     this.roundNo = roundNo;
   }
 
-  public UUID getSessionId() {
+  public @Nullable UUID getSessionId() {
     return sessionId;
   }
 
-  public void setSessionId(UUID sessionId) {
+  public void setSessionId(@Nullable UUID sessionId) {
     this.sessionId = sessionId;
   }
 
-  public RoundSpec getSpecJson() {
+  public @Nullable RoundSpec getSpecJson() {
     return specJson;
   }
 
-  public void setSpecJson(RoundSpec specJson) {
+  public void setSpecJson(@Nullable RoundSpec specJson) {
     this.specJson = specJson;
   }
 
@@ -69,19 +72,19 @@ public class RoundEntity {
     this.status = status;
   }
 
-  public OffsetDateTime getSubmissionDeadline() {
+  public @Nullable OffsetDateTime getSubmissionDeadline() {
     return submissionDeadline;
   }
 
-  public void setSubmissionDeadline(OffsetDateTime submissionDeadline) {
+  public void setSubmissionDeadline(@Nullable OffsetDateTime submissionDeadline) {
     this.submissionDeadline = submissionDeadline;
   }
 
-  public Long getSeed() {
+  public @Nullable Long getSeed() {
     return seed;
   }
 
-  public void setSeed(Long seed) {
+  public void setSeed(@Nullable Long seed) {
     this.seed = seed;
   }
 }

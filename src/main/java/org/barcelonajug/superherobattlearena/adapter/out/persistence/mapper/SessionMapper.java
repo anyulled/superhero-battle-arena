@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class SessionMapper {
 
-  public Session toDomain(SessionEntity entity) {
+  public @org.jspecify.annotations.Nullable Session toDomain(SessionEntity entity) {
     if (entity == null) {
       return null;
     }
     return new Session(entity.getSessionId(), entity.getCreatedAt(), entity.isActive());
   }
 
-  public SessionEntity toEntity(Session session) {
+  public @org.jspecify.annotations.Nullable SessionEntity toEntity(Session session) {
     if (session == null) {
       return null;
     }

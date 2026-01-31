@@ -2,27 +2,41 @@ package org.barcelonajug.superherobattlearena.domain;
 
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
+import org.jspecify.annotations.Nullable;
 
 /** Represents a battle match between two teams in a tournament session. */
 public class Match {
 
   /** Builder for creating Match instances. */
   public static class Builder {
+    // We suppress init because these will be set by builder
+    @SuppressWarnings("NullAway.Init")
     private UUID matchId;
-    private UUID sessionId;
+
+    private @Nullable UUID sessionId;
+
+    @SuppressWarnings("NullAway.Init")
     private Integer roundNo;
+
+    @SuppressWarnings("NullAway.Init")
     private UUID teamA;
+
+    @SuppressWarnings("NullAway.Init")
     private UUID teamB;
-    private UUID winnerTeam;
+
+    private @Nullable UUID winnerTeam;
+
+    @SuppressWarnings("NullAway.Init")
     private MatchStatus status;
-    private MatchResult resultJson;
+
+    private @Nullable MatchResult resultJson;
 
     public Builder matchId(UUID matchId) {
       this.matchId = matchId;
       return this;
     }
 
-    public Builder sessionId(UUID sessionId) {
+    public Builder sessionId(@Nullable UUID sessionId) {
       this.sessionId = sessionId;
       return this;
     }
@@ -42,7 +56,7 @@ public class Match {
       return this;
     }
 
-    public Builder winnerTeam(UUID winnerTeam) {
+    public Builder winnerTeam(@Nullable UUID winnerTeam) {
       this.winnerTeam = winnerTeam;
       return this;
     }
@@ -52,7 +66,7 @@ public class Match {
       return this;
     }
 
-    public Builder resultJson(MatchResult resultJson) {
+    public Builder resultJson(@Nullable MatchResult resultJson) {
       this.resultJson = resultJson;
       return this;
     }
@@ -75,14 +89,26 @@ public class Match {
     return new Builder();
   }
 
+  @SuppressWarnings("NullAway.Init")
   private UUID matchId;
-  private UUID sessionId;
+
+  private @Nullable UUID sessionId;
+
+  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
+
+  @SuppressWarnings("NullAway.Init")
   private UUID teamA;
+
+  @SuppressWarnings("NullAway.Init")
   private UUID teamB;
-  private UUID winnerTeam;
+
+  private @Nullable UUID winnerTeam;
+
+  @SuppressWarnings("NullAway.Init")
   private MatchStatus status;
-  private MatchResult resultJson;
+
+  private @Nullable MatchResult resultJson;
 
   public UUID getMatchId() {
     return matchId;
@@ -92,11 +118,11 @@ public class Match {
     this.matchId = matchId;
   }
 
-  public UUID getSessionId() {
+  public @Nullable UUID getSessionId() {
     return sessionId;
   }
 
-  public void setSessionId(UUID sessionId) {
+  public void setSessionId(@Nullable UUID sessionId) {
     this.sessionId = sessionId;
   }
 
@@ -124,11 +150,11 @@ public class Match {
     this.teamB = teamB;
   }
 
-  public UUID getWinnerTeam() {
+  public @Nullable UUID getWinnerTeam() {
     return winnerTeam;
   }
 
-  public void setWinnerTeam(UUID winnerTeam) {
+  public void setWinnerTeam(@Nullable UUID winnerTeam) {
     this.winnerTeam = winnerTeam;
   }
 
@@ -140,11 +166,11 @@ public class Match {
     this.status = status;
   }
 
-  public MatchResult getResultJson() {
+  public @Nullable MatchResult getResultJson() {
     return resultJson;
   }
 
-  public void setResultJson(MatchResult resultJson) {
+  public void setResultJson(@Nullable MatchResult resultJson) {
     this.resultJson = resultJson;
   }
 }

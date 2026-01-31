@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.List;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "superhero_biography")
@@ -17,23 +18,25 @@ public class SuperheroBiographyEntity {
 
   @Id
   @Column(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private Integer superheroId;
 
   @Column(name = "full_name")
-  private String fullName;
+  private @Nullable String fullName;
 
   @JdbcTypeCode(SqlTypes.JSON)
-  private List<String> aliases;
+  private @Nullable List<String> aliases;
 
   @Column(name = "place_of_birth")
-  private String placeOfBirth;
+  private @Nullable String placeOfBirth;
 
   @Column(name = "first_appearance")
-  private String firstAppearance;
+  private @Nullable String firstAppearance;
 
   @OneToOne
   @MapsId
   @JoinColumn(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
   private SuperheroEntity superhero;
 
   public SuperheroBiographyEntity() {}
@@ -46,35 +49,35 @@ public class SuperheroBiographyEntity {
     this.superheroId = superheroId;
   }
 
-  public String getFullName() {
+  public @Nullable String getFullName() {
     return fullName;
   }
 
-  public void setFullName(String fullName) {
+  public void setFullName(@Nullable String fullName) {
     this.fullName = fullName;
   }
 
-  public List<String> getAliases() {
+  public @Nullable List<String> getAliases() {
     return aliases;
   }
 
-  public void setAliases(List<String> aliases) {
+  public void setAliases(@Nullable List<String> aliases) {
     this.aliases = aliases;
   }
 
-  public String getPlaceOfBirth() {
+  public @Nullable String getPlaceOfBirth() {
     return placeOfBirth;
   }
 
-  public void setPlaceOfBirth(String placeOfBirth) {
+  public void setPlaceOfBirth(@Nullable String placeOfBirth) {
     this.placeOfBirth = placeOfBirth;
   }
 
-  public String getFirstAppearance() {
+  public @Nullable String getFirstAppearance() {
     return firstAppearance;
   }
 
-  public void setFirstAppearance(String firstAppearance) {
+  public void setFirstAppearance(@Nullable String firstAppearance) {
     this.firstAppearance = firstAppearance;
   }
 
