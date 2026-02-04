@@ -16,7 +16,7 @@ public record Team(
         UUID sessionId,
     @Schema(description = "Name of the team", example = "The Avengers") String name,
     @Schema(description = "Team registration timestamp") OffsetDateTime createdAt,
-    @Schema(description = "List of hero IDs in the team", example = "[\"1\", \"2\", \"3\"]")
+    @Schema(description = "List of members in the team", example = "[\"Member 1\", \"Member 2\"]")
         List<String> members) {
   /**
    * Constructs a new Team.
@@ -25,7 +25,7 @@ public record Team(
    * @param sessionId the session ID.
    * @param name the team name.
    * @param createdAt the creation timestamp.
-   * @param members the list of hero IDs.
+   * @param members the list of members.
    */
   public Team {
     if (members == null || members.size() < 2) {
