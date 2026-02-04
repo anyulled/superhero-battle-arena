@@ -1,15 +1,25 @@
 package org.barcelonajug.superherobattlearena.domain.json;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 
 /** Represents a specific event during a match in JSON format. */
+@Schema(description = "An event that occurred during a match simulation")
 public record MatchEvent(
-    String type,
-    long timestamp,
-    String description,
-    @org.jspecify.annotations.Nullable String actorId,
-    @org.jspecify.annotations.Nullable String targetId,
-    int value) {
+    @Schema(description = "Type of the event", example = "HIT") String type,
+    @Schema(description = "Timestamp when the event occurred", example = "1706784000000")
+        long timestamp,
+    @Schema(
+            description = "Human-readable description of the event",
+            example = "Superman hits Batman for 25 damage")
+        String description,
+    @Schema(description = "ID of the actor (e.g., attacker)", example = "1")
+        @org.jspecify.annotations.Nullable
+        String actorId,
+    @Schema(description = "ID of the target", example = "2") @org.jspecify.annotations.Nullable
+        String targetId,
+    @Schema(description = "Numeric value associated with the event (e.g., damage)", example = "25")
+        int value) {
 
   public static MatchEvent matchStart(long timestamp) {
     return new MatchEvent("MATCH_START", timestamp, "Match started", null, null, 0);
