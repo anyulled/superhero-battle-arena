@@ -156,14 +156,35 @@ class InitFixture {
     private void createRound() throws Exception {
         printHeader("Creating Round 1...");
 
-        final String url = baseUrl + "/api/rounds?sessionId=" + sessionId + "&roundNo=1";
+        final String url = baseUrl + "/api/admin/rounds/create";
+
+        // Create a default RoundSpec
+        Map<String, Object> spec = new HashMap<>();
+        spec.put("description", "Round 1 - The Beginning");
+        spec.put("teamSize", HEROES_PER_TEAM);
+        spec.put("budgetCap", 100);
+        spec.put("requiredRoles", Map.of());
+        spec.put("maxSameRole", Map.of());
+        spec.put("bannedTags", List.of());
+        spec.put("tagModifiers", Map.of());
+        spec.put("mapType", "ARENA");
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("sessionId", sessionId);
+        requestBody.put("roundNo", 1);
+        requestBody.put("spec", spec);
+
+        String jsonBody = objectMapper.writeValueAsString(requestBody);
+
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .POST(HttpRequest.BodyPublishers.noBody())
+                .header("Content-Type", "application/json")
+                .header("Authorization", AUTH_HEADER)
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
         httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-        logger.info("Round 1 created!");
+        logger.info("Round 1 created via Admin API!");
     }
 
     private List<Integer> extractHeroIds() throws Exception {

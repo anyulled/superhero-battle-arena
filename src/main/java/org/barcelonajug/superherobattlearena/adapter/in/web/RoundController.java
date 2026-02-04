@@ -31,21 +31,6 @@ public class RoundController {
   }
 
   @Operation(
-      summary = "Create a new round",
-      description = "Creates a new round for a given session.")
-  @ApiResponse(
-      responseCode = "200",
-      description = "Round created successfully",
-      content = @Content(schema = @Schema(implementation = Integer.class)))
-  @PostMapping
-  public ResponseEntity<Integer> createRound(
-      @Parameter(description = "ID of the session", required = true) @RequestParam UUID sessionId,
-      @Parameter(description = "Number of the round", required = true) @RequestParam
-          Integer roundNo) {
-    return ResponseEntity.ok(roundUseCase.createRound(sessionId, roundNo));
-  }
-
-  @Operation(
       summary = "Get round details",
       description = "Retrieves the specifications and constraints for a specific round.")
   @ApiResponse(

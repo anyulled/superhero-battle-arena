@@ -129,6 +129,14 @@ public class AdminUseCase {
     return matchUseCase.autoMatch(sessionId, roundNo);
   }
 
+  public UUID createMatch(UUID teamA, UUID teamB, Integer roundNo, UUID sessionId) {
+    return matchUseCase.createMatch(teamA, teamB, roundNo, sessionId);
+  }
+
+  public String runMatch(UUID matchId) {
+    return matchUseCase.runMatch(matchId);
+  }
+
   @Transactional
   public Map<String, Object> runAllBattles(Integer roundNo, UUID sessionId) {
     long startTime = System.currentTimeMillis();

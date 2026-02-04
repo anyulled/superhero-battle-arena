@@ -93,6 +93,37 @@ public class AdminController {
     return ResponseEntity.ok(adminUseCase.autoMatch(sessionId, roundNo));
   }
 
+  /** Manually create a single match */
+  @Operation(
+      summary = "Create a match",
+      description = "Manually creates a match between two teams.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Match created",
+      content = @Content(schema = @Schema(implementation = UUID.class)))
+  @PostMapping("/matches/create")
+  public ResponseEntity<UUID> createMatch(
+      @Parameter(description = "ID of the first team", required = true) @RequestParam UUID teamA,
+      @Parameter(description = "ID of the second team", required = true) @RequestParam UUID teamB,
+      @Parameter(description = "Number of the round", example = "1")
+          @RequestParam(defaultValue = "1")
+          Integer roundNo,
+      @Parameter(description = "Optional session ID") @RequestParam(required = false)
+          UUID sessionId) {
+    return ResponseEntity.ok(adminUseCase.createMatch(teamA, teamB, roundNo, sessionId));
+  }
+
+  /** Run a single match */
+  @Operation(summary = "Run a match", description = "Simulates a match and returns the winner.")
+  @ApiResponse(responseCode = "200", description = "Match completed")
+  @PostMapping("/matches/{matchId}/run")
+  public ResponseEntity<String> runMatch(
+      @Parameter(description = "ID of the match to run", required = true)
+          @org.springframework.web.bind.annotation.PathVariable
+          UUID matchId) {
+    return ResponseEntity.ok("Match completed. Winner: " + adminUseCase.runMatch(matchId));
+  }
+
   /**
    * Run all pending matches for a round.
    *
