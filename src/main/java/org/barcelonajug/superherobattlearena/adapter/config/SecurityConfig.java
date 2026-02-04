@@ -37,7 +37,12 @@ public class SecurityConfig {
                     .hasRole("ADMIN")
                     // Public API endpoints
                     .requestMatchers(
-                        "/api/teams", "/api/teams/**", "/api/**", "/", "/swagger-ui/**")
+                        "/api/teams",
+                        "/api/teams/**",
+                        "/api/**",
+                        "/",
+                        "/swagger-ui/**",
+                        "/v3/api-docs/**")
                     .permitAll()
                     // Static resources
                     .requestMatchers(

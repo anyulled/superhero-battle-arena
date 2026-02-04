@@ -8,7 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
-import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
@@ -33,7 +32,6 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
 
   @Autowired private MockMvc mockMvc;
   @Autowired private MatchRepositoryPort matchRepository;
-  @Autowired private SessionRepositoryPort sessionRepository;
   @Autowired private RoundRepositoryPort roundRepository;
 
   @Test

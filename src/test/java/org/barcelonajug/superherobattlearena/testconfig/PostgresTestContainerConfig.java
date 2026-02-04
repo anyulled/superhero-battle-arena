@@ -17,7 +17,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @Testcontainers
 public abstract class PostgresTestContainerConfig {
 
-  @Container @ServiceConnection
+  @SuppressWarnings("resource")
+  @Container
+  @ServiceConnection
   static final PostgreSQLContainer<?> postgres =
       new PostgreSQLContainer<>("postgres:16")
           .withDatabaseName("superhero_db")
