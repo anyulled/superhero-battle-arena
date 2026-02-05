@@ -17,5 +17,7 @@ public interface MatchRepositoryPort {
 
   List<Match> findAll();
 
+  List<Match> findByRoundNoAndSessionId(Integer roundNo, UUID sessionId);
+
   List<Match> findPendingMatches(Integer roundNo, UUID sessionId);
 }

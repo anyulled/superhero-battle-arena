@@ -59,14 +59,35 @@ public class MatchUseCase {
 
     try {
       log.info("Starting auto-match for round {} in session {}", roundNo, sessionId);
-      List<Submission> submissions = submissionRepository.findByRoundNo(roundNo);
-      log.debug("Found {} submissions for round {}", submissions.size(), roundNo);
+
+      // Get existing matches for this round and session
+      List<Match> existingMatches = matchRepository.findByRoundNoAndSessionId(roundNo, sessionId);
+      java.util.Set<UUID> alreadyMatchedTeams = new java.util.HashSet<>();
+      for (Match m : existingMatches) {
+        alreadyMatchedTeams.add(m.getTeamA());
+        alreadyMatchedTeams.add(m.getTeamB());
+      }
+      log.debug(
+          "Found {} existing matches with {} teams already matched",
+          existingMatches.size(),
+          alreadyMatchedTeams.size());
+
+      // Get all submissions and filter out already-matched teams
+      List<Submission> allSubmissions = submissionRepository.findByRoundNo(roundNo);
+      List<Submission> unmatchedSubmissions =
+          allSubmissions.stream()
+              .filter(s -> !alreadyMatchedTeams.contains(s.getTeamId()))
+              .toList();
+      log.debug(
+          "Found {} total submissions, {} unmatched",
+          allSubmissions.size(),
+          unmatchedSubmissions.size());
 
       List<UUID> matchIds = new ArrayList<>();
 
-      for (int i = 0; i < submissions.size() - 1; i += 2) {
-        Submission subA = submissions.get(i);
-        Submission subB = submissions.get(i + 1);
+      for (int i = 0; i < unmatchedSubmissions.size() - 1; i += 2) {
+        Submission subA = unmatchedSubmissions.get(i);
+        Submission subB = unmatchedSubmissions.get(i + 1);
 
         Match match =
             Match.builder()

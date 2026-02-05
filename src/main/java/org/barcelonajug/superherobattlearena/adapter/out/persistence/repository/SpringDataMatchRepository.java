@@ -15,4 +15,6 @@ public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, UU
 
   List<MatchEntity> findByRoundNoAndStatusAndSessionId(
       Integer roundNo, MatchStatus status, UUID sessionId);
+
+  List<MatchEntity> findByRoundNoAndSessionId(Integer roundNo, UUID sessionId);
 }
