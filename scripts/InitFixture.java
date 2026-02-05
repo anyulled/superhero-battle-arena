@@ -2,10 +2,15 @@
 //DEPS com.fasterxml.jackson.core:jackson-databind:2.18.2
 //DEPS com.github.javafaker:javafaker:1.0.2
 //DEPS org.slf4j:slf4j-simple:2.0.9
+//DEPS info.picocli:picocli:4.7.6
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 
 import java.io.File;
 import java.net.URI;
@@ -16,9 +21,9 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,12 +32,10 @@ import org.slf4j.LoggerFactory;
  * Uses Java Faker to generate team member names that are different from hero
  * names.
  * 
- * Usage: jbang InitFixture.java [session-id|base-url]
- * [base-url|heroes-json-file] [heroes-json-file]
- * Defaults: session-id=random UUID, base-url=http://localhost:8080,
- * heroes-json-file=src/main/resources/all-superheroes.json
+ * Usage: jbang InitFixture.java [options]
  */
-class InitFixture {
+@Command(name = "InitFixture", mixinStandardHelpOptions = true, version = "1.0", description = "Initialize fixture data for the Superhero Battle Arena")
+class InitFixture implements Callable<Integer> {
     private static final String DEFAULT_BASE_URL = "http://localhost:8080";
     private static final String DEFAULT_HEROES_FILE = "src/main/resources/all-superheroes.json";
     private static final String AUTH_HEADER = "Basic YWRtaW46YWRtaW4=";
@@ -40,62 +43,97 @@ class InitFixture {
     private static final int HEROES_PER_TEAM = 5;
     private static final Logger logger = LoggerFactory.getLogger(InitFixture.class);
 
-    private final String sessionId;
-    private final String baseUrl;
-    private final String heroesFile;
-    private final HttpClient httpClient;
-    private final ObjectMapper objectMapper;
-    private final Faker faker;
-    private final Set<String> usedHeroNames;
+    @Option(names = { "-s", "--session-id" }, description = "Session ID (default: random UUID or latest existing)")
+    private String sessionId;
 
-    public InitFixture(final String sessionId, final String baseUrl, final String heroesFile) {
-        this.sessionId = sessionId;
-        this.baseUrl = baseUrl;
-        this.heroesFile = heroesFile;
+    @Option(names = { "-u", "--url" }, description = "Base URL", defaultValue = DEFAULT_BASE_URL)
+    private String baseUrl;
+
+    @Option(names = { "-f", "--file" }, description = "Heroes JSON file", defaultValue = DEFAULT_HEROES_FILE)
+    private String heroesFile;
+
+    @Option(names = { "--skip-session" }, description = "Skip session initialization (verifies existing session)")
+    private boolean skipSession;
+
+    @Option(names = { "--skip-teams" }, description = "Skip team registration (also skips squad formation)")
+    private boolean skipTeams;
+
+    @Option(names = { "--skip-round" }, description = "Skip round creation (verifies existing round 1)")
+    private boolean skipRound;
+
+    @Option(names = { "--skip-squads" }, description = "Skip squad formations")
+    private boolean skipSquads;
+
+    private HttpClient httpClient;
+    private ObjectMapper objectMapper;
+    private Faker faker;
+    private Set<String> usedHeroNames;
+
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new InitFixture()).execute(args);
+        System.exit(exitCode);
+    }
+
+    @Override
+    public Integer call() throws Exception {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
         this.objectMapper = new ObjectMapper();
         this.faker = new Faker();
         this.usedHeroNames = new HashSet<>();
+
+        runFixture();
+        return 0;
     }
 
-    public static void main(String[] args) {
-        final String sessionId;
-        final String baseUrl;
-        final String heroesFile;
-
-        if (args.length == 0) {
-            sessionId = UUID.randomUUID().toString();
-            baseUrl = DEFAULT_BASE_URL;
-            heroesFile = DEFAULT_HEROES_FILE;
-        } else if (args[0].startsWith("http")) {
-            sessionId = UUID.randomUUID().toString();
-            baseUrl = args[0];
-            heroesFile = args.length > 1 ? args[1] : DEFAULT_HEROES_FILE;
-        } else {
-            sessionId = args[0];
-            baseUrl = args.length > 1 ? args[1] : DEFAULT_BASE_URL;
-            heroesFile = args.length > 2 ? args[2] : DEFAULT_HEROES_FILE;
-        }
-
-        final InitFixture fixture = new InitFixture(sessionId, baseUrl, heroesFile);
-        fixture.run();
-    }
-
-    public void run() {
+    private void runFixture() {
         printHeader("Initializing Enhanced Fixture Data");
 
         try {
-            initializeSession();
-            final List<String> teamIds = registerTeams();
-            createRound();
-            final List<Integer> heroIds = extractHeroIds();
-            submitSquadFormations(teamIds, heroIds);
+            if (!skipSession) {
+                if (sessionId == null) {
+                    sessionId = UUID.randomUUID().toString();
+                }
+                initializeSession();
+            } else {
+                logger.info("Skipping session initialization (--skip-session)");
+                verifySession();
+            }
+
+            if (!skipRound) {
+                createRound();
+            } else {
+                logger.info("Skipping round creation (--skip-round)");
+                verifyRound();
+            }
+
+            List<String> teamIds = Collections.emptyList();
+            if (!skipTeams) {
+                teamIds = registerTeams();
+            } else {
+                logger.info("Skipping team registration (--skip-teams)");
+            }
+
+            if (!skipTeams && !skipSquads) {
+                if (teamIds.isEmpty()) {
+                    logger.warn("No teams registered, cannot submit squad formations.");
+                } else {
+                    final List<Integer> heroIds = extractHeroIds();
+                    submitSquadFormations(teamIds, heroIds);
+                }
+            } else {
+                if (skipTeams) {
+                    logger.info("Skipping squad formations (due to --skip-teams)");
+                } else {
+                    logger.info("Skipping squad formations (--skip-squads)");
+                }
+            }
+
             printSuccess();
         } catch (Exception e) {
             logger.error("Error initializing fixture: {}", e.getMessage(), e);
-            System.exit(1);
+            throw new RuntimeException(e);
         }
     }
 
@@ -111,6 +149,37 @@ class InitFixture {
 
         httpClient.send(request, HttpResponse.BodyHandlers.discarding());
         logger.info("Session started.");
+    }
+
+    private void verifySession() throws Exception {
+        logger.info("Retrieving active session...");
+        final String url = baseUrl + "/api/sessions/active";
+        final HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            throw new IllegalStateException("No active session found via API, and --skip-session was requested.");
+        } else if (response.statusCode() != 200) {
+            throw new IllegalStateException("Failed to retrieve active session: " + response.statusCode());
+        }
+
+        Map<String, Object> session = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {
+        });
+        String activeSessionId = session.get("sessionId").toString();
+
+        if (sessionId != null) {
+            if (!activeSessionId.equals(sessionId)) {
+                throw new IllegalStateException("Requested session ID " + sessionId
+                        + " (provided via -s) is not the currently active session (Active: " + activeSessionId + ")");
+            }
+            logger.info("Session {} verified as active.", sessionId);
+        } else {
+            sessionId = activeSessionId;
+            logger.info("Using active session: {}", sessionId);
+        }
     }
 
     private List<String> registerTeams() throws Exception {
@@ -185,6 +254,23 @@ class InitFixture {
 
         httpClient.send(request, HttpResponse.BodyHandlers.discarding());
         logger.info("Round 1 created via Admin API!");
+    }
+
+    private void verifyRound() throws Exception {
+        logger.info("Verifying Round 1 existence...");
+        final String url = baseUrl + "/api/rounds/1";
+        final HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .GET()
+                .build();
+
+        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() == 404) {
+            throw new IllegalStateException("Round 1 not found via API, and --skip-round was requested.");
+        } else if (response.statusCode() != 200) {
+            throw new IllegalStateException("Failed to verify round 1: " + response.statusCode());
+        }
+        logger.info("Round 1 found.");
     }
 
     private List<Integer> extractHeroIds() throws Exception {
@@ -286,9 +372,17 @@ class InitFixture {
     private void printSuccess() {
         printHeader("Fixture Data Initialized Successfully!");
         logger.info("Session ID: {}", sessionId);
-        logger.info("Total Teams: {}", TEAM_COUNT);
-        logger.info("Round 1: Created with {} squad submissions", TEAM_COUNT);
-        logger.info("You can now create matches between any of the {} teams!", TEAM_COUNT);
+        if (!skipTeams) {
+            logger.info("Total Teams: {}", TEAM_COUNT);
+        }
+        if (!skipRound) {
+            logger.info("Round 1: Created");
+        } else {
+            logger.info("Round 1: Verified (Skipped Creation)");
+        }
+        if (!skipTeams && !skipSquads) {
+            logger.info("Squads Submitted");
+        }
         logger.info("=========================================");
     }
 
