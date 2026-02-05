@@ -16,14 +16,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles({"postgres-test", "test"})
+@org.springframework.transaction.annotation.Transactional(
+    propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
 class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
 
   private static final Logger log = LoggerFactory.getLogger(AdminControllerPerformanceIT.class);
@@ -33,6 +31,12 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
   @Autowired private MockMvc mockMvc;
   @Autowired private MatchRepositoryPort matchRepository;
   @Autowired private RoundRepositoryPort roundRepository;
+  @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+  @org.junit.jupiter.api.AfterEach
+  void tearDown() {
+    jdbcTemplate.execute("TRUNCATE TABLE matches, rounds CASCADE");
+  }
 
   @Test
   void measureRunAllBattlesPerformance() throws Exception {

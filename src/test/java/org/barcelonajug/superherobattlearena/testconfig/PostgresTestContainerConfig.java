@@ -1,11 +1,11 @@
 package org.barcelonajug.superherobattlearena.testconfig;
 
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Shared PostgreSQL container configuration for integration tests. Extend this class to use a real
@@ -14,12 +14,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * <p>The container uses PostgreSQL 16 (matching production docker-compose.yml) and is configured
  * with container reuse enabled for faster test execution.
  */
-@Testcontainers
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles({"postgres-test", "test"})
+@Transactional
 public abstract class PostgresTestContainerConfig {
 
-  @SuppressWarnings("resource")
-  @Container
-  @ServiceConnection
   static final PostgreSQLContainer<?> postgres =
       new PostgreSQLContainer<>("postgres:16")
           .withDatabaseName("superhero_db")
@@ -27,8 +26,15 @@ public abstract class PostgresTestContainerConfig {
           .withPassword("super_password")
           .withReuse(true);
 
+  static {
+    postgres.start();
+  }
+
   @DynamicPropertySource
   static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
     // Use PostgreSQL-specific Flyway migrations
     registry.add(
         "spring.flyway.locations",

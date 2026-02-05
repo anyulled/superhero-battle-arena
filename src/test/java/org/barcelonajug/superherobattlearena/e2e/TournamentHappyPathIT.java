@@ -18,22 +18,16 @@ import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * End-to-end integration test for the complete tournament happy path. Tests the full workflow from
  * session creation to battle completion using PostgreSQL via Testcontainers.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles({"postgres-test", "test"})
-@Transactional
 class TournamentHappyPathIT extends PostgresTestContainerConfig {
 
   private static final String ADMIN_USER = "admin";
@@ -53,12 +47,12 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
     // Step 2: Users register teams
     UUID teamAId =
         registerTeam(
-            faker.esports().team(),
+            faker.esports().team() + " " + UUID.randomUUID(),
             List.of(faker.name().firstName(), faker.name().firstName()),
             sessionId);
     UUID teamBId =
         registerTeam(
-            faker.esports().team(),
+            faker.esports().team() + " " + UUID.randomUUID(),
             List.of(faker.name().firstName(), faker.name().firstName()),
             sessionId);
     assertThat(teamAId).isNotNull();

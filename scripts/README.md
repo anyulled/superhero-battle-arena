@@ -1,4 +1,4 @@
-# Jbang Scripts
+# JBang Scripts
 
 This directory contains JBang scripts for managing the Superhero Battle Arena.
 
@@ -11,55 +11,62 @@ This directory contains JBang scripts for managing the Superhero Battle Arena.
 
 ### InitFixture.java
 
-Initializes fixture data for the Superhero Battle Arena with:
+Initializes fixture data for the Superhero Battle Arena using [picocli](https://picocli.info/) for a rich command-line experience.
 
-- 20 teams with randomly generated member names using Java Faker
-- 5 heroes per team from the superhero database
-- Rotating battle strategies (AGGRESSIVE, DEFENSIVE, BALANCED)
+**Features:**
+
+- Creates a session and round 1 automatically (if not skipped)
+- Registers 20 teams with randomly generated member names using Java Faker
+- Submits squad formations for all teams with rotating battle strategies (AGGRESSIVE, DEFENSIVE, BALANCED)
+- Supports skipping specific lifecycle steps (session, round, teams, squads)
+- Verifies existing state when steps are skipped
 
 **Usage:**
 
 ```bash
-# Use defaults (random session, localhost:8080, src/main/resources/all-superheroes.json)
+# Show help
+jbang scripts/InitFixture.java --help
+
+# Use all defaults (random session, localhost:8080, default heroes file)
 jbang scripts/InitFixture.java
 
-# Specific session ID
-jbang scripts/InitFixture.java <session-id>
-
-# Custom base URL (automatically generates a random session ID)
-jbang scripts/InitFixture.java http://localhost:9090
-
 # Specific session ID and custom base URL
-jbang scripts/InitFixture.java <session-id> http://localhost:9090
+jbang scripts/InitFixture.java -s my-session -u http://localhost:9090
 
-# Custom base URL and heroes file (automatically generates a random session ID)
-jbang scripts/InitFixture.java http://localhost:9090 path/to/heroes.json
+# Skip session and round creation (assumes they already exist)
+jbang scripts/InitFixture.java --skip-session --skip-round
+
+# Use a specific heroes file
+jbang scripts/InitFixture.java -f path/to/heroes.json
+```
+
+**Options:**
+
+- `-s, --session-id`: Specific session ID (default: random UUID or latest existing if skipped)
+- `-u, --url`: Base URL of the application (default: <http://localhost:8080>)
+- `-f, --file`: Path to the heroes JSON file (default: src/main/resources/all-superheroes.json)
+- `--skip-session`: Skip session initialization (verifies existing session)
+- `--skip-teams`: Skip team registration (also skips squad formations)
+- `--skip-round`: Skip round creation (verifies existing round 1)
+- `--skip-squads`: Skip squad formations
+
+### GenerateSuperheroSql.java
+
+Generates SQL seed data from the `all-superheroes.json` file. This script populates the `superheroes`, `superhero_powerstats`, `superhero_appearance`, `superhero_biography`, and `superhero_images` tables. It generates separate files for H2 and PostgreSQL dialects.
+
+**Usage:**
+
+```bash
+jbang scripts/GenerateSuperheroSql.java
 ```
 
 **Features:**
 
-- Immutable data structures using Java records
-- Functional programming patterns
-- Uses Java Faker for realistic name generation
-- HTTP client with proper timeout configuration
-
-+### GenerateSuperheroSql.java
-+
-+Generates SQL seed data from the `all-superheroes.json` file. This script populates the `superheroes`, `superhero_powerstats`, `superhero_appearance`, `superhero_biography`, and `superhero_images` tables.
-+
-+**Usage:**
-+
-+```bash
-+jbang scripts/GenerateSuperheroSql.java
-+```
-+
-+**Features:**
-+
-+- Parses complex JSON hero data using Jackson
-+- Calculates hero "cost" based on power stats
-+- Handled SQL escaping and null values for database compatibility
-+- Implements modern Java 21 `Math.clamp` for stat normalization
-+
+- Parses complex JSON hero data using Jackson
+- Calculates hero "cost" based on power stats
+- Handles SQL escaping and null values for database compatibility
+- Implements modern Java 21 `Math.clamp` for stat normalization
+- Supports `ON CONFLICT` for PostgreSQL and standard inserts for H2
 
 ### ExtractHeroes.java
 
@@ -82,7 +89,7 @@ jbang scripts/ExtractHeroes.java src/main/resources/all-superheroes.json 100
 
 ## Design Principles
 
-Both scripts follow these principles:
+The scripts follow these principles:
 
 - **Immutability**: Use `final` fields, immutable collections, and records
 - **Functional Style**: Stream API, method references, and pure functions
@@ -94,6 +101,7 @@ Both scripts follow these principles:
 
 Dependencies are automatically managed by JBang:
 
-- `com.fasterxml.jackson.core:jackson-databind:2.18.2` - JSON processing
-- `com.github.javafaker:javafaker:1.0.2` - Fake data generation (InitFixture only)
-- `org.slf4j:slf4j-nop:2.0.9` - Logging (InitFixture only)
+- `com.fasterxml.jackson.core:jackson-databind` - JSON processing
+- `com.github.javafaker:javafaker` - Fake data generation
+- `info.picocli:picocli` - Command-line parsing
+- `org.slf4j:slf4j-simple` - Logging

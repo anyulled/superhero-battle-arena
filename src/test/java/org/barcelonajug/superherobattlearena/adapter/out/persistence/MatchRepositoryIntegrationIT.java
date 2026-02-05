@@ -13,17 +13,11 @@ import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Integration test verifying repository operations against real PostgreSQL. Tests database queries,
  * constraints, and data persistence using Testcontainers.
  */
-@SpringBootTest
-@ActiveProfiles({"postgres-test", "test"})
-@Transactional
 class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
 
   @Autowired private SpringDataMatchRepository matchRepository;
