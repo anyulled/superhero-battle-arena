@@ -117,4 +117,23 @@ public class RoundUseCase {
         .findByTeamIdAndRoundNo(teamId, roundNo)
         .map(Submission::getSubmissionJson);
   }
+
+  public java.util.List<DraftSubmission> getSubmissions(Integer roundNo, UUID sessionId) {
+    Optional<Round> round = roundRepository.findById(roundNo);
+    if (round.isPresent() && sessionId != null && !sessionId.equals(round.get().getSessionId())) {
+      log.warn(
+          "Requesting submissions for round {} with mismatched session {}. Round belongs to session {}",
+          roundNo,
+          sessionId,
+          round.get().getSessionId());
+      return java.util.Collections.emptyList();
+    }
+    return submissionRepository.findByRoundNo(roundNo).stream()
+        .map(Submission::getSubmissionJson)
+        .toList();
+  }
+
+  public java.util.List<Round> listRounds(UUID sessionId) {
+    return roundRepository.findBySessionId(sessionId);
+  }
 }

@@ -278,8 +278,7 @@
 
             try {
                 // Test auth by fetching sessions
-                const response = await fetch('/api/admin/sessions/start', {
-                    method: 'POST',
+                const response = await fetch('/api/admin/sessions', {
                     headers: { 'Authorization': authHeader }
                 });
 
@@ -308,10 +307,14 @@
                         active: s.active
                     }));
 
-                    if (sessions.length > 0 && !currentSessionId) {
+                    if (sessions.length === 0) {
+                        await createSession();
+                    } else if (!currentSessionId) {
                         currentSessionId = sessions[0].id;
+                        updateSessionSelector();
+                    } else {
+                        updateSessionSelector();
                     }
-                    updateSessionSelector();
                 }
             } catch (error) {
                 console.error('Failed to load sessions:', error);
@@ -377,10 +380,52 @@
         }
 
         async function loadRounds() {
-            // Load rounds for current session
-            // For demo, we'll track created rounds
-            document.getElementById('roundSelector').innerHTML = '<option value="">No rounds created</option>';
-            document.getElementById('roundInfo').textContent = 'Create a round to get started';
+            if (!currentSessionId) {
+                document.getElementById('roundSelector').innerHTML = '<option value="">Select a session first</option>';
+                document.getElementById('roundInfo').textContent = '';
+                selectedRoundNo = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/rounds?sessionId=${currentSessionId}`);
+                if (response.ok) {
+                    const rounds = await response.json();
+                    const selector = document.getElementById('roundSelector');
+
+                    if (rounds.length === 0) {
+                        selector.innerHTML = '<option value="">No rounds created</option>';
+                        document.getElementById('roundInfo').textContent = 'Create a round to get started';
+                        selectedRoundNo = null;
+                    } else {
+                        selector.innerHTML = '';
+                        rounds.forEach(round => {
+                            const option = document.createElement('option');
+                            option.value = round.roundNo;
+                            option.textContent = `Round ${round.roundNo}`;
+                            selector.appendChild(option);
+                        });
+
+                        // Select first round if none selected
+                        if (!selectedRoundNo && rounds.length > 0) {
+                            selectedRoundNo = rounds[0].roundNo;
+                        }
+                        selector.value = selectedRoundNo;
+                        document.getElementById('roundInfo').textContent = `Round ${selectedRoundNo} selected`;
+
+                        // Refresh team entries for selected round
+                        refreshTeamEntries();
+                    }
+
+                    selector.onchange = function () {
+                        selectedRoundNo = parseInt(this.value);
+                        document.getElementById('roundInfo').textContent = `Round ${selectedRoundNo} selected`;
+                        refreshTeamEntries();
+                    };
+                }
+            } catch (error) {
+                console.error('Failed to load rounds:', error);
+            }
         }
 
         async function createRound() {
@@ -425,7 +470,6 @@
                     selectedRoundNo = createdRoundNo;
                     showSuccess('roundStatus', `Round ${createdRoundNo} created successfully`);
                     updateRoundSelector(createdRoundNo);
-                    refreshTeamEntries();
                     lucide.createIcons();
                 } else {
                     showError('roundStatus', 'Failed to create round');
@@ -463,7 +507,7 @@
 
             try {
                 // Fetch submissions for the round
-                const response = await fetch(`/api/rounds/${selectedRoundNo}/submissions`);
+                const response = await fetch(`/api/rounds/${selectedRoundNo}/submissions?sessionId=${currentSessionId}`);
                 if (response.ok) {
                     const submissions = await response.json();
                     const count = submissions.length;

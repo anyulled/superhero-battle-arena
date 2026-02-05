@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.usecase.RoundUseCase;
+import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,19 @@ public class RoundController {
 
   public RoundController(RoundUseCase roundUseCase) {
     this.roundUseCase = roundUseCase;
+  }
+
+  @Operation(
+      summary = "List rounds for a session",
+      description = "Retrieves all rounds for a specific session.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "List of rounds retrieved successfully",
+      content = @Content(schema = @Schema(implementation = Round.class)))
+  @GetMapping
+  public ResponseEntity<java.util.List<Round>> listRounds(
+      @Parameter(description = "Session ID", required = true) @RequestParam UUID sessionId) {
+    return ResponseEntity.ok(roundUseCase.listRounds(sessionId));
   }
 
   @Operation(
@@ -86,5 +100,21 @@ public class RoundController {
         .getSubmission(roundNo, teamId)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
+  }
+
+  @Operation(
+      summary = "Get all submissions for a round",
+      description = "Retrieves all team submissions for a specific round.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "List of submissions retrieved successfully",
+      content = @Content(schema = @Schema(implementation = DraftSubmission.class)))
+  @GetMapping("/{roundNo}/submissions")
+  public ResponseEntity<java.util.List<DraftSubmission>> getSubmissions(
+      @Parameter(description = "Number of the round", required = true) @PathVariable
+          Integer roundNo,
+      @Parameter(description = "Optional session ID for validation") @RequestParam(required = false)
+          UUID sessionId) {
+    return ResponseEntity.ok(roundUseCase.getSubmissions(roundNo, sessionId));
   }
 }

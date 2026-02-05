@@ -2,7 +2,9 @@ package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.RoundMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataRoundRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
@@ -23,6 +25,11 @@ public class RoundPersistenceAdapter implements RoundRepositoryPort {
   @Override
   public Optional<Round> findById(Integer roundNo) {
     return repository.findById(roundNo).map(mapper::toDomain);
+  }
+
+  @Override
+  public List<Round> findBySessionId(UUID sessionId) {
+    return repository.findBySessionId(sessionId).stream().map(mapper::toDomain).toList();
   }
 
   @Override
