@@ -205,12 +205,10 @@ public class MatchUseCase {
       matchRepository.save(match);
 
       log.debug("Persisting {} match events", result.events().size());
-      int seq = 1;
-      List<MatchEvent> eventsToSave = new ArrayList<>();
-      for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
-        MatchEvent matchEvent = new MatchEvent(matchId, seq++, evt);
-        eventsToSave.add(matchEvent);
-      }
+      List<MatchEvent> eventsToSave =
+          java.util.stream.IntStream.range(0, result.events().size())
+              .mapToObj(i -> new MatchEvent(matchId, i + 1, result.events().get(i)))
+              .toList();
       matchEventRepository.saveAll(eventsToSave);
 
       log.debug("Recording hero usage for both teams");
