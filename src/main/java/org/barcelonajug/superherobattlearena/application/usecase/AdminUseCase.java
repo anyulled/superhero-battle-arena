@@ -213,10 +213,11 @@ public class AdminUseCase {
           matchRepository.save(match);
 
           int seq = 1;
+          List<MatchEvent> matchEvents = new ArrayList<>();
           for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
-            MatchEvent matchEvent = new MatchEvent(match.getMatchId(), seq++, evt);
-            matchEventRepository.save(matchEvent);
+            matchEvents.add(new MatchEvent(match.getMatchId(), seq++, evt));
           }
+          matchEventRepository.saveAll(matchEvents);
 
           fatigueUseCase.recordUsage(
               match.getTeamA(),
