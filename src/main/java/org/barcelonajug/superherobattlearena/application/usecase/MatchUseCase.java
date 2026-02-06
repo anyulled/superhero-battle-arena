@@ -305,7 +305,8 @@ public class MatchUseCase {
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
     List<Hero> fetchedHeroes = rosterUseCase.getHeroes(submission.heroIds());
     Map<Integer, Hero> heroMap =
-        fetchedHeroes.stream().collect(Collectors.toMap(Hero::id, Function.identity()));
+        fetchedHeroes.stream()
+            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
 
     List<Hero> orderedHeroes = new ArrayList<>();
     for (Integer id : submission.heroIds()) {
