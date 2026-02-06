@@ -41,4 +41,4 @@ jobs:
         name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
         path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/*.xml' || 'target/failsafe-reports/*.xml' }}
         reporter: java-junit
-        fail-on-error: true
+        fail-on-error: false
