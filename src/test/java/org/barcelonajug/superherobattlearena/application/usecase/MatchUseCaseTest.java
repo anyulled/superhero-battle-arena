@@ -186,6 +186,27 @@ class MatchUseCaseTest {
         .save(any(org.barcelonajug.superherobattlearena.domain.Match.class));
   }
 
+  @Test
+  void getPendingMatches_shouldDelegateToRepository() {
+    // Given
+    Integer roundNo = 1;
+    UUID sessionId = UUID.randomUUID();
+    org.barcelonajug.superherobattlearena.domain.Match match =
+        new org.barcelonajug.superherobattlearena.domain.Match();
+    match.setMatchId(UUID.randomUUID());
+    List<org.barcelonajug.superherobattlearena.domain.Match> expectedMatches = List.of(match);
+
+    when(matchRepository.findPendingMatches(roundNo, sessionId)).thenReturn(expectedMatches);
+
+    // When
+    List<org.barcelonajug.superherobattlearena.domain.Match> result =
+        matchUseCase.getPendingMatches(roundNo, sessionId);
+
+    // Then
+    assertThat(result).isEqualTo(expectedMatches);
+    verify(matchRepository).findPendingMatches(roundNo, sessionId);
+  }
+
   // Helper method to create test submissions
   private List<Submission> createSubmissions(int count, Integer roundNo) {
     List<Submission> submissions = new ArrayList<>();
