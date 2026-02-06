@@ -16,6 +16,11 @@ jobs:
     
     name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests (PostgreSQL)' }}
 
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
     steps:
     - uses: actions/checkout@v4
 
