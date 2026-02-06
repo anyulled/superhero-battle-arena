@@ -257,11 +257,7 @@ public class MatchUseCase {
   }
 
   public List<Match> getPendingMatches(Integer roundNo, UUID sessionId) {
-    return matchRepository.findAll().stream()
-        .filter(m -> m.getRoundNo().equals(roundNo))
-        .filter(m -> m.getStatus() == MatchStatus.PENDING)
-        .filter(m -> sessionId == null || sessionId.equals(m.getSessionId()))
-        .toList();
+    return matchRepository.findPendingMatches(roundNo, sessionId);
   }
 
   public String runMatchResult(Match match) {
