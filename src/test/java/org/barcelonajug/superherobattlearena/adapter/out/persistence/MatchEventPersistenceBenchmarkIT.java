@@ -16,10 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles({"h2", "test"})
 @Transactional
-class MatchEventPersistenceBenchmarkTest {
+class MatchEventPersistenceBenchmarkIT {
 
-  private static final Logger log =
-      LoggerFactory.getLogger(MatchEventPersistenceBenchmarkTest.class);
+  private static final Logger log = LoggerFactory.getLogger(MatchEventPersistenceBenchmarkIT.class);
 
   @Autowired private MatchEventRepositoryPort matchEventRepository;
 
