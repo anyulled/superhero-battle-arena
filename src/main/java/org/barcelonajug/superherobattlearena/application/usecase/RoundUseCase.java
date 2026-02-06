@@ -85,12 +85,14 @@ public class RoundUseCase {
         throw new IllegalArgumentException("Team must have exactly 5 heroes");
       }
 
-      Submission submission = new Submission();
-      submission.setTeamId(teamId);
-      submission.setRoundNo(roundNo);
-      submission.setSubmissionJson(draft);
-      submission.setAccepted(true);
-      submission.setSubmittedAt(OffsetDateTime.now());
+      Submission submission =
+          Submission.builder()
+              .teamId(teamId)
+              .roundNo(roundNo)
+              .submissionJson(draft)
+              .accepted(true)
+              .submittedAt(OffsetDateTime.now())
+              .build();
 
       submissionRepository.save(submission);
       log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);

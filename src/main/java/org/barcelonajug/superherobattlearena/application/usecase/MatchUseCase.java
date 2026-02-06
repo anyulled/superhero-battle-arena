@@ -127,13 +127,15 @@ public class MatchUseCase {
   }
 
   public UUID createMatch(UUID teamA, UUID teamB, Integer roundNo, UUID sessionId) {
-    Match match = new Match();
-    match.setMatchId(UUID.randomUUID());
-    match.setSessionId(sessionId);
-    match.setTeamA(teamA);
-    match.setTeamB(teamB);
-    match.setRoundNo(roundNo);
-    match.setStatus(MatchStatus.PENDING);
+    Match match =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .teamA(teamA)
+            .teamB(teamB)
+            .roundNo(roundNo)
+            .status(MatchStatus.PENDING)
+            .build();
     matchRepository.save(match);
     return match.getMatchId();
   }

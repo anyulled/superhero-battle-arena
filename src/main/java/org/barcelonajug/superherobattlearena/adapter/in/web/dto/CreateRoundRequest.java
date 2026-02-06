@@ -10,5 +10,4 @@ public record CreateRoundRequest(
             description = "ID of the tournament session",
             example = "550e8400-e29b-41d4-a716-446655440001")
         UUID sessionId,
-    // RoundNo is now auto-generated
     @Schema(description = "Specifications and constraints for the round") RoundSpec spec) {}

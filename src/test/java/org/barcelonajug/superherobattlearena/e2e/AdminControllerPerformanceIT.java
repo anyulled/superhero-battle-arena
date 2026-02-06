@@ -68,6 +68,7 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
 
   private void createRound(Integer roundNo, UUID sessionId) {
     Round round = new Round();
+    round.setRoundId(UUID.randomUUID());
     round.setRoundNo(roundNo);
     round.setSessionId(sessionId);
     round.setStatus(org.barcelonajug.superherobattlearena.domain.RoundStatus.OPEN);

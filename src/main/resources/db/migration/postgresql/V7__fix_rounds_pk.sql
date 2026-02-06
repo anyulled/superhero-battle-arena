@@ -6,7 +6,7 @@ UPDATE rounds SET round_id = gen_random_uuid() WHERE round_id IS NULL;
 
 ALTER TABLE rounds ALTER COLUMN round_id SET NOT NULL;
 
--- Drop old PK (Postgres requires dropping by constraint name, standard is table_pkey)
+-- Drop old PK (Postgres requires dropping by constraint name)
 ALTER TABLE rounds DROP CONSTRAINT rounds_pkey;
 
 -- Set new PK
