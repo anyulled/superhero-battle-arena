@@ -87,15 +87,18 @@ public class AdminUseCase {
   }
 
   @Transactional
-  public Integer createRound(UUID sessionId, Integer roundNo, RoundSpec spec) {
+  public Integer createRound(UUID sessionId, RoundSpec spec) {
     MDC.put("sessionId", sessionId.toString());
-    MDC.put("roundNo", roundNo.toString());
+
+    // Auto-calculate next round number
+    Integer nextRoundNo = roundRepository.findMaxRoundNo(sessionId).orElse(0) + 1;
+    MDC.put("roundNo", nextRoundNo.toString());
 
     try {
       log.info(
           "Creating round - sessionId={}, roundNo={}, spec={}",
           sessionId,
-          roundNo,
+          nextRoundNo,
           spec.description());
 
       Optional<Session> session = sessionRepository.findById(sessionId);
@@ -110,14 +113,15 @@ public class AdminUseCase {
       }
 
       Round round = new Round();
-      round.setRoundNo(roundNo);
+      round.setRoundId(UUID.randomUUID());
+      round.setRoundNo(nextRoundNo);
       round.setSessionId(sessionId);
       round.setSeed(System.currentTimeMillis());
       round.setStatus(RoundStatus.OPEN);
       round.setSpecJson(spec);
 
       roundRepository.save(round);
-      log.info("Round created successfully - roundNo={}, seed={}", roundNo, round.getSeed());
+      log.info("Round created successfully - roundNo={}, seed={}", nextRoundNo, round.getSeed());
       return round.getRoundNo();
     } finally {
       MDC.remove("sessionId");
@@ -138,9 +142,24 @@ public class AdminUseCase {
   }
 
   @Transactional
-  public Map<String, Object> runAllBattles(Integer roundNo, UUID sessionId) {
+  public Map<String, Object> runAllBattles(Integer roundNo, UUID sessionIdOrNull) {
     long startTime = System.currentTimeMillis();
     MDC.put("roundNo", roundNo.toString());
+
+    // Determine effective sessionId
+    final UUID sessionId;
+    if (sessionIdOrNull != null) {
+      sessionId = sessionIdOrNull;
+    } else {
+      Optional<Match> anyMatch =
+          matchRepository.findAll().stream()
+              .filter(m -> m.getRoundNo().equals(roundNo))
+              .filter(m -> m.getStatus() == MatchStatus.PENDING)
+              .findFirst();
+
+      sessionId = anyMatch.map(Match::getSessionId).orElse(null);
+    }
+
     if (sessionId != null) {
       MDC.put("sessionId", sessionId.toString());
     }
@@ -148,11 +167,24 @@ public class AdminUseCase {
     try {
       log.info("Starting batch battle execution - roundNo={}, sessionId={}", roundNo, sessionId);
 
+      if (sessionId == null) {
+        log.warn(
+            "No session context found for runAllBattles roundNo={}. Assuming nothing to run.",
+            roundNo);
+        Map<String, Object> result = new HashMap<>();
+        result.put("matchIds", new ArrayList<>());
+        result.put("winners", new HashMap<>());
+        result.put("total", 0);
+        result.put("successCount", 0);
+        return result;
+      }
+
+      // Filter matches using the effective sessionId
       List<Match> pendingMatches =
           matchRepository.findAll().stream()
               .filter(m -> m.getRoundNo().equals(roundNo))
               .filter(m -> m.getStatus() == MatchStatus.PENDING)
-              .filter(m -> sessionId == null || sessionId.equals(m.getSessionId()))
+              .filter(m -> sessionId.equals(m.getSessionId()))
               .toList();
 
       log.info("Found {} pending matches for round {}", pendingMatches.size(), roundNo);
@@ -163,7 +195,7 @@ public class AdminUseCase {
 
       Round round =
           roundRepository
-              .findById(roundNo)
+              .findBySessionIdAndRoundNo(sessionId, roundNo)
               .orElseThrow(() -> new IllegalArgumentException("Round not found: " + roundNo));
 
       for (Match match : pendingMatches) {

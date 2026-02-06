@@ -171,7 +171,7 @@ async function createRound() {
         return;
     }
 
-    const roundNo = Number.parseInt(document.getElementById('newRoundNo').value);
+    // roundNo manual reading removed
     const teamSize = Number.parseInt(document.getElementById('newRoundTeamSize').value);
     const budgetCap = Number.parseInt(document.getElementById('newRoundBudget').value);
     const description = document.getElementById('newRoundDescription').value;
@@ -197,7 +197,7 @@ async function createRound() {
             },
             body: JSON.stringify({
                 sessionId: currentSessionId,
-                roundNo,
+                // roundNo removed
                 spec
             })
         });

@@ -6,9 +6,14 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Round;
 
 public interface RoundRepositoryPort {
-  Optional<Round> findById(Integer roundNo);
+  // Deprecating or removing findById(Integer) as it's ambiguous
+  // Optional<Round> findById(Integer roundNo);
+
+  Optional<Round> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo);
 
   List<Round> findBySessionId(UUID sessionId);
 
   Round save(Round round);
+
+  Optional<Integer> findMaxRoundNo(UUID sessionId);
 }
