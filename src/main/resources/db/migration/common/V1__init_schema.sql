@@ -5,7 +5,7 @@ CREATE TABLE teams (
 );
 
 CREATE TABLE rounds (
-    round_no INT PRIMARY KEY,
+    round_no INT CONSTRAINT rounds_pkey PRIMARY KEY,
     spec_json JSONB,
     status VARCHAR(50) NOT NULL,
     submission_deadline TIMESTAMPTZ,

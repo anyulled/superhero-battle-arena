@@ -1,15 +1,13 @@
 -- Add round_id UUID column
 ALTER TABLE rounds ADD COLUMN round_id UUID;
 
--- Since this is H2 memory DB for now or we assume no data that violates, we can just set random UUIDs
--- However, for H2 compatibility we might need a java function or valid SQL. 
--- RANDOM_UUID() is available in H2.
-UPDATE rounds SET round_id = RANDOM_UUID() WHERE round_id IS NULL;
+-- Use gen_random_uuid() for Postgres compatibility (requires Postgres 13+)
+UPDATE rounds SET round_id = gen_random_uuid() WHERE round_id IS NULL;
 
 ALTER TABLE rounds ALTER COLUMN round_id SET NOT NULL;
 
--- Drop old PK
-ALTER TABLE rounds DROP PRIMARY KEY;
+-- Drop old PK (Postgres requires dropping by constraint name, standard is table_pkey)
+ALTER TABLE rounds DROP CONSTRAINT rounds_pkey;
 
 -- Set new PK
 ALTER TABLE rounds ADD PRIMARY KEY (round_id);

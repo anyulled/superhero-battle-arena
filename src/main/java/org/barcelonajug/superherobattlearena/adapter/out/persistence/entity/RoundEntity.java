@@ -23,7 +23,7 @@ public class RoundEntity {
   @SuppressWarnings("NullAway.Init")
   private UUID roundId;
 
-  @Column(name = "round_no")
+  @Column(name = "round_no", nullable = false)
   @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
 
