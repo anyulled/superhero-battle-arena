@@ -289,14 +289,14 @@ public class MatchUseCase {
         fetchedHeroes.stream()
             .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
 
-    List<Hero> orderedHeroes = new ArrayList<>();
-    for (Integer id : submission.heroIds()) {
-      Hero hero = heroMap.get(id);
-      if (hero == null) {
-        throw new IllegalArgumentException("Hero not found in roster: " + id);
-      }
-      orderedHeroes.add(hero);
-    }
+    List<Hero> orderedHeroes =
+        submission.heroIds().stream()
+            .map(
+                id ->
+                    Optional.ofNullable(heroMap.get(id))
+                        .orElseThrow(
+                            () -> new IllegalArgumentException("Hero not found in roster: " + id)))
+            .toList();
     return fatigueUseCase.applyFatigue(teamId, orderedHeroes, roundNo);
   }
 
