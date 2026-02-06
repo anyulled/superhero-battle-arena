@@ -214,6 +214,20 @@
 		<!-- PostgreSQL integration tests with Testcontainers -->
 		<profile>
 			<id>postgres-tests</id>
+			<properties>
+				<spring.profiles.active>postgres</spring.profiles.active>
+			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>org.postgresql</groupId>
+					<artifactId>postgresql</artifactId>
+					<scope>runtime</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.flywaydb</groupId>
+					<artifactId>flyway-database-postgresql</artifactId>
+				</dependency>
+			</dependencies>
 			<build>
 				<plugins>
 					<plugin>
