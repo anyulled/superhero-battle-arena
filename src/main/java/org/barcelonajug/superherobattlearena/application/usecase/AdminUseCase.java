@@ -212,11 +212,12 @@ public class AdminUseCase {
                   0));
           matchRepository.save(match);
 
-          int seq = 1;
-          List<MatchEvent> matchEvents = new ArrayList<>();
-          for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
-            matchEvents.add(new MatchEvent(match.getMatchId(), seq++, evt));
-          }
+          java.util.concurrent.atomic.AtomicInteger seq =
+              new java.util.concurrent.atomic.AtomicInteger(1);
+          List<MatchEvent> matchEvents =
+              result.events().stream()
+                  .map(evt -> new MatchEvent(match.getMatchId(), seq.getAndIncrement(), evt))
+                  .toList();
           matchEventRepository.saveAll(matchEvents);
 
           fatigueUseCase.recordUsage(
