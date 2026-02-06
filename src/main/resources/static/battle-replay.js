@@ -190,6 +190,15 @@ $(document).ready(async function () {
             case 'HIT': // Fallthrough or explicit
                 handleAttack(actorId, targetId, value, description);
                 break;
+            case 'HEALTH_CHANGED':
+                if (targetId) {
+                    // value is assumed to be the new exact health
+                    updateHealth(targetId, value, true);
+                    if (description) log(description);
+                } else {
+                    console.warn('HEALTH_CHANGED event missing targetId');
+                }
+                break;
             default:
                 log(description);
         }
@@ -231,11 +240,6 @@ $(document).ready(async function () {
 
         log(desc);
     }
-
-    // NOTE: If the backend sends HEALTH_CHANGED events separately, use them.
-    // If NOT, we rely on attack damage.
-    // Looking at MatchEventType: HEALTH_CHANGED might exist?
-    // Let's handle it if it comes.
 
     function updateHealth(uniqueId, deltaOrExact, isExact = false) {
         const heroData = state.rosters[uniqueId];
