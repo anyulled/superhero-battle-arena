@@ -192,9 +192,13 @@ $(document).ready(async function () {
                 break;
             case 'HEALTH_CHANGED':
                 if (targetId) {
-                    // value is assumed to be the new exact health
-                    updateHealth(targetId, value, true);
-                    if (description) log(description);
+                    if (typeof value === 'number') {
+                        // value is assumed to be the new exact health
+                        updateHealth(targetId, value, true);
+                        if (description) log(description);
+                    } else {
+                        console.warn(`HEALTH_CHANGED event for target ${targetId} has invalid or missing health value:`, value);
+                    }
                 } else {
                     console.warn('HEALTH_CHANGED event missing targetId');
                 }
