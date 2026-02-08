@@ -7,9 +7,6 @@ import org.jspecify.annotations.Nullable;
 /** Represents a round in a tournament session. */
 public class Round {
   @SuppressWarnings("NullAway.Init")
-  private UUID roundId;
-
-  @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
 
   @SuppressWarnings("NullAway.Init")
@@ -22,14 +19,6 @@ public class Round {
   private RoundStatus status;
 
   private java.time.@Nullable OffsetDateTime submissionDeadline;
-
-  public UUID getRoundId() {
-    return roundId;
-  }
-
-  public void setRoundId(UUID roundId) {
-    this.roundId = roundId;
-  }
 
   public Integer getRoundNo() {
     return roundNo;

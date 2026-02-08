@@ -43,11 +43,11 @@ class RoundListingIT extends PostgresTestContainerConfig {
     assertThat(rounds).isEmpty();
 
     // Create round 1
-    int round1 = createRound(sessionId);
+    int round1 = createRound(sessionId, 1);
     assertThat(round1).isEqualTo(1);
 
     // Create round 2
-    int round2 = createRound(sessionId);
+    int round2 = createRound(sessionId, 2);
     assertThat(round2).isEqualTo(2);
 
     // List rounds should return both rounds
@@ -71,20 +71,20 @@ class RoundListingIT extends PostgresTestContainerConfig {
     UUID sessionId1 = createSession();
     UUID sessionId2 = createSession();
 
-    // Create rounds for session 1 (will be 1, 2)
-    createRound(sessionId1);
-    createRound(sessionId1);
+    // Create rounds for session 1 (use round numbers 10, 11)
+    createRound(sessionId1, 10);
+    createRound(sessionId1, 11);
 
-    // Create rounds for session 2 (will be 1)
-    createRound(sessionId2);
+    // Create rounds for session 2 (use round number 20)
+    createRound(sessionId2, 20);
 
     // List rounds for session 1 should only return its rounds
     List<Integer> rounds1 = listRounds(sessionId1);
-    assertThat(rounds1).containsExactlyInAnyOrder(1, 2);
+    assertThat(rounds1).containsExactlyInAnyOrder(10, 11);
 
     // List rounds for session 2 should only return its rounds
     List<Integer> rounds2 = listRounds(sessionId2);
-    assertThat(rounds2).containsExactly(1);
+    assertThat(rounds2).containsExactly(20);
   }
 
   // ==================== Helper Methods ====================
@@ -103,10 +103,10 @@ class RoundListingIT extends PostgresTestContainerConfig {
     return UUID.fromString(body.replace("\"", ""));
   }
 
-  private int createRound(UUID sessionId) throws Exception {
+  private int createRound(UUID sessionId, int roundNo) throws Exception {
     RoundSpec spec =
         new RoundSpec(
-            "Test Round",
+            "Test Round " + roundNo,
             5,
             1000,
             Collections.emptyMap(),
@@ -115,7 +115,7 @@ class RoundListingIT extends PostgresTestContainerConfig {
             Collections.emptyMap(),
             "ARENA_1");
 
-    CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
+    CreateRoundRequest request = new CreateRoundRequest(sessionId, roundNo, spec);
 
     MvcResult result =
         mockMvc

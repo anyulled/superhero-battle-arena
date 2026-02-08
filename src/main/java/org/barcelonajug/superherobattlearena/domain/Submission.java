@@ -24,10 +24,6 @@ public class Submission {
   private @Nullable String rejectedReason;
   private @Nullable OffsetDateTime submittedAt;
 
-  public static Builder builder() {
-    return new Builder();
-  }
-
   public UUID getTeamId() {
     return teamId;
   }
@@ -74,43 +70,5 @@ public class Submission {
 
   public void setSubmittedAt(@Nullable OffsetDateTime submittedAt) {
     this.submittedAt = submittedAt;
-  }
-
-  public static class Builder {
-    private final Submission submission = new Submission();
-
-    public Builder teamId(UUID teamId) {
-      submission.setTeamId(teamId);
-      return this;
-    }
-
-    public Builder roundNo(Integer roundNo) {
-      submission.setRoundNo(roundNo);
-      return this;
-    }
-
-    public Builder submissionJson(DraftSubmission submissionJson) {
-      submission.setSubmissionJson(submissionJson);
-      return this;
-    }
-
-    public Builder accepted(Boolean accepted) {
-      submission.setAccepted(accepted);
-      return this;
-    }
-
-    public Builder rejectedReason(String rejectedReason) {
-      submission.setRejectedReason(rejectedReason);
-      return this;
-    }
-
-    public Builder submittedAt(OffsetDateTime submittedAt) {
-      submission.setSubmittedAt(submittedAt);
-      return this;
-    }
-
-    public Submission build() {
-      return submission;
-    }
   }
 }
