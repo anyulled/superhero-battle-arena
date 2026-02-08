@@ -74,16 +74,6 @@ public class MatchUseCase {
 
       // Get all submissions and filter out already-matched teams
       List<Submission> allSubmissions = submissionRepository.findByRoundNo(roundNo);
-      // NOTE: submissionRepository.findByRoundNo(roundNo) returns submissions for ALL
-      // sessions.
-      // Ideally we should filter by team's session, but Submission doesn't have
-      // session_id.
-      // We rely on auto-match being called per session and checking teams.
-      // However, if we pick a team from another session that also submitted to "Round
-      // 1",
-      // we might match them. THIS IS A POTENTIAL BUG.
-      // For now, fixing Round bug is priority.
-
       List<Submission> unmatchedSubmissions =
           allSubmissions.stream()
               .filter(s -> !alreadyMatchedTeams.contains(s.getTeamId()))
@@ -127,15 +117,13 @@ public class MatchUseCase {
   }
 
   public UUID createMatch(UUID teamA, UUID teamB, Integer roundNo, UUID sessionId) {
-    Match match =
-        Match.builder()
-            .matchId(UUID.randomUUID())
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(roundNo)
-            .status(MatchStatus.PENDING)
-            .build();
+    Match match = new Match();
+    match.setMatchId(UUID.randomUUID());
+    match.setSessionId(sessionId);
+    match.setTeamA(teamA);
+    match.setTeamB(teamB);
+    match.setRoundNo(roundNo);
+    match.setStatus(MatchStatus.PENDING);
     matchRepository.save(match);
     return match.getMatchId();
   }
@@ -194,14 +182,7 @@ public class MatchUseCase {
               java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
               match.getRoundNo());
 
-      // FIX: Use findBySessionIdAndRoundNo instead of findById(Integer)
-      UUID sessionId =
-          java.util.Objects.requireNonNull(match.getSessionId(), "Match session ID cannot be null");
-      Round round =
-          roundRepository
-              .findBySessionIdAndRoundNo(sessionId, match.getRoundNo())
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Round not found: " + match.getRoundNo()));
+      Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
 
       log.debug("Delegating to battle engine for simulation");
       SimulationResult result =
@@ -224,11 +205,11 @@ public class MatchUseCase {
       matchRepository.save(match);
 
       log.debug("Persisting {} match events", result.events().size());
-      List<MatchEvent> eventsToSave =
-          java.util.stream.IntStream.range(0, result.events().size())
-              .mapToObj(i -> new MatchEvent(matchId, i + 1, result.events().get(i)))
-              .toList();
-      matchEventRepository.saveAll(eventsToSave);
+      int seq = 1;
+      for (org.barcelonajug.superherobattlearena.domain.json.MatchEvent evt : result.events()) {
+        MatchEvent matchEvent = new MatchEvent(matchId, seq++, evt);
+        matchEventRepository.save(matchEvent);
+      }
 
       log.debug("Recording hero usage for both teams");
       updateHeroUsage(

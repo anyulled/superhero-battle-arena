@@ -19,11 +19,7 @@ import org.jspecify.annotations.Nullable;
 public class RoundEntity {
 
   @Id
-  @Column(name = "round_id")
-  @SuppressWarnings("NullAway.Init")
-  private UUID roundId;
-
-  @Column(name = "round_no", nullable = false)
+  @Column(name = "round_no")
   @SuppressWarnings("NullAway.Init")
   private Integer roundNo;
 
@@ -43,14 +39,6 @@ public class RoundEntity {
   private @Nullable OffsetDateTime submissionDeadline;
 
   private @Nullable Long seed;
-
-  public UUID getRoundId() {
-    return roundId;
-  }
-
-  public void setRoundId(UUID roundId) {
-    this.roundId = roundId;
-  }
 
   public Integer getRoundNo() {
     return roundNo;

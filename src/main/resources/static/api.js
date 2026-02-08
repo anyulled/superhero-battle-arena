@@ -16,7 +16,7 @@ const API = {
         eventsStream: (id) => new EventSource(`/api/matches/${id}/events/stream`)
     },
     rounds: {
-        get: (roundNo, sessionId) => $.get(`/api/rounds/${roundNo}${sessionId ? '?sessionId=' + sessionId : ''}`),
+        get: (roundNo) => $.get(`/api/rounds/${roundNo}`),
         getSubmission: (roundNo, teamId) => $.get(`/api/rounds/${roundNo}/submission?teamId=${teamId}`),
         submit: (roundNo, teamId, draft) => $.ajax({
             url: `/api/rounds/${roundNo}/submit?teamId=${teamId}`,

@@ -55,10 +55,9 @@ public class RoundController {
   @GetMapping("/{roundNo}")
   public ResponseEntity<RoundSpec> getRound(
       @Parameter(description = "Number of the round", required = true) @PathVariable
-          Integer roundNo,
-      @Parameter(description = "Session ID", required = true) @RequestParam UUID sessionId) {
+          Integer roundNo) {
     return roundUseCase
-        .getRoundSpec(roundNo, sessionId)
+        .getRoundSpec(roundNo)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }

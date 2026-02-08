@@ -28,24 +28,12 @@ $(document).ready(async function () {
         teamARoster: $('#teamARoster'),
         teamBRoster: $('#teamBRoster'),
         winnerModal: $('#winnerModal'),
-        winnerName: $('#winnerName'),
-        winnerMembers: $('#winnerMembers')
+        winnerName: $('#winnerName')
     };
 
     // Helper: Log message
     function log(msg, type = 'info') {
-        let color;
-        switch (type) {
-            case 'damage':
-                color = 'text-red-400';
-                break;
-            case 'special':
-                color = 'text-yellow-400 font-bold';
-                break;
-            default:
-                color = 'text-slate-300';
-        }
-
+        const color = type === 'damage' ? 'text-red-400' : (type === 'special' ? 'text-yellow-400 font-bold' : 'text-slate-300');
         const time = new Date().toLocaleTimeString();
         const el = $(`<div class="${color} border-l-2 border-slate-700 pl-2 mb-1"><span class="text-slate-500 text-xs mr-2">[${time}]</span>${msg}</div>`);
         els.log.prepend(el);
@@ -117,7 +105,7 @@ $(document).ready(async function () {
         }
 
         // 3. Load Team Names
-        const allTeams = await API.teams.list(state.match.sessionId);
+        const allTeams = await API.teams.list();
         state.teamA = allTeams.find(t => t.teamId === state.match.teamA);
         state.teamB = allTeams.find(t => t.teamId === state.match.teamB);
 
@@ -202,19 +190,6 @@ $(document).ready(async function () {
             case 'HIT': // Fallthrough or explicit
                 handleAttack(actorId, targetId, value, description);
                 break;
-            case 'HEALTH_CHANGED':
-                if (targetId) {
-                    if (typeof value === 'number') {
-                        // value is assumed to be the new exact health
-                        updateHealth(targetId, value, true);
-                        if (description) log(description);
-                    } else {
-                        console.warn(`HEALTH_CHANGED event for target ${targetId} has invalid or missing health value:`, value);
-                    }
-                } else {
-                    console.warn('HEALTH_CHANGED event missing targetId');
-                }
-                break;
             default:
                 log(description);
         }
@@ -257,6 +232,11 @@ $(document).ready(async function () {
         log(desc);
     }
 
+    // NOTE: If the backend sends HEALTH_CHANGED events separately, use them.
+    // If NOT, we rely on attack damage.
+    // Looking at MatchEventType: HEALTH_CHANGED might exist?
+    // Let's handle it if it comes.
+
     function updateHealth(uniqueId, deltaOrExact, isExact = false) {
         const heroData = state.rosters[uniqueId];
         if (!heroData) {
@@ -279,20 +259,8 @@ $(document).ready(async function () {
         const card = $(document.getElementById(`hero-${uniqueId}`));
 
         if (card.length) {
-            let statusClass;
-            if (pct > 50) {
-                statusClass = 'bg-green-500';
-            } else if (pct > 20) {
-                statusClass = 'bg-yellow-500';
-            } else {
-                statusClass = 'bg-red-500';
-            }
-
-            card.find('.hp-bar')
-                .css('width', `${pct}%`)
-                .removeClass('bg-green-500 bg-yellow-500 bg-red-500')
-                .addClass(statusClass);
-
+            card.find('.hp-bar').css('width', `${pct}%`).removeClass('bg-green-500 bg-yellow-500 bg-red-500')
+                .addClass(pct > 50 ? 'bg-green-500' : (pct > 20 ? 'bg-yellow-500' : 'bg-red-500'));
             card.find('.hp-text').text(`${Math.ceil(heroData.currentHealth)}/${heroData.maxHealth}`);
         } else {
             console.warn(`UI update skipped: Card #hero-${uniqueId} not found`);
@@ -310,14 +278,7 @@ $(document).ready(async function () {
         $('#winnerModal').removeClass('hidden').addClass('flex');
 
         const winner = (winnerTeamId === state.match.teamA) ? state.teamA : state.teamB;
-        if (winner) {
-            els.winnerName.text(winner.name);
-            if (winner.members && winner.members.length > 0) {
-                els.winnerMembers.text('by ' + winner.members.join(' & '));
-            } else {
-                els.winnerMembers.text('');
-            }
-        }
+        if (winner) els.winnerName.text(winner.name);
     }
 
 });

@@ -76,7 +76,8 @@ public class AdminController {
               required = true)
           @RequestBody
           CreateRoundRequest request) {
-    return ResponseEntity.ok(adminUseCase.createRound(request.sessionId(), request.spec()));
+    return ResponseEntity.ok(
+        adminUseCase.createRound(request.sessionId(), request.roundNo(), request.spec()));
   }
 
   /** Automatically match teams for a round */
