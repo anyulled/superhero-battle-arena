@@ -23,8 +23,8 @@ public class RoundPersistenceAdapter implements RoundRepositoryPort {
   }
 
   @Override
-  public Optional<Round> findById(Integer roundNo) {
-    return repository.findById(roundNo).map(mapper::toDomain);
+  public Optional<Round> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo) {
+    return repository.findBySessionIdAndRoundNo(sessionId, roundNo).map(mapper::toDomain);
   }
 
   @Override
@@ -35,5 +35,10 @@ public class RoundPersistenceAdapter implements RoundRepositoryPort {
   @Override
   public Round save(Round round) {
     return requireNonNull(mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(round)))));
+  }
+
+  @Override
+  public Optional<Integer> findMaxRoundNo(UUID sessionId) {
+    return repository.findMaxRoundNo(sessionId);
   }
 }

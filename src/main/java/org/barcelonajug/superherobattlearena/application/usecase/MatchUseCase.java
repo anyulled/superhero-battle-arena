@@ -74,6 +74,16 @@ public class MatchUseCase {
 
       // Get all submissions and filter out already-matched teams
       List<Submission> allSubmissions = submissionRepository.findByRoundNo(roundNo);
+      // NOTE: submissionRepository.findByRoundNo(roundNo) returns submissions for ALL
+      // sessions.
+      // Ideally we should filter by team's session, but Submission doesn't have
+      // session_id.
+      // We rely on auto-match being called per session and checking teams.
+      // However, if we pick a team from another session that also submitted to "Round
+      // 1",
+      // we might match them. THIS IS A POTENTIAL BUG.
+      // For now, fixing Round bug is priority.
+
       List<Submission> unmatchedSubmissions =
           allSubmissions.stream()
               .filter(s -> !alreadyMatchedTeams.contains(s.getTeamId()))
@@ -117,13 +127,15 @@ public class MatchUseCase {
   }
 
   public UUID createMatch(UUID teamA, UUID teamB, Integer roundNo, UUID sessionId) {
-    Match match = new Match();
-    match.setMatchId(UUID.randomUUID());
-    match.setSessionId(sessionId);
-    match.setTeamA(teamA);
-    match.setTeamB(teamB);
-    match.setRoundNo(roundNo);
-    match.setStatus(MatchStatus.PENDING);
+    Match match =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .teamA(teamA)
+            .teamB(teamB)
+            .roundNo(roundNo)
+            .status(MatchStatus.PENDING)
+            .build();
     matchRepository.save(match);
     return match.getMatchId();
   }
@@ -182,7 +194,14 @@ public class MatchUseCase {
               java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
               match.getRoundNo());
 
-      Round round = roundRepository.findById(match.getRoundNo()).orElseThrow();
+      // FIX: Use findBySessionIdAndRoundNo instead of findById(Integer)
+      UUID sessionId =
+          java.util.Objects.requireNonNull(match.getSessionId(), "Match session ID cannot be null");
+      Round round =
+          roundRepository
+              .findBySessionIdAndRoundNo(sessionId, match.getRoundNo())
+              .orElseThrow(
+                  () -> new IllegalArgumentException("Round not found: " + match.getRoundNo()));
 
       log.debug("Delegating to battle engine for simulation");
       SimulationResult result =

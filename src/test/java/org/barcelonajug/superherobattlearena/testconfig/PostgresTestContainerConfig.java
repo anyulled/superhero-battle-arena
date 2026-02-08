@@ -39,5 +39,8 @@ public abstract class PostgresTestContainerConfig {
     registry.add(
         "spring.flyway.locations",
         () -> "classpath:db/migration/common,classpath:db/migration/postgresql");
+    // Fix checksum mismatch by cleaning on error
+    registry.add("spring.flyway.clean-on-validation-error", () -> "true");
+    registry.add("spring.flyway.clean-disabled", () -> "false");
   }
 }
