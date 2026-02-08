@@ -59,7 +59,7 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
     assertThat(teamBId).isNotNull();
 
     // Step 3: Admin creates round 1 (no constraints)
-    int roundNo = createRound(sessionId, 1);
+    int roundNo = createRound(sessionId);
     assertThat(roundNo).isEqualTo(1);
 
     // Step 4: Teams submit their hero squads (5 heroes each)
@@ -128,7 +128,7 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
     return UUID.fromString(body.replace("\"", ""));
   }
 
-  private int createRound(UUID sessionId, int roundNo) throws Exception {
+  private int createRound(UUID sessionId) throws Exception {
     RoundSpec spec =
         new RoundSpec(
             "Test Round",
@@ -140,7 +140,7 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
             Collections.emptyMap(),
             "ARENA_1");
 
-    CreateRoundRequest request = new CreateRoundRequest(sessionId, roundNo, spec);
+    CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
 
     MvcResult result =
         mockMvc

@@ -1,14 +1,17 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
+import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Round;
-import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.Submission;
+import org.barcelonajug.superherobattlearena.domain.Team;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.slf4j.Logger;
@@ -23,49 +26,23 @@ public class RoundUseCase {
 
   private final RoundRepositoryPort roundRepository;
   private final SubmissionRepositoryPort submissionRepository;
+  private final TeamRepositoryPort teamRepository;
 
   public RoundUseCase(
-      RoundRepositoryPort roundRepository, SubmissionRepositoryPort submissionRepository) {
+      RoundRepositoryPort roundRepository,
+      SubmissionRepositoryPort submissionRepository,
+      TeamRepositoryPort teamRepository) {
     this.roundRepository = roundRepository;
     this.submissionRepository = submissionRepository;
+    this.teamRepository = teamRepository;
   }
 
-  public Integer createRound(UUID sessionId, Integer roundNo) {
-    MDC.put("sessionId", sessionId.toString());
-    MDC.put("roundNo", roundNo.toString());
-
-    try {
-      log.info("Creating round - sessionId={}, roundNo={}", sessionId, roundNo);
-
-      Round round = new Round();
-      round.setRoundNo(roundNo);
-      round.setSessionId(sessionId);
-      round.setSeed(System.currentTimeMillis());
-      round.setStatus(RoundStatus.OPEN);
-
-      RoundSpec spec =
-          new RoundSpec(
-              "Default Round",
-              5,
-              100,
-              Collections.emptyMap(),
-              Collections.emptyMap(),
-              Collections.emptyList(),
-              Collections.emptyMap(),
-              "ARENA_1");
-      round.setSpecJson(spec);
-
-      roundRepository.save(round);
-      log.info("Round created successfully - roundNo={}, seed={}", roundNo, round.getSeed());
-      return round.getRoundNo();
-    } finally {
-      MDC.remove("sessionId");
-      MDC.remove("roundNo");
+  public Optional<RoundSpec> getRoundSpec(Integer roundNo, UUID sessionId) {
+    if (sessionId == null) {
+      log.warn("getRoundSpec called without sessionId for roundNo={}", roundNo);
+      return Optional.empty();
     }
-  }
-
-  public Optional<RoundSpec> getRoundSpec(Integer roundNo) {
-    return roundRepository.findById(roundNo).map(Round::getSpecJson);
+    return roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo).map(Round::getSpecJson);
   }
 
   public void submitTeam(Integer roundNo, UUID teamId, DraftSubmission draft) {
@@ -78,6 +55,20 @@ public class RoundUseCase {
           teamId,
           roundNo,
           draft.heroIds().size());
+
+      // Validate team exists and identify session
+      Team team =
+          teamRepository
+              .findById(teamId)
+              .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+
+      // Validate round exists for this session
+      // Team is record -> accessors are name(), sessionId()
+      Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(team.sessionId(), roundNo);
+      if (round.isEmpty()) {
+        throw new IllegalArgumentException(
+            "Round " + roundNo + " does not exist in session " + team.sessionId());
+      }
 
       if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
         log.warn("Team already submitted - teamId={}, roundNo={}", teamId, roundNo);
@@ -94,12 +85,14 @@ public class RoundUseCase {
         throw new IllegalArgumentException("Team must have exactly 5 heroes");
       }
 
-      Submission submission = new Submission();
-      submission.setTeamId(teamId);
-      submission.setRoundNo(roundNo);
-      submission.setSubmissionJson(draft);
-      submission.setAccepted(true);
-      submission.setSubmittedAt(OffsetDateTime.now());
+      Submission submission =
+          Submission.builder()
+              .teamId(teamId)
+              .roundNo(roundNo)
+              .submissionJson(draft)
+              .accepted(true)
+              .submittedAt(OffsetDateTime.now())
+              .build();
 
       submissionRepository.save(submission);
       log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
@@ -119,16 +112,23 @@ public class RoundUseCase {
   }
 
   public java.util.List<DraftSubmission> getSubmissions(Integer roundNo, UUID sessionId) {
-    Optional<Round> round = roundRepository.findById(roundNo);
-    if (round.isPresent() && sessionId != null && !sessionId.equals(round.get().getSessionId())) {
-      log.warn(
-          "Requesting submissions for round {} with mismatched session {}. Round belongs to session {}",
-          roundNo,
-          sessionId,
-          round.get().getSessionId());
+    if (sessionId == null) {
+      log.warn("getSubmissions called without sessionId");
       return java.util.Collections.emptyList();
     }
+
+    Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo);
+    if (round.isEmpty()) {
+      return java.util.Collections.emptyList();
+    }
+
+    // Filter submissions to ensure they belong to the correct session
+    List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
+    // Team -> teamId()
+    Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(Collectors.toSet());
+
     return submissionRepository.findByRoundNo(roundNo).stream()
+        .filter(s -> sessionTeamIds.contains(s.getTeamId()))
         .map(Submission::getSubmissionJson)
         .toList();
   }
