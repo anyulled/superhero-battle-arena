@@ -303,7 +303,12 @@ public class AdminUseCase {
     for (Integer heroId : submission.heroIds()) {
       Hero hero = heroMap.get(heroId);
       if (hero == null) {
-        throw new IllegalArgumentException("Hero not found in roster: " + heroId);
+        // Fallback to single fetch if batch fetch missed it (robustness against cache/DB issues)
+        hero =
+            rosterUseCase
+                .getHero(heroId)
+                .orElseThrow(
+                    () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
       }
       baseHeroes.add(hero);
     }
