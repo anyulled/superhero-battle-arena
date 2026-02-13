@@ -292,16 +292,22 @@ public class AdminUseCase {
   }
 
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
-    List<Hero> battleHeroes = new ArrayList<>();
+    List<Integer> distinctHeroIds = submission.heroIds().stream().distinct().toList();
+    Map<Integer, Hero> heroMap =
+        rosterUseCase.getHeroes(distinctHeroIds).stream()
+            .collect(
+                java.util.stream.Collectors.toMap(
+                    Hero::id, java.util.function.Function.identity()));
+
+    List<Hero> baseHeroes = new ArrayList<>();
     for (Integer heroId : submission.heroIds()) {
-      Hero baseHero =
-          rosterUseCase
-              .getHero(heroId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
-      Hero fatiguedHero = fatigueUseCase.applyFatigue(teamId, baseHero, roundNo);
-      battleHeroes.add(fatiguedHero);
+      Hero hero = heroMap.get(heroId);
+      if (hero == null) {
+        throw new IllegalArgumentException("Hero not found in roster: " + heroId);
+      }
+      baseHeroes.add(hero);
     }
-    return battleHeroes;
+
+    return fatigueUseCase.applyFatigue(teamId, baseHeroes, roundNo);
   }
 }
