@@ -34,15 +34,19 @@ public class TeamController {
   }
 
   @Operation(
-      summary = "Get all available heroes",
-      description = "Retrieves a list of all heroes that can be picked for a team.")
+      summary = "Get available heroes",
+      description =
+          "Retrieves a list of heroes that can be picked for a team. Supports pagination.")
   @ApiResponse(
       responseCode = "200",
       description = "List of heroes",
       content = @Content(array = @ArraySchema(schema = @Schema(implementation = Hero.class))))
   @GetMapping("/heroes")
-  public List<Hero> getHeroes() {
-    return rosterUseCase.getAllHeroes();
+  public List<Hero> getHeroes(
+      @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+      @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "50")
+          int size) {
+    return rosterUseCase.getAllHeroes(page, size);
   }
 
   @Operation(
