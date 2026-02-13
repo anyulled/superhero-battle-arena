@@ -197,7 +197,6 @@ public class MatchUseCase {
               java.util.Objects.requireNonNull(subB.get().getSubmissionJson()),
               match.getRoundNo());
 
-      // FIX: Use findBySessionIdAndRoundNo instead of findById(Integer)
       UUID sessionId =
           java.util.Objects.requireNonNull(match.getSessionId(), "Match session ID cannot be null");
       Round round =

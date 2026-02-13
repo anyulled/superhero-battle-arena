@@ -14,7 +14,7 @@
 	<name>superhero-battle-arena</name>
 	<description>Superhero Battle Arena Application</description>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>25</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -259,7 +259,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.13.0</version>
 				<configuration>
-					<release>21</release>
+					<release>25</release>
 					<fork>true</fork>
 					<compilerArgs>
 						<arg>-XDcompilePolicy=simple</arg>
