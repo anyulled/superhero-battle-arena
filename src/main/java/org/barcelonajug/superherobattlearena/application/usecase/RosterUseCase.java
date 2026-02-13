@@ -36,7 +36,7 @@ public class RosterUseCase {
     return superheroRepository.findById(id);
   }
 
-  @Cacheable(value = "heroLists", key = "#ids.hashCode()")
+  @Cacheable(value = "heroLists", key = "#ids")
   public List<Hero> getHeroes(List<Integer> ids) {
     log.debug("Fetching {} heroes by ids", ids.size());
     return superheroRepository.findByIds(ids);
