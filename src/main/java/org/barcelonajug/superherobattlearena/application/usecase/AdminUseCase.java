@@ -151,9 +151,7 @@ public class AdminUseCase {
     if (sessionIdOrNull != null) {
       sessionId = sessionIdOrNull;
     } else {
-      Optional<Match> anyMatch =
-          matchRepository.findPendingMatches(roundNo, null).stream().findFirst();
-
+      Optional<Match> anyMatch = matchRepository.findFirstPendingMatch(roundNo);
       sessionId = anyMatch.map(Match::getSessionId).orElse(null);
     }
 
