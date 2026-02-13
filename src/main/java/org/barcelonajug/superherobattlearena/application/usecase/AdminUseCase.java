@@ -152,10 +152,7 @@ public class AdminUseCase {
       sessionId = sessionIdOrNull;
     } else {
       Optional<Match> anyMatch =
-          matchRepository.findAll().stream()
-              .filter(m -> m.getRoundNo().equals(roundNo))
-              .filter(m -> m.getStatus() == MatchStatus.PENDING)
-              .findFirst();
+          matchRepository.findPendingMatches(roundNo, null).stream().findFirst();
 
       sessionId = anyMatch.map(Match::getSessionId).orElse(null);
     }
@@ -180,12 +177,7 @@ public class AdminUseCase {
       }
 
       // Filter matches using the effective sessionId
-      List<Match> pendingMatches =
-          matchRepository.findAll().stream()
-              .filter(m -> m.getRoundNo().equals(roundNo))
-              .filter(m -> m.getStatus() == MatchStatus.PENDING)
-              .filter(m -> sessionId.equals(m.getSessionId()))
-              .toList();
+      List<Match> pendingMatches = matchRepository.findPendingMatches(roundNo, sessionId);
 
       log.info("Found {} pending matches for round {}", pendingMatches.size(), roundNo);
 

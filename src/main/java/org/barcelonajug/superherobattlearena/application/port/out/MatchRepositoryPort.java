@@ -19,5 +19,6 @@ public interface MatchRepositoryPort {
 
   List<Match> findByRoundNoAndSessionId(Integer roundNo, UUID sessionId);
 
-  List<Match> findPendingMatches(Integer roundNo, UUID sessionId);
+  List<Match> findPendingMatches(
+      Integer roundNo, @org.jspecify.annotations.Nullable UUID sessionId);
 }

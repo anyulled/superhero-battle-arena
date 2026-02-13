@@ -77,7 +77,8 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   }
 
   @Override
-  public List<Match> findPendingMatches(Integer roundNo, UUID sessionId) {
+  public List<Match> findPendingMatches(
+      Integer roundNo, @org.jspecify.annotations.Nullable UUID sessionId) {
     return (sessionId == null
             ? repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING)
             : repository.findByRoundNoAndStatusAndSessionId(
