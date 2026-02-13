@@ -89,11 +89,4 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
         .map(java.util.Objects::requireNonNull)
         .toList();
   }
-
-  @Override
-  public Optional<Match> findFirstPendingMatch(Integer roundNo) {
-    return repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING).stream()
-        .findFirst()
-        .map(mapper::toDomain);
-  }
 }
