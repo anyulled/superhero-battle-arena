@@ -13,21 +13,22 @@ A Spring Boot application built with Hexagonal Architecture that simulates battl
 ## Features
 
 - **Team Management**: Register your team of superheroes.
-- **Matchmaking**: Create matches between two registered teams.
-- **Battle Simulation**: Deterministic battle engine with turn-based combat mechanics.
+- **Squad Formation**: Submit specific hero lineups and strategies for each round.
+- **Matchmaking**: Create matches between two registered teams within a session.
+- **Battle Simulation**: Deterministic battle engine with turn-based combat mechanics and fatigue system.
 - **Live Replay**: Watch battles unfold in real-time via Server-Sent Events (SSE) with visual animations.
-- **Hexagonal Architecture**: Clean separation of concerns with Domain, Application, and Adapter layers.
+- **Hexagonal Architecture**: Clean separation of concerns with Domain, Application (Use Cases), and Adapter layers.
 
 ## Technology Stack
 
-- **Backend**: Java 25 (Preview Features), Spring Boot 4.0.2
-- **Frontend**: HTML5, Tailwind CSS, jQuery
-- **Architecture**: Hexagonal (Ports & Adapters)
+- **Backend**: Java 25 (Preview Features), Spring Boot 4.x
+- **Frontend**: HTML5, Tailwind CSS, jQuery, Lucide Icons
+- **Architecture**: Hexagonal (Ports & Adapters) with Use Case pattern
 - **Build Tool**: Maven
 
 ## How to Run
 
-1. **Prerequisites**: Ensure you have Java 21+ installed.
+1. **Prerequisites**: Ensure you have Java 21+ installed (Java 25 recommended for full compatibility).
 2. **Build and Run**:
 
    ```bash
@@ -38,7 +39,7 @@ A Spring Boot application built with Hexagonal Architecture that simulates battl
 
 The application supports different environments through Spring profiles:
 
-- **`h2` (Default)**: Uses an in-memory H2 database. Perfect for local development and testing without any infrastructure requirements.
+- **`h2` (Default)**: Uses an in-memory H2 database. Perfect for local development.
 
   ```bash
   ./mvnw spring-boot:run -Dspring-boot.run.profiles=h2
@@ -82,7 +83,8 @@ If you are using **Podman** instead of Docker, the `spring-boot-docker-compose` 
 
 5. **Access the Application**:
 
-   Open your browser to [http://localhost:8080/lobby.html](http://localhost:8080/lobby.html)
+   Open your browser to [http://localhost:8080/](http://localhost:8080/) (the main entry point).
+
 6. **API Documentation**:
    - Swagger UI: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
    - OpenAPI JSON: [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
@@ -96,9 +98,9 @@ graph TD
     User[User Browser]
     
     subgraph "Superhero Battle Arena"
-        Web["Web Adapter\n(Controllers)"]
-        App["Application Layer\n(Services/Use Cases)"]
-        Domain["Domain Layer\n(Entities/Logic)"]
+        Web["Web Adapter (Controllers)"]
+        App["Application Layer (Use Cases)"]
+        Domain["Domain Layer (Entities/Logic)"]
         Persist[Persistence Adapter]
     end
     
@@ -108,11 +110,11 @@ graph TD
     App -->|Ports| Persist
 ```
 
-### Battle Flow
+## Battle Flow
 
-The system flow is divided into three main phases: Registration, Matchmaking, and Battle.
+The system flow is divided into four main phases: Registration, Squad Submission, Matchmaking, and Battle.
 
-#### Phase 1: Registration (Session & Teams)
+### Phase 1: Registration (Session & Teams)
 
 ```mermaid
 sequenceDiagram
@@ -130,7 +132,22 @@ sequenceDiagram
     T-->>U: Team ID
 ```
 
-#### Phase 2: Matchmaking & Round Setup
+### Phase 2: Squad Submission
+
+Before a match can be run for a specific round, teams must submit their squad (list of heroes) and strategy.
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant SC as SubmissionController
+    participant R as Repository
+
+    U->>SC: POST /api/submissions (Team ID, Round No, Hero IDs, Strategy)
+    SC->>R: Save Submission
+    SC-->>U: Confirmed
+```
+
+### Phase 3: Matchmaking & Round Setup
 
 ```mermaid
 sequenceDiagram
@@ -142,21 +159,21 @@ sequenceDiagram
     U->>RC: POST /api/rounds (Session ID, Round No)
     RC->>R: Save Round Config
     
-    U->>MC: POST /api/matches/create (Team A, Team B)
-    MC->>R: Create Pending Match
-    MC-->>U: Match ID
+    U->>MC: POST /api/matches/auto (Session ID, Round No)
+    MC->>R: Create Pending Matches for all submissions
+    MC-->>U: Match IDs
 ```
 
-#### Phase 3: Battle Simulation & Visualization
+### Phase 4: Battle Simulation & Visualization
 
 ```mermaid
 sequenceDiagram
     participant U as User
     participant F as Frontend
     participant MC as MatchController
-    participant E as BattleEngine
+    participant E as BattleEngineUseCase
 
-    U->>F: Start/Watch Match
+    U->>F: Watch Match
     F->>MC: POST /api/matches/{id}/run
     MC->>E: simulate(match)
     E-->>MC: Full Battle Result (Winner, Events)
@@ -164,25 +181,29 @@ sequenceDiagram
     
     F->>MC: GET /api/matches/{id}/events/stream
     loop Replay
-        MC-->>F: SSE Event (Attack, Damage)
-        F->>F: Animate
+        MC-->>F: SSE Event (ATTACK, HEALTH_CHANGED, etc.)
+        F->>F: Animate Health Bars and Effects
     end
 ```
 
-### Domain Model
+## Domain Model
+
+Key domain entities use the **Builder Pattern** and are implemented as Java **Records** where immutable data transfer is required.
 
 ```mermaid
 classDiagram
     class Match {
-        UUID id
+        UUID matchId
+        UUID sessionId
         UUID teamA
         UUID teamB
+        Integer roundNo
         MatchStatus status
-        List~MatchEvent~ events
+        MatchResult result
     }
     
     class Team {
-        UUID id
+        UUID teamId
         String name
         List~String~ members
     }
@@ -190,8 +211,11 @@ classDiagram
     class Hero {
         int id
         String name
-        PowerStats stats
+        String slug
+        PowerStats powerstats
         String role
+        Integer cost
+        List~String~ tags
     }
     
     class MatchEvent {
@@ -201,21 +225,42 @@ classDiagram
         int value
     }
     
-    Match "1" *-- "*" MatchEvent : contains
-    Match --> "2" Team : references
+    Match --> MatchStatus
+    Match --> MatchResult
+    Hero "1" *-- "1" PowerStats
 ```
+
+### Match Events
+
+The simulation generates various event types delivered via SSE:
+
+- `START_BATTLE`: Initialization of the combat scene.
+- `ATTACK`: When a hero performs an action.
+- `HEALTH_CHANGED`: Updates hero health bars in the UI.
+- `BATTLE_OVER`: Final result including the winner.
 
 ## Usage Guide
 
-1. **Lobby**: Go to `/lobby.html`. Use the buttons to register default teams if none exist.
-2. **Create Match**: Select two teams from the list and click "Create Match".
-3. **Bracket**: You will be redirected to `/bracket.html`. Click "Watch Live/Replay" on your match.
-4. **Battle**: Watch the simulation on `/battle.html`.
+1. **Home**: Start at `index.html`.
+2. **Lobby**: Manage teams and see active sessions. Registration is done via API (see samples in `/lobby.html`).
+3. **Admin**: Configure rounds and trigger auto-matchmaking.
+4. **Current Bracket**: View the tournament progress on `bracket.html`.
+5. **Watch Battle**: Experience the real-time simulation on `battle.html`.
+
+## Command-Line Tools
+
+The repository includes several utility scripts for data initialization and SQL generation.
+
+See the [Scripts Documentation](scripts/README.md) for detailed instructions on using JBang to:
+
+- Initialize test fixtures (`InitFixture.java`)
+- Generate seed SQL from JSON (`GenerateSuperheroSql.java`)
+- Extract hero data (`ExtractHeroes.java`)
 
 ## Development
 
 The project structure follows Hexagonal Architecture principles:
 
 - `domain`: Pure business logic and entities. No framework dependencies.
-- `application`: Use cases and input/output ports.
-- `adapter`: Implementation of ports (Web, Persistence).
+- `application`: Use cases (service layer) and input/output ports.
+- `adapter`: Implementation of ports (Web/Rest, Persistence/JPA).
