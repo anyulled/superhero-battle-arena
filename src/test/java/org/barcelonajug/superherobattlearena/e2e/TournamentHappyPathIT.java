@@ -93,6 +93,17 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
       assertThat(match.get("status").asText()).isEqualTo("COMPLETED");
       assertThat(match.has("winnerTeam")).isTrue();
     }
+
+    // Step 9: Verify round is CLOSED
+    JsonNode rounds = getRounds(sessionId);
+    boolean foundClosedRound = false;
+    for (JsonNode roundNode : rounds) {
+      if (roundNode.get("roundNo").asInt() == roundNo) {
+        assertThat(roundNode.get("status").asText()).isEqualTo("CLOSED");
+        foundClosedRound = true;
+      }
+    }
+    assertThat(foundClosedRound).isTrue();
   }
 
   // ==================== Helper Methods ====================
@@ -229,5 +240,15 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
         .map(JsonNode::asText)
         .map(UUID::fromString)
         .toList();
+  }
+
+  private JsonNode getRounds(UUID sessionId) throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(get("/api/rounds").param("sessionId", sessionId.toString()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    return objectMapper.readTree(result.getResponse().getContentAsString());
   }
 }

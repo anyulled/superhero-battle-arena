@@ -271,6 +271,14 @@ public class AdminUseCase {
       }
 
       long duration = System.currentTimeMillis() - startTime;
+
+      List<Match> remainingPending = matchRepository.findPendingMatches(roundNo, sessionId);
+      if (remainingPending.isEmpty()) {
+        round.setStatus(RoundStatus.CLOSED);
+        roundRepository.save(round);
+        log.info("Closed round {} for session {} as all matches are completed", roundNo, sessionId);
+      }
+
       log.info(
           "Batch battle execution completed - roundNo={}, total={}, successful={}, failed={}, duration={}ms",
           roundNo,

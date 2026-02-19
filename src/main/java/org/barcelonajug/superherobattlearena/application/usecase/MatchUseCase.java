@@ -18,6 +18,7 @@ import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
+import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
@@ -245,6 +246,18 @@ public class MatchUseCase {
 
       String resultStr = result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW";
       long duration = System.currentTimeMillis() - startTime;
+
+      List<Match> remainingPending =
+          matchRepository.findPendingMatches(match.getRoundNo(), sessionId);
+      if (remainingPending.isEmpty()) {
+        round.setStatus(RoundStatus.CLOSED);
+        roundRepository.save(round);
+        log.info(
+            "Closed round {} for session {} as all matches are completed",
+            match.getRoundNo(),
+            sessionId);
+      }
+
       log.info(
           "Match execution completed - matchId={}, result={}, duration={}ms",
           matchId,

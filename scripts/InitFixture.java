@@ -137,7 +137,7 @@ class InitFixture implements Callable<Integer> {
         }
     }
 
-    private void initializeSession() throws Exception {
+    private HttpResponse<String> initializeSession() throws Exception {
         logger.info("Initializing Session: {}", sessionId);
 
         final String url = baseUrl + "/api/admin/sessions/start?sessionId=" + sessionId;
@@ -147,11 +147,12 @@ class InitFixture implements Callable<Integer> {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        HttpResponse<String> response = sendWithLogging(request);
         logger.info("Session started.");
+        return response;
     }
 
-    private void verifySession() throws Exception {
+    private HttpResponse<String> verifySession() throws Exception {
         logger.info("Retrieving active session...");
         final String url = baseUrl + "/api/sessions/active";
         final HttpRequest request = HttpRequest.newBuilder()
@@ -159,7 +160,7 @@ class InitFixture implements Callable<Integer> {
                 .GET()
                 .build();
 
-        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        final HttpResponse<String> response = sendWithLogging(request);
         if (response.statusCode() == 404) {
             throw new IllegalStateException("No active session found via API, and --skip-session was requested.");
         } else if (response.statusCode() != 200) {
@@ -180,29 +181,61 @@ class InitFixture implements Callable<Integer> {
             sessionId = activeSessionId;
             logger.info("Using active session: {}", sessionId);
         }
+        return response;
     }
 
     private List<String> registerTeams() throws Exception {
         printHeader("Registering " + TEAM_COUNT + " Teams...");
+
+        // Fetch existing teams to avoid duplicate name errors
+        final String getTeamsUrl = baseUrl + "/api/teams?sessionId=" + sessionId;
+        final HttpRequest getTeamsRequest = HttpRequest.newBuilder()
+                .uri(URI.create(getTeamsUrl))
+                .GET()
+                .build();
+        final HttpResponse<String> getTeamsResponse = sendWithLogging(getTeamsRequest);
+        final List<Map<String, Object>> existingTeams = objectMapper.readValue(getTeamsResponse.body(),
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+        final Map<String, String> existingTeamMap = existingTeams.stream()
+                .collect(Collectors.toMap(
+                        t -> t.get("name").toString(),
+                        t -> t.get("teamId").toString()));
 
         final List<TeamConfig> teamConfigs = generateTeamConfigs();
         final List<String> teamIds = new ArrayList<>();
 
         for (int i = 0; i < teamConfigs.size(); i++) {
             final TeamConfig config = teamConfigs.get(i);
+
+            if (existingTeamMap.containsKey(config.name())) {
+                String teamId = existingTeamMap.get(config.name());
+                logger.info("[{}/{}] Team '{}' already exists. Reusing ID: {}", i + 1, TEAM_COUNT, config.name(),
+                        teamId);
+                teamIds.add(teamId);
+                continue;
+            }
+
             logger.info("[{}/{}] Registering: {}", i + 1, TEAM_COUNT, config.name());
 
-            final String teamId = registerTeam(config);
-            teamIds.add(teamId);
-
-            logger.info("   Team ID: {}", teamId);
+            final HttpResponse<String> response = registerTeam(config);
+            if (response.statusCode() == 200) {
+                final String teamId = response.body().replace("\"", "");
+                teamIds.add(teamId);
+                logger.info("   Team ID: {}", teamId);
+            } else {
+                logger.error("   Failed to register team '{}': {}", config.name(), response.body());
+                // If it failed but somehow exists now (race condition or partial name match),
+                // we might have issues.
+                // For now, we skip it to avoid crashing the whole script.
+            }
         }
 
-        logger.info("All {} teams registered successfully!", TEAM_COUNT);
+        logger.info("Finished team registration logic. {} teams ready.", teamIds.size());
         return Collections.unmodifiableList(teamIds);
     }
 
-    private String registerTeam(final TeamConfig config) throws Exception {
+    private HttpResponse<String> registerTeam(final TeamConfig config) throws Exception {
         final String encodedName = URLEncoder.encode(config.name(), StandardCharsets.UTF_8);
         final String encodedMembers = URLEncoder.encode(config.members(), StandardCharsets.UTF_8);
 
@@ -215,14 +248,10 @@ class InitFixture implements Callable<Integer> {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
-        final HttpResponse<String> response = httpClient.send(
-                request,
-                HttpResponse.BodyHandlers.ofString());
-
-        return response.body().replace("\"", "");
+        return sendWithLogging(request);
     }
 
-    private void createRound() throws Exception {
+    private HttpResponse<String> createRound() throws Exception {
         printHeader("Creating Round 1...");
 
         final String url = baseUrl + "/api/admin/rounds/create";
@@ -252,25 +281,27 @@ class InitFixture implements Callable<Integer> {
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
-        httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        HttpResponse<String> response = sendWithLogging(request);
         logger.info("Round 1 created via Admin API!");
+        return response;
     }
 
-    private void verifyRound() throws Exception {
+    private HttpResponse<String> verifyRound() throws Exception {
         logger.info("Verifying Round 1 existence...");
-        final String url = baseUrl + "/api/rounds/1";
+        final String url = baseUrl + "/api/rounds/1?sessionId=" + sessionId;
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .GET()
                 .build();
 
-        final HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        final HttpResponse<String> response = sendWithLogging(request);
         if (response.statusCode() == 404) {
             throw new IllegalStateException("Round 1 not found via API, and --skip-round was requested.");
         } else if (response.statusCode() != 200) {
             throw new IllegalStateException("Failed to verify round 1: " + response.statusCode());
         }
         logger.info("Round 1 found.");
+        return response;
     }
 
     private List<Integer> extractHeroIds() throws Exception {
@@ -307,7 +338,7 @@ class InitFixture implements Callable<Integer> {
         }
     }
 
-    private void submitRoster(final String teamId, final List<Integer> heroIds, final Strategy strategy)
+    private HttpResponse<String> submitRoster(final String teamId, final List<Integer> heroIds, final Strategy strategy)
             throws Exception {
         final String url = baseUrl + "/api/rounds/1/submit?teamId=" + teamId;
         final String heroIdsJson = heroIds.stream()
@@ -324,7 +355,21 @@ class InitFixture implements Callable<Integer> {
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
-        httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+        return sendWithLogging(request);
+    }
+
+    private HttpResponse<String> sendWithLogging(HttpRequest request) throws Exception {
+        try {
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 400) {
+                logger.error("HTTP Exception Logged for {} - Status Code: {}, Body: {}",
+                        request.uri(), response.statusCode(), response.body());
+            }
+            return response;
+        } catch (Exception e) {
+            logger.error("HTTP Execution Exception for {}: {}", request.uri(), e.getMessage());
+            throw e;
+        }
     }
 
     private List<TeamConfig> generateTeamConfigs() {
