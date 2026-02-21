@@ -169,13 +169,11 @@ $(document).ready(async function () {
 
 
     } catch (err) {
-        console.error(err);
         alert('Failed to initialize battle: ' + err.message);
     }
 
     // Event Processor
     function processEvent(event) {
-        console.log('Event:', event);
         const { type, description, actorId, targetId, value } = event;
 
         switch (type) {
@@ -194,7 +192,7 @@ $(document).ready(async function () {
                 break;
             case 'HERO_KNOCKED_OUT':
                 handleKO(targetId);
-                log(description, 'damage');
+                log('😵 ' + description, 'damage');
                 break;
             case 'MATCH_END':
                 handleWin(value); // value is winning team ID
@@ -254,7 +252,7 @@ $(document).ready(async function () {
         // updateHealth should run regardless of UI presence to keep state consistent
         updateHealth(targetId, -damage);
 
-        log(desc);
+        log('👊 ' + desc);
     }
 
     function updateHealth(uniqueId, deltaOrExact, isExact = false) {

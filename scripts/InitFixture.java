@@ -3,11 +3,13 @@
 //DEPS com.github.javafaker:javafaker:1.0.2
 //DEPS org.slf4j:slf4j-simple:2.0.9
 //DEPS info.picocli:picocli:4.7.6
+//DEPS io.github.cdimascio:dotenv-java:3.0.0
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
+import io.github.cdimascio.dotenv.Dotenv;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -38,7 +40,6 @@ import org.slf4j.LoggerFactory;
 class InitFixture implements Callable<Integer> {
     private static final String DEFAULT_BASE_URL = "http://localhost:8080";
     private static final String DEFAULT_HEROES_FILE = "src/main/resources/all-superheroes.json";
-    private static final String AUTH_HEADER = "Basic YWRtaW46YWRtaW4=";
     private static final int TEAM_COUNT = 20;
     private static final int HEROES_PER_TEAM = 5;
     private static final Logger logger = LoggerFactory.getLogger(InitFixture.class);
@@ -68,6 +69,7 @@ class InitFixture implements Callable<Integer> {
     private ObjectMapper objectMapper;
     private Faker faker;
     private Set<String> usedHeroNames;
+    private String authHeader;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new InitFixture()).execute(args);
@@ -82,6 +84,16 @@ class InitFixture implements Callable<Integer> {
         this.objectMapper = new ObjectMapper();
         this.faker = new Faker();
         this.usedHeroNames = new HashSet<>();
+
+        Dotenv dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .filename(".env.local")
+                .load();
+
+        String adminUser = dotenv.get("ADMIN_USERNAME", "admin");
+        String adminPass = dotenv.get("ADMIN_PASSWORD", "1234");
+        this.authHeader = "Basic "
+                + Base64.getEncoder().encodeToString((adminUser + ":" + adminPass).getBytes(StandardCharsets.UTF_8));
 
         runFixture();
         return 0;
@@ -143,7 +155,7 @@ class InitFixture implements Callable<Integer> {
         final String url = baseUrl + "/api/admin/sessions/start?sessionId=" + sessionId;
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .header("Authorization", AUTH_HEADER)
+                .header("Authorization", authHeader)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
@@ -157,14 +169,17 @@ class InitFixture implements Callable<Integer> {
         final String url = baseUrl + "/api/sessions/active";
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
+                .header("Authorization", authHeader)
                 .GET()
                 .build();
 
         final HttpResponse<String> response = sendWithLogging(request);
         if (response.statusCode() == 404) {
-            throw new IllegalStateException("No active session found via API, and --skip-session was requested.");
+            throw new IllegalStateException(String.format(
+                    "No active session found via API (Response: %s). --skip-session was requested.", response.body()));
         } else if (response.statusCode() != 200) {
-            throw new IllegalStateException("Failed to retrieve active session: " + response.statusCode());
+            throw new IllegalStateException(String.format("Failed to retrieve active session: Status %d, Response: %s",
+                    response.statusCode(), response.body()));
         }
 
         Map<String, Object> session = objectMapper.readValue(response.body(), new TypeReference<Map<String, Object>>() {
@@ -191,6 +206,7 @@ class InitFixture implements Callable<Integer> {
         final String getTeamsUrl = baseUrl + "/api/teams?sessionId=" + sessionId;
         final HttpRequest getTeamsRequest = HttpRequest.newBuilder()
                 .uri(URI.create(getTeamsUrl))
+                .header("Authorization", authHeader)
                 .GET()
                 .build();
         final HttpResponse<String> getTeamsResponse = sendWithLogging(getTeamsRequest);
@@ -245,6 +261,7 @@ class InitFixture implements Callable<Integer> {
 
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
+                .header("Authorization", authHeader)
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
 
@@ -277,30 +294,42 @@ class InitFixture implements Callable<Integer> {
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
-                .header("Authorization", AUTH_HEADER)
+                .header("Authorization", authHeader)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
         HttpResponse<String> response = sendWithLogging(request);
+        if (response.statusCode() >= 400) {
+            throw new IllegalStateException("Failed to create Round 1 via Admin API: " + response.statusCode());
+        }
         logger.info("Round 1 created via Admin API!");
         return response;
     }
 
     private HttpResponse<String> verifyRound() throws Exception {
-        logger.info("Verifying Round 1 existence...");
-        final String url = baseUrl + "/api/rounds/1?sessionId=" + sessionId;
+        logger.info("Verifying any active round existence for session...");
+        final String url = baseUrl + "/api/rounds?sessionId=" + sessionId;
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
+                .header("Authorization", authHeader)
                 .GET()
                 .build();
 
         final HttpResponse<String> response = sendWithLogging(request);
-        if (response.statusCode() == 404) {
-            throw new IllegalStateException("Round 1 not found via API, and --skip-round was requested.");
-        } else if (response.statusCode() != 200) {
-            throw new IllegalStateException("Failed to verify round 1: " + response.statusCode());
+        if (response.statusCode() != 200) {
+            throw new IllegalStateException(String.format("Failed to list rounds: Status %d, Response: %s",
+                    response.statusCode(), response.body()));
         }
-        logger.info("Round 1 found.");
+
+        List<Map<String, Object>> rounds = objectMapper.readValue(response.body(),
+                new TypeReference<List<Map<String, Object>>>() {
+                });
+        if (rounds.isEmpty()) {
+            throw new IllegalStateException(String.format(
+                    "No rounds found for session %s. --skip-round was requested but no rounds exist.", sessionId));
+        }
+
+        logger.info("Found {} active round(s).", rounds.size());
         return response;
     }
 
@@ -352,6 +381,7 @@ class InitFixture implements Callable<Integer> {
         final HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("Content-Type", "application/json")
+                .header("Authorization", authHeader)
                 .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                 .build();
 
@@ -381,7 +411,7 @@ class InitFixture implements Callable<Integer> {
                 "Celestial Champions", "Dark Dimension", "Speedster Alliance", "Ultimate Warriors");
 
         return teamNames.stream()
-                .map(this::createTeamConfig)
+                .map(name -> createTeamConfig(name))
                 .toList();
     }
 

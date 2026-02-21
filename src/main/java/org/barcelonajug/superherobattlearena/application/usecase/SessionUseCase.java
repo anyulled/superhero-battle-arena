@@ -67,6 +67,19 @@ public class SessionUseCase {
 
     try {
       log.info("Starting session - sessionId={}", id);
+
+      // Deactivate all existing active sessions to recover from multiple-active bug
+      sessionRepository
+          .findAll()
+          .stream()
+          .filter(Session::isActive)
+          .forEach(
+              existingSession -> {
+                log.info("Deactivating previous session: {}", existingSession.getSessionId());
+                existingSession.setActive(false);
+                sessionRepository.save(existingSession);
+              });
+
       Session session = new Session(id, OffsetDateTime.now(), true);
       Session savedSession = sessionRepository.save(session);
       log.info("Session started successfully - sessionId={}", id);
