@@ -29,205 +29,215 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureMockMvc
 class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
 
-    private static final String ADMIN_USER = "admin";
-    private static final String ADMIN_PASS = "test";
+  private static final String ADMIN_USER = "admin";
+  private static final String ADMIN_PASS = "test";
 
-    @Autowired
-    private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Faker faker = new Faker();
+  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final Faker faker = new Faker();
 
-    @Test
-    void shouldCompleteTournamentWithConstrainedRoundSpec() throws Exception {
-        UUID sessionId = createSession();
-        assertThat(sessionId).isNotNull();
+  @Test
+  void shouldCompleteTournamentWithConstrainedRoundSpec() throws Exception {
+    UUID sessionId = createSession();
+    assertThat(sessionId).isNotNull();
 
-        UUID teamAId = registerTeam(
-                faker.esports().team() + " " + UUID.randomUUID(),
-                List.of(faker.name().firstName(), faker.name().firstName()),
-                sessionId);
-        UUID teamBId = registerTeam(
-                faker.esports().team() + " " + UUID.randomUUID(),
-                List.of(faker.name().firstName(), faker.name().firstName()),
-                sessionId);
-        assertThat(teamAId).isNotNull();
-        assertThat(teamBId).isNotNull();
+    UUID teamAId =
+        registerTeam(
+            faker.esports().team() + " " + UUID.randomUUID(),
+            List.of(faker.name().firstName(), faker.name().firstName()),
+            sessionId);
+    UUID teamBId =
+        registerTeam(
+            faker.esports().team() + " " + UUID.randomUUID(),
+            List.of(faker.name().firstName(), faker.name().firstName()),
+            sessionId);
+    assertThat(teamAId).isNotNull();
+    assertThat(teamBId).isNotNull();
 
-        int roundNo = createConstrainedRound(sessionId);
-        assertThat(roundNo).isEqualTo(1);
+    int roundNo = createConstrainedRound(sessionId);
+    assertThat(roundNo).isEqualTo(1);
 
-        // Team A: Agent Bob (10) + Alfred Pennyworth (17) + Bushido (25) = 62 ≤
-        // budgetCap 80
-        submitSquad(teamAId, roundNo, List.of(10, 17, 144), "BALANCED");
-        // Team B: Ben 10 (27) + Captain Cold (24) + Big Daddy (29) = 80 = budgetCap 80
-        submitSquad(teamBId, roundNo, List.of(78, 152, 82), "DEFENSIVE");
+    // Team A: Agent Bob (10) + Alfred Pennyworth (17) + Bushido (25) = 62 ≤
+    // budgetCap 80
+    submitSquad(teamAId, roundNo, List.of(10, 17, 144), "BALANCED");
+    // Team B: Ben 10 (27) + Captain Cold (24) + Big Daddy (29) = 80 = budgetCap 80
+    submitSquad(teamBId, roundNo, List.of(78, 152, 82), "DEFENSIVE");
 
-        verifySubmissionExists(teamAId, roundNo);
-        verifySubmissionExists(teamBId, roundNo);
+    verifySubmissionExists(teamAId, roundNo);
+    verifySubmissionExists(teamBId, roundNo);
 
-        List<UUID> matchIds = autoMatchTeams(sessionId, roundNo);
-        assertThat(matchIds).isNotEmpty();
+    List<UUID> matchIds = autoMatchTeams(sessionId, roundNo);
+    assertThat(matchIds).isNotEmpty();
 
-        JsonNode battleResult = runAllBattles(sessionId, roundNo);
-        int totalMatches = battleResult.get("totalMatches").asInt();
-        int successfulSimulations = battleResult.get("successfulSimulations").asInt();
+    JsonNode battleResult = runAllBattles(sessionId, roundNo);
+    int totalMatches = battleResult.get("totalMatches").asInt();
+    int successfulSimulations = battleResult.get("successfulSimulations").asInt();
 
-        assertThat(totalMatches).isGreaterThanOrEqualTo(1);
-        assertThat(successfulSimulations).isEqualTo(totalMatches);
+    assertThat(totalMatches).isGreaterThanOrEqualTo(1);
+    assertThat(successfulSimulations).isEqualTo(totalMatches);
 
-        List<UUID> completedMatchIds = extractMatchIds(battleResult);
-        assertThat(completedMatchIds).isNotEmpty();
+    List<UUID> completedMatchIds = extractMatchIds(battleResult);
+    assertThat(completedMatchIds).isNotEmpty();
 
-        for (UUID matchId : completedMatchIds) {
-            JsonNode match = getMatch(matchId);
-            assertThat(match.get("status").asText()).isEqualTo("COMPLETED");
-            assertThat(match.hasNonNull("winnerTeam")).isTrue();
-        }
-
-        JsonNode rounds = getRounds(sessionId);
-        Optional<JsonNode> targetRound = StreamSupport.stream(rounds.spliterator(), false)
-                .filter(roundNode -> roundNode.get("roundNo").asInt() == roundNo)
-                .findFirst();
-        assertThat(targetRound).isPresent();
-        assertThat(targetRound.get().get("status").asText()).isEqualTo("CLOSED");
+    for (UUID matchId : completedMatchIds) {
+      JsonNode match = getMatch(matchId);
+      assertThat(match.get("status").asText()).isEqualTo("COMPLETED");
+      assertThat(match.hasNonNull("winnerTeam")).isTrue();
     }
 
-    // ==================== Helper Methods ====================
+    JsonNode rounds = getRounds(sessionId);
+    Optional<JsonNode> targetRound =
+        StreamSupport.stream(rounds.spliterator(), false)
+            .filter(roundNode -> roundNode.get("roundNo").asInt() == roundNo)
+            .findFirst();
+    assertThat(targetRound).isPresent();
+    assertThat(targetRound.get().get("status").asText()).isEqualTo("CLOSED");
+  }
 
-    private UUID createSession() throws Exception {
-        MvcResult result = mockMvc
-                .perform(
-                        post("/api/admin/sessions/start")
-                                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+  // ==================== Helper Methods ====================
 
-        String body = result.getResponse().getContentAsString();
-        return objectMapper.readValue(body, UUID.class);
-    }
-
-    private UUID registerTeam(String name, List<String> members, UUID sessionId) throws Exception {
-        String membersParam = String.join(",", members);
-        MvcResult result = mockMvc
-                .perform(
-                        post("/api/teams/register")
-                                .param("name", name)
-                                .param("members", membersParam)
-                                .param("sessionId", sessionId.toString())
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String body = result.getResponse().getContentAsString();
-        return objectMapper.readValue(body, UUID.class);
-    }
-
-    private int createConstrainedRound(UUID sessionId) throws Exception {
-        RoundSpec spec = new RoundSpec(
-                "Constrained Round",
-                3,
-                80,
-                Map.of("Fighter", 1),
-                Map.of("Fighter", 3),
-                List.of("FLYING"),
-                Map.of("MAGIC", 1.2),
-                "ARENA_2");
-
-        CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
-
-        MvcResult result = mockMvc
-                .perform(
-                        post("/api/admin/rounds/create")
-                                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        return Integer.parseInt(result.getResponse().getContentAsString().trim());
-    }
-
-    private void submitSquad(UUID teamId, int roundNo, List<Integer> heroIds, String strategy)
-            throws Exception {
-        DraftSubmission submission = new DraftSubmission(heroIds, strategy);
-
+  private UUID createSession() throws Exception {
+    MvcResult result =
         mockMvc
-                .perform(
-                        post("/api/rounds/{roundNo}/submit", roundNo)
-                                .param("teamId", teamId.toString())
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(submission)))
-                .andExpect(status().isOk());
-    }
+            .perform(
+                post("/api/admin/sessions/start")
+                    .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
 
-    private void verifySubmissionExists(UUID teamId, int roundNo) throws Exception {
+    String body = result.getResponse().getContentAsString();
+    return objectMapper.readValue(body, UUID.class);
+  }
+
+  private UUID registerTeam(String name, List<String> members, UUID sessionId) throws Exception {
+    String membersParam = String.join(",", members);
+    MvcResult result =
         mockMvc
-                .perform(
-                        get("/api/rounds/{roundNo}/submission", roundNo).param("teamId", teamId.toString()))
-                .andExpect(status().isOk());
+            .perform(
+                post("/api/teams/register")
+                    .param("name", name)
+                    .param("members", membersParam)
+                    .param("sessionId", sessionId.toString())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    String body = result.getResponse().getContentAsString();
+    return objectMapper.readValue(body, UUID.class);
+  }
+
+  private int createConstrainedRound(UUID sessionId) throws Exception {
+    RoundSpec spec =
+        new RoundSpec(
+            "Constrained Round",
+            3,
+            80,
+            Map.of("Fighter", 1),
+            Map.of("Fighter", 3),
+            List.of("FLYING"),
+            Map.of("MAGIC", 1.2),
+            "ARENA_2");
+
+    CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/admin/rounds/create")
+                    .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    return Integer.parseInt(result.getResponse().getContentAsString().trim());
+  }
+
+  private void submitSquad(UUID teamId, int roundNo, List<Integer> heroIds, String strategy)
+      throws Exception {
+    DraftSubmission submission = new DraftSubmission(heroIds, strategy);
+
+    mockMvc
+        .perform(
+            post("/api/rounds/{roundNo}/submit", roundNo)
+                .param("teamId", teamId.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(submission)))
+        .andExpect(status().isOk());
+  }
+
+  private void verifySubmissionExists(UUID teamId, int roundNo) throws Exception {
+    mockMvc
+        .perform(
+            get("/api/rounds/{roundNo}/submission", roundNo).param("teamId", teamId.toString()))
+        .andExpect(status().isOk());
+  }
+
+  private List<UUID> autoMatchTeams(UUID sessionId, int roundNo) throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/admin/matches/auto-match")
+                    .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                    .param("sessionId", sessionId.toString())
+                    .param("roundNo", String.valueOf(roundNo))
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    JsonNode matchIds = objectMapper.readTree(result.getResponse().getContentAsString());
+    return extractUuidsFromArray(matchIds);
+  }
+
+  private JsonNode runAllBattles(UUID sessionId, int roundNo) throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/admin/matches/run-all")
+                    .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                    .param("roundNo", String.valueOf(roundNo))
+                    .param("sessionId", sessionId.toString())
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    return objectMapper.readTree(result.getResponse().getContentAsString());
+  }
+
+  private JsonNode getMatch(UUID matchId) throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(get("/api/matches/{matchId}", matchId))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    return objectMapper.readTree(result.getResponse().getContentAsString());
+  }
+
+  private List<UUID> extractMatchIds(JsonNode battleResult) {
+    JsonNode matchIdsNode = battleResult.get("matchIds");
+    return extractUuidsFromArray(matchIdsNode);
+  }
+
+  private List<UUID> extractUuidsFromArray(JsonNode arrayNode) {
+    if (arrayNode == null || !arrayNode.isArray()) {
+      return Collections.emptyList();
     }
+    return java.util.stream.StreamSupport.stream(arrayNode.spliterator(), false)
+        .map(JsonNode::asText)
+        .map(UUID::fromString)
+        .toList();
+  }
 
-    private List<UUID> autoMatchTeams(UUID sessionId, int roundNo) throws Exception {
-        MvcResult result = mockMvc
-                .perform(
-                        post("/api/admin/matches/auto-match")
-                                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
-                                .param("sessionId", sessionId.toString())
-                                .param("roundNo", String.valueOf(roundNo))
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+  private JsonNode getRounds(UUID sessionId) throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(get("/api/rounds").param("sessionId", sessionId.toString()))
+            .andExpect(status().isOk())
+            .andReturn();
 
-        JsonNode matchIds = objectMapper.readTree(result.getResponse().getContentAsString());
-        return extractUuidsFromArray(matchIds);
-    }
-
-    private JsonNode runAllBattles(UUID sessionId, int roundNo) throws Exception {
-        MvcResult result = mockMvc
-                .perform(
-                        post("/api/admin/matches/run-all")
-                                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
-                                .param("roundNo", String.valueOf(roundNo))
-                                .param("sessionId", sessionId.toString())
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString());
-    }
-
-    private JsonNode getMatch(UUID matchId) throws Exception {
-        MvcResult result = mockMvc
-                .perform(get("/api/matches/{matchId}", matchId))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString());
-    }
-
-    private List<UUID> extractMatchIds(JsonNode battleResult) {
-        JsonNode matchIdsNode = battleResult.get("matchIds");
-        return extractUuidsFromArray(matchIdsNode);
-    }
-
-    private List<UUID> extractUuidsFromArray(JsonNode arrayNode) {
-        if (arrayNode == null || !arrayNode.isArray()) {
-            return Collections.emptyList();
-        }
-        return java.util.stream.StreamSupport.stream(arrayNode.spliterator(), false)
-                .map(JsonNode::asText)
-                .map(UUID::fromString)
-                .toList();
-    }
-
-    private JsonNode getRounds(UUID sessionId) throws Exception {
-        MvcResult result = mockMvc
-                .perform(get("/api/rounds").param("sessionId", sessionId.toString()))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        return objectMapper.readTree(result.getResponse().getContentAsString());
-    }
+    return objectMapper.readTree(result.getResponse().getContentAsString());
+  }
 }
