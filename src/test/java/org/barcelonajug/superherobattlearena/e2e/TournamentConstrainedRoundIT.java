@@ -146,7 +146,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        return Integer.parseInt(result.getResponse().getContentAsString());
+        return Integer.parseInt(result.getResponse().getContentAsString().trim());
     }
 
     private void submitSquad(UUID teamId, int roundNo, List<Integer> heroIds, String strategy)
