@@ -1,0 +1,15 @@
+#!/bin/sh
+# pre-commit hook to ensure code is formatted with Spotless
+
+echo "Running Spotless Check..."
+./mvnw spotless:check
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Spotless check failed!"
+  echo "Please run './mvnw spotless:apply' to fix formatting before committing."
+  exit 1
+fi
+
+echo "✅ Spotless check passed!"
+exit 0

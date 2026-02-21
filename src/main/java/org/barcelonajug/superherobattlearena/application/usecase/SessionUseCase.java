@@ -69,9 +69,7 @@ public class SessionUseCase {
       log.info("Starting session - sessionId={}", id);
 
       // Deactivate all existing active sessions to recover from multiple-active bug
-      sessionRepository
-          .findAll()
-          .stream()
+      sessionRepository.findAll().stream()
           .filter(Session::isActive)
           .forEach(
               existingSession -> {
