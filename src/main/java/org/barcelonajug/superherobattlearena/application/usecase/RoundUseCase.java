@@ -76,13 +76,17 @@ public class RoundUseCase {
             "Team " + teamId + " already submitted for round " + roundNo);
       }
 
-      if (draft.heroIds().size() != 5) {
+      RoundSpec spec = round.get().getSpecJson();
+      int requiredTeamSize = spec != null ? spec.teamSize() : 5;
+      if (draft.heroIds().size() != requiredTeamSize) {
         log.error(
-            "Invalid team size - teamId={}, roundNo={}, size={}",
+            "Invalid team size - teamId={}, roundNo={}, size={}, required={}",
             teamId,
             roundNo,
-            draft.heroIds().size());
-        throw new IllegalArgumentException("Team must have exactly 5 heroes");
+            draft.heroIds().size(),
+            requiredTeamSize);
+        throw new IllegalArgumentException(
+            "Team must have exactly " + requiredTeamSize + " heroes");
       }
 
       Submission submission =
