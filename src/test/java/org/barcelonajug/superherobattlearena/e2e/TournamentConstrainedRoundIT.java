@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 import net.datafaker.Faker;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
@@ -85,14 +87,12 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
     }
 
     JsonNode rounds = getRounds(sessionId);
-    boolean foundClosedRound = false;
-    for (JsonNode roundNode : rounds) {
-      if (roundNode.get("roundNo").asInt() == roundNo) {
-        assertThat(roundNode.get("status").asText()).isEqualTo("CLOSED");
-        foundClosedRound = true;
-      }
-    }
-    assertThat(foundClosedRound).isTrue();
+    Optional<JsonNode> targetRound =
+        StreamSupport.stream(rounds.spliterator(), false)
+            .filter(roundNode -> roundNode.get("roundNo").asInt() == roundNo)
+            .findFirst();
+    assertThat(targetRound).isPresent();
+    assertThat(targetRound.get().get("status").asText()).isEqualTo("CLOSED");
   }
 
   // ==================== Helper Methods ====================
@@ -108,7 +108,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
             .andReturn();
 
     String body = result.getResponse().getContentAsString();
-    return UUID.fromString(body.replace("\"", ""));
+    return objectMapper.readValue(body, UUID.class);
   }
 
   private UUID registerTeam(String name, List<String> members, UUID sessionId) throws Exception {
@@ -125,7 +125,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
             .andReturn();
 
     String body = result.getResponse().getContentAsString();
-    return UUID.fromString(body.replace("\"", ""));
+    return objectMapper.readValue(body, UUID.class);
   }
 
   private int createConstrainedRound(UUID sessionId) throws Exception {

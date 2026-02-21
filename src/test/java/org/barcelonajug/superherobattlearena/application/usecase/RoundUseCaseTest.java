@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,7 +55,11 @@ class RoundUseCaseTest {
     void arrangeTeam() {
       team =
           new Team(
-              TEAM_ID, SESSION_ID, "Alpha Squad", OffsetDateTime.now(), List.of("Alice", "Bob"));
+              TEAM_ID,
+              SESSION_ID,
+              "Alpha Squad",
+              OffsetDateTime.now(ZoneOffset.UTC),
+              List.of("Alice", "Bob"));
       given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
     }
 
