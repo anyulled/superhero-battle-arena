@@ -1,0 +1,40 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - id: 'auth'
+        name: 'Authenticate to Google Cloud'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: '${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+        
+      - name: 'Deploy to Cloud Run via Buildpacks'
+        run: |
+          gcloud run deploy superhero-battle-arena \
+            --source . \
+            --region ${{ vars.GCP_REGION }} \
+            --project ${{ vars.GCP_PROJECT_ID }} \
+            --allow-unauthenticated \
+            --set-env-vars="SPRING_PROFILES_ACTIVE=h2" \
+            --build-env-vars="BP_NATIVE_IMAGE=true,BP_JVM_VERSION=21,BP_MAVEN_BUILD_ARGUMENTS=-Pnative,-Ph2,-DskipTests=true,package" \
+            --memory 512Mi \
+            --cpu 1

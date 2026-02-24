@@ -1,0 +1,20 @@
+#!/bin/sh
+# pre-push hook to ensure all tests and linting pass before pushing to a remote
+
+echo "=========================================================="
+echo "Running Pre-Push Checks (Linting, Unit Tests, Integration Tests)..."
+echo "=========================================================="
+
+# Run full project verification including integration tests with Postgres
+./mvnw clean verify -Ppostgres-tests
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "❌ Pre-push checks failed!"
+  echo "Some tests, linting rules, or checks did not pass. Please fix them before pushing."
+  exit 1
+fi
+
+echo ""
+echo "✅ All checks passed! Pushing to remote..."
+exit 0
