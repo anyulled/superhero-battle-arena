@@ -1,7 +1,10 @@
 name: Deploy to Cloud Run
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Java CI with Maven"]
+    types:
+      - completed
     branches:
       - main
   workflow_dispatch:
@@ -13,6 +16,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     
     permissions:
       contents: 'read'
