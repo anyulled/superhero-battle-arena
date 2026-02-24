@@ -3,8 +3,12 @@ name: Deploy to Cloud Run
 on:
   push:
     branches:
-      - master
+      - main
   workflow_dispatch:
+
+concurrency:
+  group: 'cloud-run-deploy'
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -32,8 +36,7 @@ jobs:
         run: |
           gcloud run deploy superhero-battle-arena \
             --source . \
-            --region ${{ vars.GCP_REGION }} \
-            --project ${{ vars.GCP_PROJECT_ID }} \
+            --region europe-southwest1 \
             --allow-unauthenticated \
             --set-env-vars="SPRING_PROFILES_ACTIVE=h2" \
             --build-env-vars="BP_NATIVE_IMAGE=true,BP_JVM_VERSION=21,BP_MAVEN_BUILD_ARGUMENTS=-Pnative,-Ph2,-DskipTests=true,package" \
