@@ -46,7 +46,7 @@
                     <p class="text-green-400 mb-2"># Example cURL Request</p>
                     <p class="text-blue-300">POST <span class="text-white">/api/teams/register</span></p>
                     <p class="mt-2 text-slate-400">curl -X POST \</p>
-                    <p class="pl-4">"http://localhost:8080/api/teams/register?name=YourTeamName&members=Member1,Member2"
+                    <p class="pl-4" id="curlCommand">"http://localhost:8080/api/teams/register?name=YourTeamName&members=Member1,Member2"
                     </p>
                 </div>
                 <div class="flex flex-col gap-2 text-sm">
@@ -114,6 +114,10 @@
         <script>
             $(document).ready(function () {
                 let currentSessionId = null;
+                const baseUrl = window.location.origin;
+                
+                // Initialize URL without session immediately
+                $('#curlCommand').html(`"${baseUrl}/api/teams/register?name=YourTeamName&members=Member1,Member2"`);
 
                 function checkActiveSession() {
                     API.sessions.active()
@@ -121,7 +125,7 @@
                             currentSessionId = session.sessionId;
                             $('#sessionStatus').html(`<span class="text-green-400 font-mono text-sm">Active Session: ${session.sessionId}</span>`);
                             // Update curl example with sessionId
-                            $('#curlCommand').html(`"http://localhost:8080/api/teams/register?name=YourTeamName&members=Member1,Member2&sessionId=${session.sessionId}"`);
+                            $('#curlCommand').html(`"${baseUrl}/api/teams/register?name=YourTeamName&members=Member1,Member2&sessionId=${session.sessionId}"`);
                             loadTeams();
                         })
                         .fail(function () {
