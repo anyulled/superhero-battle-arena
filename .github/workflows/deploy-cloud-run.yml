@@ -39,6 +39,6 @@ jobs:
             --region europe-southwest1 \
             --allow-unauthenticated \
             --set-env-vars="SPRING_PROFILES_ACTIVE=h2" \
-            --build-env-vars="BP_NATIVE_IMAGE=true,BP_JVM_VERSION=21,BP_MAVEN_BUILD_ARGUMENTS=-Pnative,-Ph2,-DskipTests=true,package" \
+            --set-build-env-vars="BP_NATIVE_IMAGE=true,BP_JVM_VERSION=21,BP_MAVEN_BUILD_ARGUMENTS=-Pnative,-Ph2,-DskipTests=true,package" \
             --memory 512Mi \
             --cpu 1
