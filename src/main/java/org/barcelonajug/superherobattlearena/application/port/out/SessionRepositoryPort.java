@@ -11,4 +11,6 @@ public interface SessionRepositoryPort {
   java.util.List<Session> findAll();
 
   Optional<Session> findById(java.util.UUID id);
+
+  void deleteAll();
 }

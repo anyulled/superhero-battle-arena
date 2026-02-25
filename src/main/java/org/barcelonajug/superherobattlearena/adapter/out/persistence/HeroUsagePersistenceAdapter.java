@@ -54,4 +54,9 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
         .map(java.util.Objects::requireNonNull)
         .toList();
   }
+
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

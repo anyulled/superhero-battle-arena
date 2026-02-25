@@ -155,4 +155,15 @@ public class AdminController {
 
     return ResponseEntity.ok(batchResult);
   }
+
+  /** Reset the tournament database to its initial state */
+  @Operation(
+      summary = "Reset database",
+      description = "DANGER: Clears all tournament data: sessions, rounds, matches, teams, etc.")
+  @ApiResponse(responseCode = "200", description = "Database reset successfully")
+  @PostMapping("/reset")
+  public ResponseEntity<Void> resetDatabase() {
+    adminUseCase.resetDatabase();
+    return ResponseEntity.ok().build();
+  }
 }

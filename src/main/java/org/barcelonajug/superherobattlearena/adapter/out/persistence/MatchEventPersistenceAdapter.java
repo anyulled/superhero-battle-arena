@@ -62,4 +62,9 @@ public final class MatchEventPersistenceAdapter implements MatchEventRepositoryP
         .map(java.util.Objects::requireNonNull)
         .toList();
   }
+
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

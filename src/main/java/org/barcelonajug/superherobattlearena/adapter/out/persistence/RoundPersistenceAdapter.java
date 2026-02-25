@@ -41,4 +41,9 @@ public class RoundPersistenceAdapter implements RoundRepositoryPort {
   public Optional<Integer> findMaxRoundNo(UUID sessionId) {
     return repository.findMaxRoundNo(sessionId);
   }
+
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

@@ -41,4 +41,9 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
         .map(java.util.Objects::requireNonNull)
         .toList();
   }
+
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

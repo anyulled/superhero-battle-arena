@@ -44,4 +44,9 @@ public class SessionPersistenceAdapter implements SessionRepositoryPort {
   public Optional<Session> findById(java.util.UUID id) {
     return repository.findById(id).map(mapper::toDomain);
   }
+
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

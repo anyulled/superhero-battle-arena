@@ -17,4 +17,6 @@ public interface TeamRepositoryPort {
   List<Team> findAll();
 
   List<Team> findBySessionId(UUID sessionId);
+
+  void deleteAll();
 }

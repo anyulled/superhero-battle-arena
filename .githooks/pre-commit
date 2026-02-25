@@ -2,6 +2,7 @@
 # pre-commit hook to ensure code is formatted with Spotless
 
 echo "Running Spotless Check..."
+./mvnw spotless:apply
 ./mvnw spotless:check
 
 if [ $? -ne 0 ]; then

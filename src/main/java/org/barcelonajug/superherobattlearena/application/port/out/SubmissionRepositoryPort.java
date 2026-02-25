@@ -11,4 +11,6 @@ public interface SubmissionRepositoryPort {
   Optional<Submission> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
 
   List<Submission> findByRoundNo(Integer roundNo);
+
+  void deleteAll();
 }

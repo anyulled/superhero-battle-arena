@@ -88,4 +88,9 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
             .map(java.util.Objects::requireNonNull)
             .toList();
   }
+
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

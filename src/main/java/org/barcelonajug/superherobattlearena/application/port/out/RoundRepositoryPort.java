@@ -14,4 +14,6 @@ public interface RoundRepositoryPort {
   Round save(Round round);
 
   Optional<Integer> findMaxRoundNo(UUID sessionId);
+
+  void deleteAll();
 }

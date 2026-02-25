@@ -17,4 +17,6 @@ public interface HeroUsageRepositoryPort {
   List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
 
   List<HeroUsage> findByTeamId(UUID teamId);
+
+  void deleteAll();
 }

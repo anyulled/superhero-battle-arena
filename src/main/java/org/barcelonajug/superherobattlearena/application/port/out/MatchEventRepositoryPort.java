@@ -28,4 +28,7 @@ public interface MatchEventRepositoryPort {
    * @return list of events
    */
   List<MatchEvent> findByMatchId(UUID matchId);
+
+  /** Delete all match events. */
+  void deleteAll();
 }
