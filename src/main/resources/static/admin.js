@@ -11,24 +11,51 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
-    authHeader = 'Basic ' + btoa(username + ':' + password);
+    const newAuthHeader = 'Basic ' + btoa(username + ':' + password);
 
     try {
         // Test auth by fetching sessions
         const response = await fetch('/api/admin/sessions', {
-            headers: { 'Authorization': authHeader }
+            headers: { 'Authorization': newAuthHeader }
         });
 
         if (response.ok) {
-            document.getElementById('loginPanel').classList.add('hidden');
-            document.getElementById('adminPanel').classList.remove('hidden');
-            await loadSessions();
-            lucide.createIcons();
+            authHeader = newAuthHeader;
+            localStorage.setItem('adminAuthHeader', authHeader);
+            showDashboard();
         } else {
             showError('loginError', 'Invalid credentials');
         }
     } catch (error) {
         showError('loginError', 'Login failed: ' + error.message);
+    }
+});
+
+function showDashboard() {
+    document.getElementById('loginPanel').classList.add('hidden');
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadSessions();
+    lucide.createIcons();
+}
+
+// Check for persistent login on load
+window.addEventListener('DOMContentLoaded', async () => {
+    const savedAuth = localStorage.getItem('adminAuthHeader');
+    if (savedAuth) {
+        authHeader = savedAuth;
+        // Verify token still works
+        try {
+            const response = await fetch('/api/admin/sessions', {
+                headers: { 'Authorization': authHeader }
+            });
+            if (response.ok) {
+                showDashboard();
+            } else {
+                localStorage.removeItem('adminAuthHeader');
+            }
+        } catch (error) {
+            console.error('Failed to verify saved auth:', error);
+        }
     }
 });
 
@@ -350,6 +377,7 @@ function showInfo(elementId, message) {
 
 function logout() {
     authHeader = '';
+    localStorage.removeItem('adminAuthHeader');
     currentSessionId = null;
     selectedRoundNo = null;
     sessions = [];
