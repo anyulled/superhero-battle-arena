@@ -22,6 +22,7 @@ const API = {
         list: (sessionId) => $.get('/api/rounds', { sessionId }),
         get: (roundNo, sessionId) => $.get(`/api/rounds/${roundNo}${sessionId ? '?sessionId=' + sessionId : ''}`),
         getSubmission: (roundNo, teamId) => $.get(`/api/rounds/${roundNo}/submission?teamId=${teamId}`),
+        getSubmissions: (roundNo, sessionId) => $.get(`/api/rounds/${roundNo}/submissions`, sessionId ? { sessionId } : {}),
         submit: (roundNo, teamId, draft) => $.ajax({
             url: `/api/rounds/${roundNo}/submit?teamId=${teamId}`,
             type: 'POST',

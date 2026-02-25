@@ -40,12 +40,15 @@ import org.slf4j.LoggerFactory;
 class InitFixture implements Callable<Integer> {
     private static final String DEFAULT_BASE_URL = "http://localhost:8080";
     private static final String DEFAULT_HEROES_FILE = "src/main/resources/all-superheroes.json";
-    private static final int TEAM_COUNT = 20;
     private static final int HEROES_PER_TEAM = 5;
     private static final Logger logger = LoggerFactory.getLogger(InitFixture.class);
 
     @Option(names = { "-s", "--session-id" }, description = "Session ID (default: random UUID or latest existing)")
     private String sessionId;
+
+    @Option(names = { "-t",
+            "--teams" }, description = "Number of teams and squads to register (default: 20)", defaultValue = "20")
+    private int teamCount;
 
     @Option(names = { "-u", "--url" }, description = "Base URL", defaultValue = DEFAULT_BASE_URL)
     private String baseUrl;
@@ -200,7 +203,7 @@ class InitFixture implements Callable<Integer> {
     }
 
     private List<String> registerTeams() throws Exception {
-        printHeader("Registering " + TEAM_COUNT + " Teams...");
+        printHeader("Registering " + teamCount + " Teams...");
 
         // Fetch existing teams to avoid duplicate name errors
         final String getTeamsUrl = baseUrl + "/api/teams?sessionId=" + sessionId;
@@ -226,13 +229,13 @@ class InitFixture implements Callable<Integer> {
 
             if (existingTeamMap.containsKey(config.name())) {
                 String teamId = existingTeamMap.get(config.name());
-                logger.info("[{}/{}] Team '{}' already exists. Reusing ID: {}", i + 1, TEAM_COUNT, config.name(),
+                logger.info("[{}/{}] Team '{}' already exists. Reusing ID: {}", i + 1, teamCount, config.name(),
                         teamId);
                 teamIds.add(teamId);
                 continue;
             }
 
-            logger.info("[{}/{}] Registering: {}", i + 1, TEAM_COUNT, config.name());
+            logger.info("[{}/{}] Registering: {}", i + 1, teamCount, config.name());
 
             final HttpResponse<String> response = registerTeam(config);
             if (response.statusCode() == 200) {
@@ -337,7 +340,7 @@ class InitFixture implements Callable<Integer> {
         final JsonNode heroes = objectMapper.readTree(new File(heroesFile));
         logger.info("Total heroes found in file: {}", heroes.size());
 
-        final int requiredHeroes = TEAM_COUNT * HEROES_PER_TEAM;
+        final int requiredHeroes = teamCount * HEROES_PER_TEAM;
         final List<Integer> heroIds = IntStream.range(0, Math.min(requiredHeroes, heroes.size()))
                 .mapToObj(heroes::get)
                 .peek(hero -> usedHeroNames.add(hero.get("name").asText().toLowerCase().replaceAll("\\s+", "")))
@@ -410,8 +413,11 @@ class InitFixture implements Callable<Integer> {
                 "Stealth Syndicate", "Psionic Protectors", "Aquatic Armada", "Savage Squad",
                 "Celestial Champions", "Dark Dimension", "Speedster Alliance", "Ultimate Warriors");
 
-        return teamNames.stream()
-                .map(name -> createTeamConfig(name))
+        return IntStream.range(0, teamCount)
+                .mapToObj(i -> {
+                    String name = i < teamNames.size() ? teamNames.get(i) : faker.team().name() + " " + (i + 1);
+                    return createTeamConfig(name);
+                })
                 .toList();
     }
 
@@ -448,7 +454,7 @@ class InitFixture implements Callable<Integer> {
         printHeader("Fixture Data Initialized Successfully!");
         logger.info("Session ID: {}", sessionId);
         if (!skipTeams) {
-            logger.info("Total Teams: {}", TEAM_COUNT);
+            logger.info("Total Teams: {}", teamCount);
         }
         if (!skipRound) {
             logger.info("Round 1: Created");

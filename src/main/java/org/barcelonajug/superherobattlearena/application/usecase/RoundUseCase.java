@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
@@ -57,10 +58,9 @@ public class RoundUseCase {
           draft.heroIds().size());
 
       // Validate team exists and identify session
-      Team team =
-          teamRepository
-              .findById(teamId)
-              .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+      Team team = teamRepository
+          .findById(teamId)
+          .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
 
       // Validate round exists for this session
       // Team is record -> accessors are name(), sessionId()
@@ -95,14 +95,13 @@ public class RoundUseCase {
             "Team must have exactly " + requiredTeamSize + " heroes");
       }
 
-      Submission submission =
-          Submission.builder()
-              .teamId(teamId)
-              .roundNo(roundNo)
-              .submissionJson(draft)
-              .accepted(true)
-              .submittedAt(OffsetDateTime.now())
-              .build();
+      Submission submission = Submission.builder()
+          .teamId(teamId)
+          .roundNo(roundNo)
+          .submissionJson(draft)
+          .accepted(true)
+          .submittedAt(OffsetDateTime.now())
+          .build();
 
       submissionRepository.save(submission);
       log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
@@ -121,7 +120,7 @@ public class RoundUseCase {
         .map(Submission::getSubmissionJson);
   }
 
-  public java.util.List<DraftSubmission> getSubmissions(Integer roundNo, UUID sessionId) {
+  public List<Submission> getSubmissions(Integer roundNo, UUID sessionId) {
     if (sessionId == null) {
       log.warn("getSubmissions called without sessionId");
       return java.util.Collections.emptyList();
@@ -132,18 +131,15 @@ public class RoundUseCase {
       return java.util.Collections.emptyList();
     }
 
-    // Filter submissions to ensure they belong to the correct session
     List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
-    // Team -> teamId()
     Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(Collectors.toSet());
 
     return submissionRepository.findByRoundNo(roundNo).stream()
         .filter(s -> sessionTeamIds.contains(s.getTeamId()))
-        .map(Submission::getSubmissionJson)
         .toList();
   }
 
-  public java.util.List<Round> listRounds(UUID sessionId) {
+  public List<Round> listRounds(UUID sessionId) {
     return roundRepository.findBySessionId(sessionId);
   }
 }

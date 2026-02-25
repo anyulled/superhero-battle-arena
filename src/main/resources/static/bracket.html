@@ -53,14 +53,16 @@
         <!-- Filters Bar -->
         <div class="flex flex-wrap items-end gap-4 bg-slate-800/60 border border-slate-700 rounded-xl p-4">
             <div class="flex flex-col gap-1">
-                <label for="sessionSelect" class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Session</label>
+                <label for="sessionSelect"
+                    class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Session</label>
                 <select id="sessionSelect"
                     class="bg-slate-900 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[220px]">
                     <option value="">All Sessions</option>
                 </select>
             </div>
             <div class="flex flex-col gap-1">
-                <label for="roundSelect" class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Round</label>
+                <label for="roundSelect"
+                    class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Round</label>
                 <select id="roundSelect"
                     class="bg-slate-900 border border-slate-600 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 min-w-[140px]"
                     disabled>
@@ -73,17 +75,43 @@
             </button>
         </div>
 
-        <section class="glass-panel p-8 rounded-2xl shadow-xl min-h-[500px]" aria-label="Tournament Matches">
+        <!-- Submitted Teams Section -->
+        <section id="submittedTeamsSection" class="glass-panel p-8 rounded-2xl shadow-xl mb-8 hidden"
+            aria-label="Submitted Teams">
+            <h3 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <i data-lucide="users" class="text-blue-400"></i> Teams Ready for Battle
+            </h3>
+            <div id="submittedTeamsContainer" class="flex flex-wrap gap-3">
+                <!-- Submitted teams will be populated here -->
+            </div>
+        </section>
+
+        <!-- Matches Section -->
+        <section class="glass-panel p-8 rounded-2xl shadow-xl min-h-[400px] mb-8" aria-label="Tournament Matches">
+            <h3 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <i data-lucide="swords" class="text-red-400"></i> Matchups
+            </h3>
             <div id="matchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Matches will be populated here -->
                 <div class="col-span-full text-center text-slate-500 py-20 flex flex-col items-center">
-                    <svg class="w-12 h-12 mb-4 animate-spin" fill="none" class="opacity-50" stroke="currentColor"
-                        viewBox="0 0 24 24">
+                    <svg class="w-12 h-12 mb-4 animate-spin opacity-50" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     <p>Loading Matches...</p>
                 </div>
+            </div>
+        </section>
+
+        <!-- Round Winners Section -->
+        <section id="roundWinnersSection" class="glass-panel p-8 rounded-2xl shadow-xl hidden"
+            aria-label="Round Winners">
+            <h3 class="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                <i data-lucide="award" class="text-yellow-400"></i> Round Winners
+            </h3>
+            <div id="roundWinnersContainer" class="flex flex-wrap gap-3">
+                <!-- Round winners will be populated here -->
+            </div>
         </section>
     </main>
 
@@ -163,6 +191,58 @@
                 lucide.createIcons();
             }
 
+            function renderSubmissions(submissions) {
+                const section = $('#submittedTeamsSection');
+                const container = $('#submittedTeamsContainer');
+                container.empty();
+
+                if (!submissions || submissions.length === 0) {
+                    section.addClass('hidden');
+                    return;
+                }
+
+                section.removeClass('hidden');
+                submissions.forEach(sub => {
+                    const teamName = teamsCache[sub.teamId] || 'Unknown Team';
+                    container.append(`
+                        <div class="bg-blue-900/40 border border-blue-500/30 text-blue-200 px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm font-medium">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-blue-400"></i>
+                            ${teamName}
+                        </div>
+                    `);
+                });
+                lucide.createIcons();
+            }
+
+            function renderWinners(matches) {
+                const section = $('#roundWinnersSection');
+                const container = $('#roundWinnersContainer');
+                container.empty();
+
+                const winners = matches
+                    .filter(m => m.status === 'COMPLETED' && m.winnerTeam)
+                    .map(m => m.winnerTeam);
+
+                const uniqueWinners = [...new Set(winners)];
+
+                if (uniqueWinners.length === 0) {
+                    section.addClass('hidden');
+                    return;
+                }
+
+                section.removeClass('hidden');
+                uniqueWinners.forEach(teamId => {
+                    const teamName = teamsCache[teamId] || 'Unknown Team';
+                    container.append(`
+                        <div class="bg-yellow-900/40 border border-yellow-500/30 text-yellow-200 px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm font-bold">
+                            <i data-lucide="crown" class="w-4 h-4 text-yellow-400"></i>
+                            ${teamName}
+                        </div>
+                    `);
+                });
+                lucide.createIcons();
+            }
+
             function applyFilters() {
                 const sessionId = $('#sessionSelect').val();
                 const roundNo = $('#roundSelect').val();
@@ -172,6 +252,17 @@
                 if (roundNo) filtered = filtered.filter(m => String(m.roundNo) === String(roundNo));
 
                 renderMatches(filtered);
+                renderWinners(filtered);
+
+                if (roundNo && sessionId) {
+                    API.rounds.getSubmissions(roundNo, sessionId).done(function (submissions) {
+                        renderSubmissions(submissions);
+                    }).fail(function () {
+                        renderSubmissions([]);
+                    });
+                } else {
+                    $('#submittedTeamsSection').addClass('hidden');
+                }
             }
 
             function populateRoundSelector(matches) {
