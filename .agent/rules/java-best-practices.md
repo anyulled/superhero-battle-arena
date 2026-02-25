@@ -27,16 +27,16 @@ Coding Standards:
 - **Logging**:
   - NEVER use `System.out.println` or `System.err.println`.
   - ALWAYS use an SLF4J logger (`org.slf4j.Logger`, `org.slf4j.LoggerFactory`).
-- **Stream API**: 
+- **Stream API**:
   - Prefer `Stream.toList()` (Java 16+) over `.collect(Collectors.toList())`.
   - Avoid over-complex stream pipelines; readability first.
-- **Immutability**: 
+- **Immutability**:
   - Prefer `List.of()`, `Set.of()`, `Map.of()` for unmodifiable collections.
   - Return unmodifiable views where possible.
 - **Static Imports**:
   - Use static imports for constants, enums, and static utility methods to avoid verbose fully qualified names in the code (e.g., `HttpStatus.BAD_REQUEST`, `ProblemDetail.forStatusAndDetail`).
 - **Imports**:
-  - Avoid fully qualified class names in the code body. Always import the class.
+  - NEVER use fully qualified class names in the code body (e.g., `org.example.Entity`). Always import the class.
   - Exception: multiple classes with the same name (e.g., `java.util.Date` vs `java.sql.Date`).
 - **Error Handling**: Use Try-with-resources (`AutoCloseable`) and validate inputs using `Objects.requireNonNull`.
 

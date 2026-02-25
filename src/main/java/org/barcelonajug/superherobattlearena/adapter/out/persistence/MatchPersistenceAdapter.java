@@ -1,9 +1,11 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.MatchEntity;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.MatchMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataMatchRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -24,23 +26,22 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
 
   @Override
   public Match save(Match match) {
-    return java.util.Objects.requireNonNull(
-        mapper.toDomain(repository.save(java.util.Objects.requireNonNull(mapper.toEntity(match)))));
+    return Objects.requireNonNull(
+        mapper.toDomain(repository.save(Objects.requireNonNull(mapper.toEntity(match)))));
   }
 
   @Override
   public List<Match> saveAll(List<Match> matches) {
-    List<org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.MatchEntity> entities = matches
-        .stream()
+    List<MatchEntity> entities = matches.stream()
         .map(mapper::toEntity)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
 
     return repository.saveAll(entities).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -53,8 +54,8 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   public List<Match> findByStatus(MatchStatus status) {
     return repository.findByStatus(status).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -62,8 +63,8 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   public List<Match> findAll() {
     return repository.findAll().stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -71,8 +72,8 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   public List<Match> findByRoundNoAndSessionId(Integer roundNo, UUID sessionId) {
     return repository.findByRoundNoAndSessionId(roundNo, sessionId).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -84,8 +85,8 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
             roundNo, MatchStatus.PENDING, sessionId))
         .stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
