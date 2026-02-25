@@ -386,3 +386,26 @@ function logout() {
     document.getElementById('loginForm').reset();
     document.getElementById('loginError').classList.add('hidden');
 }
+
+async function resetDatabase() {
+    const confirmed = confirm("CRITICAL: This will permanently delete ALL tournament data (sessions, rounds, matches, teams, submissions, and hero usage).\n\nAre you absolutely sure you want to proceed?");
+
+    if (!confirmed) return;
+
+    try {
+        const response = await fetch('/api/admin/reset', {
+            method: 'POST',
+            headers: { 'Authorization': authHeader }
+        });
+
+        if (response.ok) {
+            alert('Database reset successfully. The page will now reload.');
+            window.location.reload();
+        } else {
+            const errorText = await response.text();
+            alert('Reset failed: ' + (errorText || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error connecting to server: ' + error.message);
+    }
+}

@@ -259,6 +259,30 @@
                 <div id="battleResults" class="space-y-2 max-h-64 overflow-y-auto"></div>
             </div>
         </div>
+
+        <!-- Danger Zone -->
+        <div class="mt-8 border-t border-red-500/30 pt-8">
+            <div class="bg-red-900/10 border border-red-500/20 rounded-2xl p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-500"></i>
+                    <h2 class="text-2xl font-semibold text-red-500">Danger Zone</h2>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-medium text-white">Reset Database</h3>
+                        <p class="text-slate-400 text-sm mt-1">
+                            This will permanently delete all sessions, rounds, matches, teams, and submissions.
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                    <button onclick="resetDatabase()"
+                        class="bg-red-600 hover:bg-red-500 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-lg hover:shadow-red-500/20 whitespace-nowrap">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        Reset All Data
+                    </button>
+                </div>
+            </div>
+        </div>
     </section>
 
     <script src="api.js"></script>
