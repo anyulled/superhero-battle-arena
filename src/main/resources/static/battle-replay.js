@@ -195,7 +195,7 @@ $(document).ready(async function () {
                 log('😵 ' + description, 'damage');
                 break;
             case 'MATCH_END':
-                handleWin(value); // value is winning team ID
+                handleWin();
                 break;
             case 'HIT': // Fallthrough or explicit
                 handleAttack(actorId, targetId, value, description);
@@ -303,19 +303,30 @@ $(document).ready(async function () {
         updateHealth(uniqueId, 0, true);
     }
 
-    function handleWin(winnerTeamId) {
+    function handleWin() {
         log('Match Ended!', 'special');
         $('#winnerModal').removeClass('hidden').addClass('flex');
 
-        const winner = (winnerTeamId === state.match.teamA) ? state.teamA : state.teamB;
-        if (winner) {
-            els.winnerName.text(winner.name);
-            if (winner.members && winner.members.length > 0) {
-                els.winnerMembers.text('by ' + winner.members.join(' & '));
+        // Re-fetch match to get the authoritative winnerTeam from the DB
+        API.matches.get(matchId).then(function (updatedMatch) {
+            state.match = updatedMatch;
+            const winnerTeamId = updatedMatch.winnerTeam;
+            const winner = (winnerTeamId === state.match.teamA) ? state.teamA : state.teamB;
+            if (winner) {
+                els.winnerName.text(winner.name);
+                if (winner.members && winner.members.length > 0) {
+                    els.winnerMembers.text('by ' + winner.members.join(' & '));
+                } else {
+                    els.winnerMembers.text('');
+                }
             } else {
+                els.winnerName.text('Draw!');
                 els.winnerMembers.text('');
             }
-        }
+        }).fail(function () {
+            els.winnerName.text('Match Complete');
+            els.winnerMembers.text('');
+        });
     }
 
 });
