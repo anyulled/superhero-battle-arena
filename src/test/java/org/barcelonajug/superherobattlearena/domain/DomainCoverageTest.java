@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.junit.jupiter.api.Test;
@@ -40,7 +39,8 @@ class DomainCoverageTest {
   void testRound() {
     UUID roundId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
-    RoundSpec spec = new RoundSpec("desc", 5, 1000, Map.of(), Map.of(), List.of(), Map.of(), "ARENA_1");
+    RoundSpec spec =
+        new RoundSpec("desc", 5, 1000, Map.of(), Map.of(), List.of(), Map.of(), "ARENA_1");
 
     Round round = new Round();
     round.setRoundId(roundId);
@@ -63,13 +63,14 @@ class DomainCoverageTest {
 
     Submission.Builder builder = Submission.builder();
     DraftSubmission draft = new DraftSubmission(List.of(1, 2, 3), "ATTACK");
-    Submission sub = builder
-        .teamId(teamId)
-        .roundNo(1)
-        .submissionJson(draft)
-        .accepted(true)
-        .submittedAt(now)
-        .build();
+    Submission sub =
+        builder
+            .teamId(teamId)
+            .roundNo(1)
+            .submissionJson(draft)
+            .accepted(true)
+            .submittedAt(now)
+            .build();
 
     assertThat(sub.getTeamId()).isEqualTo(teamId);
     assertThat(sub.getRoundNo()).isEqualTo(1);
@@ -102,16 +103,17 @@ class DomainCoverageTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
 
-    Match match = Match.builder()
-        .matchId(matchId)
-        .sessionId(sessionId)
-        .roundNo(1)
-        .teamA(teamA)
-        .teamB(teamB)
-        .status(MatchStatus.PENDING)
-        .winnerTeam(teamA)
-        .resultJson(null)
-        .build();
+    Match match =
+        Match.builder()
+            .matchId(matchId)
+            .sessionId(sessionId)
+            .roundNo(1)
+            .teamA(teamA)
+            .teamB(teamB)
+            .status(MatchStatus.PENDING)
+            .winnerTeam(teamA)
+            .resultJson(null)
+            .build();
 
     assertThat(match.getMatchId()).isEqualTo(matchId);
     assertThat(match.getSessionId()).isEqualTo(sessionId);
@@ -142,36 +144,40 @@ class DomainCoverageTest {
 
   @Test
   void testHero() {
-    Hero.Appearance appearance = Hero.Appearance.builder()
-        .gender("Male")
-        .race("Human")
-        .heightCm(178)
-        .weightKg(80)
-        .eyeColor("Blue")
-        .hairColor("Black")
-        .build();
+    Hero.Appearance appearance =
+        Hero.Appearance.builder()
+            .gender("Male")
+            .race("Human")
+            .heightCm(178)
+            .weightKg(80)
+            .eyeColor("Blue")
+            .hairColor("Black")
+            .build();
 
-    Hero.Biography biography = Hero.Biography.builder()
-        .fullName("Bruce Wayne")
-        .aliases(List.of("Dark Knight"))
-        .placeOfBirth("Gotham")
-        .firstAppearance("Detective Comics #27")
-        .build();
+    Hero.Biography biography =
+        Hero.Biography.builder()
+            .fullName("Bruce Wayne")
+            .aliases(List.of("Dark Knight"))
+            .placeOfBirth("Gotham")
+            .firstAppearance("Detective Comics #27")
+            .build();
 
-    Hero.Images images = Hero.Images.builder().xs("xs.jpg").sm("sm.jpg").md("md.jpg").lg("lg.jpg").build();
+    Hero.Images images =
+        Hero.Images.builder().xs("xs.jpg").sm("sm.jpg").md("md.jpg").lg("lg.jpg").build();
 
-    Hero hero = Hero.builder()
-        .id(1)
-        .name("Batman")
-        .slug("1-batman")
-        .powerstats(Hero.PowerStats.builder().intelligence(100).build())
-        .appearance(appearance)
-        .biography(biography)
-        .images(images)
-        .role("Brawler")
-        .tags(List.of("DC"))
-        .cost(500)
-        .build();
+    Hero hero =
+        Hero.builder()
+            .id(1)
+            .name("Batman")
+            .slug("1-batman")
+            .powerstats(Hero.PowerStats.builder().intelligence(100).build())
+            .appearance(appearance)
+            .biography(biography)
+            .images(images)
+            .role("Brawler")
+            .tags(List.of("DC"))
+            .cost(500)
+            .build();
 
     assertThat(Objects.requireNonNull(hero.appearance()).gender()).isEqualTo("Male");
     assertThat(Objects.requireNonNull(hero.biography()).fullName()).isEqualTo("Bruce Wayne");
@@ -179,19 +185,20 @@ class DomainCoverageTest {
 
     // Branch test for Hero null role/cost/tags
     @SuppressWarnings("NullAway")
-    Hero defaultHero = new Hero(
-        2,
-        "Default",
-        "default",
-        Hero.PowerStats.builder().build(),
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null);
+    Hero defaultHero =
+        new Hero(
+            2,
+            "Default",
+            "default",
+            Hero.PowerStats.builder().build(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     assertThat(defaultHero.role()).isEqualTo("Fighter");
     assertThat(defaultHero.cost()).isEqualTo(10);
     assertThat(defaultHero.tags()).isEmpty();
