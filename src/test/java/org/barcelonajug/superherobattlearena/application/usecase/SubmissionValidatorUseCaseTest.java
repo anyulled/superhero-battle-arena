@@ -16,6 +16,7 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.exception.BannedTagException;
 import org.barcelonajug.superherobattlearena.domain.exception.BudgetExceededException;
 import org.barcelonajug.superherobattlearena.domain.exception.DuplicateHeroException;
+import org.barcelonajug.superherobattlearena.domain.exception.HeroNotFoundException;
 import org.barcelonajug.superherobattlearena.domain.exception.RoleCompositionException;
 import org.barcelonajug.superherobattlearena.domain.exception.TeamSizeException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
@@ -154,5 +155,59 @@ class SubmissionValidatorUseCaseTest {
     assertThatThrownBy(() -> validator.validate(submission, spec))
         .isInstanceOf(DuplicateHeroException.class)
         .hasMessageContaining("Duplicate heroes");
+  }
+
+  @Test
+  void shouldFailHeroNotFound() {
+    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
+    DraftSubmission submission =
+        new DraftSubmission(List.of(1, 999), "Attack"); // Hero 999 does not exist
+
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(HeroNotFoundException.class)
+        .hasMessageContaining("Hero not found");
+  }
+
+  @Test
+  void shouldFailTooManySameRole() {
+    RoundSpec spec =
+        new RoundSpec("Test", 2, 50, Map.of(), Map.of("Tank", 1), List.of(), Map.of(), "Basic");
+    DraftSubmission submission = new DraftSubmission(List.of(1, 100), "Attack");
+
+    Hero h4 =
+        new Hero(
+            100,
+            "H4",
+            "h4",
+            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
+            "Tank",
+            10,
+            "good",
+            "Marvel",
+            null,
+            null,
+            List.of(),
+            new Hero.Images(null, null, null, null));
+    when(rosterUseCase.getHeroes(List.of(1, 100)))
+        .thenReturn(
+            List.of(
+                new Hero(
+                    1,
+                    "H1",
+                    "h1",
+                    new Hero.PowerStats(0, 0, 0, 0, 0, 0),
+                    "Tank",
+                    10,
+                    "good",
+                    "Marvel",
+                    null,
+                    null,
+                    List.of("A"),
+                    new Hero.Images(null, null, null, null)),
+                h4));
+
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(RoleCompositionException.class)
+        .hasMessageContaining("Too many of role");
   }
 }
