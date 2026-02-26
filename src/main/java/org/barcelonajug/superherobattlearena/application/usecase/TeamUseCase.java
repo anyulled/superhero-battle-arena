@@ -1,10 +1,13 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Team;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -23,7 +26,7 @@ public class TeamUseCase {
     this.sessionUseCase = sessionUseCase;
   }
 
-  public List<Team> getTeams(UUID sessionId) {
+  public List<Team> getTeams(@Nullable UUID sessionId) {
     if (sessionId != null) {
       return teamRepository.findBySessionId(sessionId);
     }
@@ -34,7 +37,7 @@ public class TeamUseCase {
         .orElse(List.of());
   }
 
-  public UUID registerTeam(String name, List<String> members, UUID sessionId) {
+  public UUID registerTeam(String name, List<String> members, @Nullable UUID sessionId) {
     MDC.put("sessionId", sessionId != null ? sessionId.toString() : "auto");
 
     try {
@@ -56,7 +59,8 @@ public class TeamUseCase {
         log.debug("Using active session - sessionId={}", targetSessionId);
       }
 
-      Team team = new Team(UUID.randomUUID(), targetSessionId, name, OffsetDateTime.now(), members);
+      Team team = new Team(UUID.randomUUID(), targetSessionId, name,
+          OffsetDateTime.now(ZoneId.systemDefault()), members);
       teamRepository.save(team);
 
       MDC.put("teamId", team.teamId().toString());

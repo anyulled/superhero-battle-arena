@@ -56,13 +56,6 @@ $(document).ready(async function () {
         const hero = state.heroes[heroId];
         const uniqueId = `${teamId}_${heroId}`;
 
-        // Calculate Max HP (durability) - matching backend BattleEngine logic
-        // BattleEngine uses hero.powerstats.durability() directly (no multiplier in latest version)
-        // Wait, step 198 removed the multiplier? Let's check.
-        // Step 198: this.currentHp = hero.powerstats().durability();
-        // Step 202: (int) (hero.powerstats().durability() * multiplier.doubleValue()) in FatigueService
-        // But in BattleEngine constructor it is just durability().
-        // So Max HP = durability.
         const maxHealth = hero.powerstats ? hero.powerstats.durability : 100;
 
         // Store initial state
@@ -178,27 +171,33 @@ $(document).ready(async function () {
 
         switch (type) {
             case 'MATCH_START':
-                log('====== MATCH START ======', 'special');
+                log('🏁 ====== MATCH START ======', 'special');
                 break;
             case 'ROUND_START':
-                log(`--- Round ${value} Start ---`, 'special');
+                log(`🏁 --- Round ${value} Start ---`, 'special');
                 $('#roundIndicator').text(`ROUND ${value}`).removeClass('hidden');
                 break;
             case 'ROUND_END':
-                log(`--- Round ${value} End ---`, 'special');
+                log(`🏆 --- Round ${value} End ---`, 'special');
                 break;
             case 'ATTACK_PERFORMED':
                 handleAttack(actorId, targetId, value, description);
                 break;
             case 'HERO_KNOCKED_OUT':
                 handleKO(targetId);
-                log('😵 ' + description, 'damage');
+                log('☠️ ' + description, 'damage');
                 break;
             case 'MATCH_END':
                 handleWin();
                 break;
             case 'HIT': // Fallthrough or explicit
                 handleAttack(actorId, targetId, value, description);
+                break;
+            case 'CRITICAL_HIT':
+                handleAttack(actorId, targetId, value, description, '💫 ');
+                break;
+            case 'DODGE':
+                handleDodge(actorId, targetId, description);
                 break;
             case 'HEALTH_CHANGED':
                 if (targetId) {
@@ -218,7 +217,7 @@ $(document).ready(async function () {
         }
     }
 
-    function handleAttack(actorId, targetId, damage, desc) {
+    function handleAttack(actorId, targetId, damage, desc, prefix = '💥 ') {
         // IDs are now composite strings from backend: teamId_heroId
         // But we need to be careful. DOM IDs are hero-{uniqueId}
         // Using document.getElementById to avoid any selector escaping issues
@@ -252,7 +251,35 @@ $(document).ready(async function () {
         // updateHealth should run regardless of UI presence to keep state consistent
         updateHealth(targetId, -damage);
 
-        log('👊 ' + desc);
+        log(prefix + desc);
+    }
+
+    function handleDodge(actorId, targetId, desc) {
+        const actorCard = $(document.getElementById(`hero-${actorId}`));
+        const targetCard = $(document.getElementById(`hero-${targetId}`));
+
+        const actorTeamId = actorId.split('_')[0];
+        const isTeamA = actorTeamId === state.match.teamA;
+
+        if (actorCard.length) {
+            actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
+            setTimeout(() => {
+                actorCard.removeClass('attacking-right attacking-left');
+            }, 500);
+        }
+
+        if (targetCard.length) {
+            targetCard.addClass('dodge');
+            setTimeout(() => {
+                targetCard.removeClass('dodge');
+            }, 500);
+
+            const dmgEl = $(`<div class="damage-number text-slate-300">Miss</div>`);
+            targetCard.append(dmgEl);
+            setTimeout(() => dmgEl.remove(), 1000);
+        }
+
+        log('💨 ' + desc);
     }
 
     function updateHealth(uniqueId, deltaOrExact, isExact = false) {
@@ -304,7 +331,7 @@ $(document).ready(async function () {
     }
 
     function handleWin() {
-        log('Match Ended!', 'special');
+        log('🏆 Match Ended!', 'special');
         $('#winnerModal').removeClass('hidden').addClass('flex');
 
         // Re-fetch match to get the authoritative winnerTeam from the DB

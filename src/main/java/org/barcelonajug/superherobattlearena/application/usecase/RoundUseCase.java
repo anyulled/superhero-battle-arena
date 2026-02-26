@@ -14,6 +14,7 @@ import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -37,7 +38,7 @@ public class RoundUseCase {
     this.teamRepository = teamRepository;
   }
 
-  public Optional<RoundSpec> getRoundSpec(Integer roundNo, UUID sessionId) {
+  public Optional<RoundSpec> getRoundSpec(Integer roundNo, @Nullable UUID sessionId) {
     if (sessionId == null) {
       log.warn("getRoundSpec called without sessionId for roundNo={}", roundNo);
       return Optional.empty();
@@ -121,7 +122,7 @@ public class RoundUseCase {
         .map(Submission::getSubmissionJson);
   }
 
-  public List<Submission> getSubmissions(Integer roundNo, UUID sessionId) {
+  public List<Submission> getSubmissions(Integer roundNo, @Nullable UUID sessionId) {
     if (sessionId == null) {
       log.warn("getSubmissions called without sessionId");
       return java.util.Collections.emptyList();

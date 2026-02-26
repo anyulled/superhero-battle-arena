@@ -1,6 +1,8 @@
 package org.barcelonajug.superherobattlearena.domain;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.jspecify.annotations.Nullable;
 
@@ -21,7 +23,7 @@ public class Round {
   @SuppressWarnings("NullAway.Init")
   private RoundStatus status;
 
-  private java.time.@Nullable OffsetDateTime submissionDeadline;
+  private @Nullable OffsetDateTime submissionDeadline;
 
   public UUID getRoundId() {
     return roundId;
@@ -71,11 +73,11 @@ public class Round {
     this.status = status;
   }
 
-  public java.time.@Nullable OffsetDateTime getSubmissionDeadline() {
+  public @Nullable OffsetDateTime getSubmissionDeadline() {
     return submissionDeadline;
   }
 
-  public void setSubmissionDeadline(java.time.@Nullable OffsetDateTime submissionDeadline) {
+  public void setSubmissionDeadline(@Nullable OffsetDateTime submissionDeadline) {
     this.submissionDeadline = submissionDeadline;
   }
 }

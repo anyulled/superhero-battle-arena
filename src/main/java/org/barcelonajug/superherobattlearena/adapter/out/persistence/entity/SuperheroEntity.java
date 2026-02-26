@@ -1,5 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
+import java.time.OffsetDateTime;
+
+import org.jspecify.annotations.Nullable;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,7 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "superheroes")
@@ -39,24 +42,25 @@ public class SuperheroEntity {
   @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
-  private SuperheroPowerStatsEntity powerStats;
+  private @Nullable SuperheroPowerStatsEntity powerStats;
 
   @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
-  private SuperheroAppearanceEntity appearance;
+  private @Nullable SuperheroAppearanceEntity appearance;
 
   @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
-  private SuperheroBiographyEntity biography;
+  private @Nullable SuperheroBiographyEntity biography;
 
   @SuppressWarnings("NullAway.Init")
   @OneToOne(mappedBy = "superhero", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
   @PrimaryKeyJoinColumn
-  private SuperheroImagesEntity images;
+  private @Nullable SuperheroImagesEntity images;
 
-  public SuperheroEntity() {}
+  public SuperheroEntity() {
+  }
 
   public Integer getId() {
     return id;
@@ -110,7 +114,7 @@ public class SuperheroEntity {
     return powerStats;
   }
 
-  public void setPowerStats(SuperheroPowerStatsEntity powerStats) {
+  public void setPowerStats(@Nullable SuperheroPowerStatsEntity powerStats) {
     this.powerStats = powerStats;
     if (powerStats != null) {
       powerStats.setSuperhero(this);
@@ -121,7 +125,7 @@ public class SuperheroEntity {
     return appearance;
   }
 
-  public void setAppearance(SuperheroAppearanceEntity appearance) {
+  public void setAppearance(@Nullable SuperheroAppearanceEntity appearance) {
     this.appearance = appearance;
     if (appearance != null) {
       appearance.setSuperhero(this);
@@ -132,7 +136,7 @@ public class SuperheroEntity {
     return biography;
   }
 
-  public void setBiography(SuperheroBiographyEntity biography) {
+  public void setBiography(@Nullable SuperheroBiographyEntity biography) {
     this.biography = biography;
     if (biography != null) {
       biography.setSuperhero(this);
@@ -143,7 +147,7 @@ public class SuperheroEntity {
     return images;
   }
 
-  public void setImages(SuperheroImagesEntity images) {
+  public void setImages(@Nullable SuperheroImagesEntity images) {
     this.images = images;
     if (images != null) {
       images.setSuperhero(this);

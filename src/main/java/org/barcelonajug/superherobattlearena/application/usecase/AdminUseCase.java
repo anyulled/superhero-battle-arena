@@ -29,6 +29,7 @@ import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -167,7 +168,7 @@ public class AdminUseCase {
   }
 
   @Transactional
-  public Map<String, Object> runAllBattles(final Integer roundNo, final UUID sessionIdOrNull) {
+  public Map<String, Object> runAllBattles(final Integer roundNo, @Nullable final UUID sessionIdOrNull) {
     final long startTime = System.currentTimeMillis();
     MDC.put("roundNo", roundNo.toString());
 

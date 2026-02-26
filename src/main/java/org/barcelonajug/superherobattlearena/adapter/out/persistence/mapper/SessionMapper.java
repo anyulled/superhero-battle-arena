@@ -2,19 +2,20 @@ package org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper;
 
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SessionEntity;
 import org.barcelonajug.superherobattlearena.domain.Session;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SessionMapper {
 
-  public @org.jspecify.annotations.Nullable Session toDomain(SessionEntity entity) {
+  public @Nullable Session toDomain(@Nullable SessionEntity entity) {
     if (entity == null) {
       return null;
     }
     return new Session(entity.getSessionId(), entity.getCreatedAt(), entity.isActive());
   }
 
-  public @org.jspecify.annotations.Nullable SessionEntity toEntity(Session session) {
+  public @Nullable SessionEntity toEntity(@Nullable Session session) {
     if (session == null) {
       return null;
     }

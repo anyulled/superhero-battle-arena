@@ -4,6 +4,7 @@ import java.util.UUID;
 
 /** Represents an event occurring during a match. */
 public record MatchEvent(
-    UUID matchId,
-    Integer seq,
-    org.barcelonajug.superherobattlearena.domain.json.MatchEvent eventJson) {}
+        UUID matchId,
+        Integer seq,
+        MatchEvent eventJson) {
+}

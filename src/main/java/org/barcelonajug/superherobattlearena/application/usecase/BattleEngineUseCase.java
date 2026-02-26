@@ -5,10 +5,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
-import org.barcelonajug.superherobattlearena.domain.json.MatchEvent;
+import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -50,11 +53,10 @@ public class BattleEngineUseCase {
       teamAHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamAId)));
       teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
 
-      List<MatchEvent> events = new ArrayList<>();
-      java.util.concurrent.atomic.AtomicLong logicalTime =
-          new java.util.concurrent.atomic.AtomicLong(0);
+      List<MatchEventSnapshot> events = new ArrayList<>();
+      AtomicLong logicalTime = new AtomicLong(0);
 
-      events.add(MatchEvent.matchStart(logicalTime.getAndIncrement()));
+      events.add(MatchEventSnapshot.matchStart(logicalTime.getAndIncrement()));
 
       int turn = 0;
       UUID winnerId = null;
@@ -63,7 +65,7 @@ public class BattleEngineUseCase {
 
       while (turn < MAX_TURNS && winnerId == null) {
         turn++;
-        events.add(MatchEvent.turnStart(turn, logicalTime.getAndIncrement()));
+        events.add(MatchEventSnapshot.turnStart(turn, logicalTime.getAndIncrement()));
 
         winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
 
@@ -77,10 +79,10 @@ public class BattleEngineUseCase {
       }
 
       if (winnerId != null) {
-        events.add(MatchEvent.matchEnd(winnerId, logicalTime.getAndIncrement()));
+        events.add(MatchEventSnapshot.matchEnd(winnerId, logicalTime.getAndIncrement()));
         log.info("Battle completed - winner={}, turns={}", winnerId, turn);
       } else {
-        events.add(MatchEvent.draw(logicalTime.getAndIncrement()));
+        events.add(MatchEventSnapshot.draw(logicalTime.getAndIncrement()));
         log.info("Battle completed - result=DRAW, turns={}", turn);
       }
 
@@ -94,14 +96,14 @@ public class BattleEngineUseCase {
     }
   }
 
-  private @org.jspecify.annotations.Nullable UUID executeTurn(
+  private @Nullable UUID executeTurn(
       List<BattleHeroUseCase> allHeroes,
       UUID teamAId,
       UUID teamBId,
       RoundSpec roundSpec,
       Random random,
-      List<MatchEvent> events,
-      java.util.concurrent.atomic.AtomicLong logicalTime) {
+      List<MatchEventSnapshot> events,
+      AtomicLong logicalTime) {
     for (BattleHeroUseCase attacker : allHeroes) {
       if (!attacker.isAlive()) {
         continue;
@@ -117,7 +119,7 @@ public class BattleEngineUseCase {
         return attacker.teamId;
       }
 
-      performAttack(attacker, target, roundSpec, events, logicalTime);
+      performAttack(attacker, target, roundSpec, random, events, logicalTime);
     }
     return null;
   }
@@ -126,24 +128,59 @@ public class BattleEngineUseCase {
       BattleHeroUseCase attacker,
       BattleHeroUseCase target,
       RoundSpec roundSpec,
-      List<MatchEvent> events,
-      java.util.concurrent.atomic.AtomicLong logicalTime) {
-    int damage = calculateDamage(attacker, target, roundSpec);
+      Random random,
+      List<MatchEventSnapshot> events,
+      AtomicLong logicalTime) {
+
+    // 1. Dodge Check
+    double dodgeChance = (double) target.hero.powerstats().combat()
+        / (target.hero.powerstats().combat() + attacker.hero.powerstats().combat() + 0.1);
+    // Cap dodge at 50% max
+    dodgeChance = Math.min(0.5, dodgeChance);
+
+    if (random.nextDouble() < dodgeChance) {
+      events.add(
+          MatchEventSnapshot.dodge(
+              attacker.hero.name(),
+              target.hero.name(),
+              attacker.getUniqueId(),
+              target.getUniqueId(),
+              logicalTime.getAndIncrement()));
+      return;
+    }
+
+    // 2. Critical Hit Check
+    double critChance = attacker.hero.powerstats().intelligence() / 200.0;
+    boolean isCrit = random.nextDouble() < critChance;
+
+    // 3. Damage Calculation
+    int damage = calculateDamage(attacker, target, roundSpec, isCrit);
     target.currentHp -= damage;
 
-    events.add(
-        MatchEvent.hit(
-            attacker.hero.name(),
-            target.hero.name(),
-            attacker.getUniqueId(),
-            target.getUniqueId(),
-            damage,
-            logicalTime.getAndIncrement()));
+    if (isCrit) {
+      events.add(
+          MatchEventSnapshot.criticalHit(
+              attacker.hero.name(),
+              target.hero.name(),
+              attacker.getUniqueId(),
+              target.getUniqueId(),
+              damage,
+              logicalTime.getAndIncrement()));
+    } else {
+      events.add(
+          MatchEventSnapshot.hit(
+              attacker.hero.name(),
+              target.hero.name(),
+              attacker.getUniqueId(),
+              target.getUniqueId(),
+              damage,
+              logicalTime.getAndIncrement()));
+    }
 
     if (target.currentHp <= 0) {
       target.currentHp = 0;
       events.add(
-          MatchEvent.ko(
+          MatchEventSnapshot.ko(
               target.hero.name(),
               attacker.getUniqueId(),
               target.getUniqueId(),
@@ -154,11 +191,11 @@ public class BattleEngineUseCase {
   private void sortHeroesBySpeed(List<BattleHeroUseCase> heroes) {
     heroes.sort(
         Comparator.comparingInt((BattleHeroUseCase bh) -> bh.hero.powerstats().speed())
-            .reversed()
-            .thenComparingInt(bh -> bh.hero.id()));
+            .thenComparingInt(bh -> bh.hero.powerstats().combat())
+            .reversed());
   }
 
-  private @org.jspecify.annotations.Nullable UUID checkWinCondition(
+  private @Nullable UUID checkWinCondition(
       List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
     boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
     boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
@@ -171,15 +208,15 @@ public class BattleEngineUseCase {
     };
   }
 
-  private @org.jspecify.annotations.Nullable BattleHeroUseCase findTarget(
+  private @Nullable BattleHeroUseCase findTarget(
       BattleHeroUseCase attacker,
       List<BattleHeroUseCase> allHeroes,
       UUID teamAId,
       UUID teamBId,
       Random random) {
     UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
-    List<BattleHeroUseCase> targets =
-        allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive()).toList();
+    List<BattleHeroUseCase> targets = allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
+        .toList();
 
     if (targets.isEmpty()) {
       return null;
@@ -190,8 +227,7 @@ public class BattleEngineUseCase {
   private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
     // Find min HP
     int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
-    List<BattleHeroUseCase> lowestHpTargets =
-        targets.stream().filter(h -> h.currentHp == minHp).toList();
+    List<BattleHeroUseCase> lowestHpTargets = targets.stream().filter(h -> h.currentHp == minHp).toList();
 
     if (lowestHpTargets.size() == 1) {
       return lowestHpTargets.get(0);
@@ -201,7 +237,7 @@ public class BattleEngineUseCase {
   }
 
   private int calculateDamage(
-      BattleHeroUseCase attacker, BattleHeroUseCase target, RoundSpec roundSpec) {
+      BattleHeroUseCase attacker, BattleHeroUseCase target, RoundSpec roundSpec, boolean isCrit) {
     double multiplier = 1.0;
 
     // Apply Tag Modifiers
@@ -213,8 +249,13 @@ public class BattleEngineUseCase {
       }
     }
 
-    int baseAtk = attacker.hero.powerstats().strength();
-    int targetDef = target.hero.powerstats().power();
+    if (isCrit) {
+      multiplier *= 1.5;
+    }
+
+    // Power for attack, Strength for defense
+    int baseAtk = attacker.hero.powerstats().power();
+    int targetDef = target.hero.powerstats().strength();
 
     int rawDamage = (int) (baseAtk * multiplier - (targetDef * DAMAGE_DEF_FACTOR));
     return Math.max(1, rawDamage);

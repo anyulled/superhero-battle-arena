@@ -28,7 +28,7 @@ class FatigueUseCasePerformanceTest {
   }
 
   @Test
-  void testRedundantCalls() {
+  void redundantCalls() {
     UUID teamId = UUID.randomUUID();
     int teamSize = 5;
     List<Hero> heroes =
@@ -63,7 +63,7 @@ class FatigueUseCasePerformanceTest {
   }
 
   @Test
-  void testOptimizedCall() {
+  void optimizedCall() {
     UUID teamId = UUID.randomUUID();
     int teamSize = 5;
     List<Hero> heroes =
