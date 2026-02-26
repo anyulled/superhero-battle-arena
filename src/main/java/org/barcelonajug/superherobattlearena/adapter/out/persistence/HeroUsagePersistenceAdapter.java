@@ -3,7 +3,6 @@ package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.HeroUsageMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataHeroUsageRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
@@ -25,8 +24,7 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
   @Override
   public HeroUsage save(HeroUsage heroUsage) {
     return Objects.requireNonNull(
-        mapper.toDomain(
-            repository.save(Objects.requireNonNull(mapper.toEntity(heroUsage)))));
+        mapper.toDomain(repository.save(Objects.requireNonNull(mapper.toEntity(heroUsage)))));
   }
 
   @Override

@@ -4,7 +4,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.slf4j.Logger;

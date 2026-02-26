@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SessionEntity;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SessionMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SessionRepository;

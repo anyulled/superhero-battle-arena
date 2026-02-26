@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
@@ -60,9 +59,10 @@ public class RoundUseCase {
           draft.heroIds().size());
 
       // Validate team exists and identify session
-      Team team = teamRepository
-          .findById(teamId)
-          .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+      Team team =
+          teamRepository
+              .findById(teamId)
+              .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
 
       // Validate round exists for this session
       // Team is record -> accessors are name(), sessionId()
@@ -97,13 +97,14 @@ public class RoundUseCase {
             "Team must have exactly " + requiredTeamSize + " heroes");
       }
 
-      Submission submission = Submission.builder()
-          .teamId(teamId)
-          .roundNo(roundNo)
-          .submissionJson(draft)
-          .accepted(true)
-          .submittedAt(OffsetDateTime.now())
-          .build();
+      Submission submission =
+          Submission.builder()
+              .teamId(teamId)
+              .roundNo(roundNo)
+              .submissionJson(draft)
+              .accepted(true)
+              .submittedAt(OffsetDateTime.now())
+              .build();
 
       submissionRepository.save(submission);
       log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);

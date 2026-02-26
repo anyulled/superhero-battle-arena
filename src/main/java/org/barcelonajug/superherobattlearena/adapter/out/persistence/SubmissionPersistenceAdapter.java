@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SubmissionMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataSubmissionRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
@@ -26,8 +25,7 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
   @Override
   public Submission save(Submission submission) {
     return Objects.requireNonNull(
-        mapper.toDomain(
-            repository.save(Objects.requireNonNull(mapper.toEntity(submission)))));
+        mapper.toDomain(repository.save(Objects.requireNonNull(mapper.toEntity(submission)))));
   }
 
   @Override

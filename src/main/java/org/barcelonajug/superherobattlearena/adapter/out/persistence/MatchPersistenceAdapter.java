@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.MatchEntity;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.MatchMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataMatchRepository;
@@ -32,11 +31,12 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
 
   @Override
   public List<Match> saveAll(List<Match> matches) {
-    List<MatchEntity> entities = matches.stream()
-        .map(mapper::toEntity)
-        .filter(Objects::nonNull)
-        .map(Objects::requireNonNull)
-        .toList();
+    List<MatchEntity> entities =
+        matches.stream()
+            .map(mapper::toEntity)
+            .filter(Objects::nonNull)
+            .map(Objects::requireNonNull)
+            .toList();
 
     return repository.saveAll(entities).stream()
         .map(mapper::toDomain)
@@ -80,14 +80,14 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   @Override
   public List<Match> findPendingMatches(Integer roundNo, UUID sessionId) {
     return (sessionId == null
-        ? repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING)
-        : repository.findByRoundNoAndStatusAndSessionId(
-            roundNo, MatchStatus.PENDING, sessionId))
+            ? repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING)
+            : repository.findByRoundNoAndStatusAndSessionId(
+                roundNo, MatchStatus.PENDING, sessionId))
         .stream()
-        .map(mapper::toDomain)
-        .filter(Objects::nonNull)
-        .map(Objects::requireNonNull)
-        .toList();
+            .map(mapper::toDomain)
+            .filter(Objects::nonNull)
+            .map(Objects::requireNonNull)
+            .toList();
   }
 
   @Override

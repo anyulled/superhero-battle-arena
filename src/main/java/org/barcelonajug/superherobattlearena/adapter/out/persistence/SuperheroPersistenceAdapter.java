@@ -3,7 +3,6 @@ package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SuperheroMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataSuperheroRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
