@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
@@ -33,12 +32,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class RoundUseCaseTest {
 
-  @Mock
-  private RoundRepositoryPort roundRepository;
-  @Mock
-  private SubmissionRepositoryPort submissionRepository;
-  @Mock
-  private TeamRepositoryPort teamRepository;
+  @Mock private RoundRepositoryPort roundRepository;
+  @Mock private SubmissionRepositoryPort submissionRepository;
+  @Mock private TeamRepositoryPort teamRepository;
 
   private RoundUseCase roundUseCase;
 
@@ -58,12 +54,13 @@ class RoundUseCaseTest {
 
     @BeforeEach
     void arrangeTeam() {
-      team = new Team(
-          TEAM_ID,
-          SESSION_ID,
-          "Alpha Squad",
-          OffsetDateTime.now(ZoneOffset.UTC),
-          List.of("Alice", "Bob"));
+      team =
+          new Team(
+              TEAM_ID,
+              SESSION_ID,
+              "Alpha Squad",
+              OffsetDateTime.now(ZoneOffset.UTC),
+              List.of("Alice", "Bob"));
       given(teamRepository.findById(TEAM_ID)).willReturn(Optional.of(team));
     }
 
@@ -72,8 +69,9 @@ class RoundUseCaseTest {
       given(teamRepository.findById(TEAM_ID)).willReturn(Optional.empty());
 
       assertThatThrownBy(
-          () -> roundUseCase.submitTeam(
-              ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("Team not found");
     }
@@ -84,8 +82,9 @@ class RoundUseCaseTest {
           .willReturn(Optional.empty());
 
       assertThatThrownBy(
-          () -> roundUseCase.submitTeam(
-              ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("does not exist in session");
     }
@@ -99,8 +98,9 @@ class RoundUseCaseTest {
           .willReturn(Optional.of(Submission.builder().build()));
 
       assertThatThrownBy(
-          () -> roundUseCase.submitTeam(
-              ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalStateException.class)
           .hasMessageContaining("already submitted");
     }
@@ -114,8 +114,9 @@ class RoundUseCaseTest {
           .willReturn(Optional.empty());
 
       assertThatThrownBy(
-          () -> roundUseCase.submitTeam(
-              ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2), "ATTACK")))
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("exactly 3 heroes");
     }
@@ -129,8 +130,9 @@ class RoundUseCaseTest {
           .willReturn(Optional.empty());
 
       assertThatCode(
-          () -> roundUseCase.submitTeam(
-              ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .doesNotThrowAnyException();
 
       then(submissionRepository).should().save(any(Submission.class));
@@ -145,8 +147,9 @@ class RoundUseCaseTest {
           .willReturn(Optional.empty());
 
       assertThatThrownBy(
-          () -> roundUseCase.submitTeam(
-              ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("exactly 5 heroes");
     }
@@ -189,15 +192,26 @@ class RoundUseCaseTest {
           .willReturn(Optional.of(new Round()));
 
       // Teams in session
-      Team teamA = new Team(UUID.randomUUID(), SESSION_ID, "A", OffsetDateTime.now(ZoneOffset.UTC),
-          List.of("Hero1", "Hero2"));
-      Team teamB = new Team(UUID.randomUUID(), SESSION_ID, "B", OffsetDateTime.now(ZoneOffset.UTC),
-          List.of("Hero3", "Hero4"));
+      Team teamA =
+          new Team(
+              UUID.randomUUID(),
+              SESSION_ID,
+              "A",
+              OffsetDateTime.now(ZoneOffset.UTC),
+              List.of("Hero1", "Hero2"));
+      Team teamB =
+          new Team(
+              UUID.randomUUID(),
+              SESSION_ID,
+              "B",
+              OffsetDateTime.now(ZoneOffset.UTC),
+              List.of("Hero3", "Hero4"));
       given(teamRepository.findBySessionId(SESSION_ID)).willReturn(List.of(teamA, teamB));
 
       // All submissions for round
       Submission subA = Submission.builder().teamId(teamA.teamId()).build();
-      Submission subOther = Submission.builder().teamId(UUID.randomUUID()).build(); // Not in session
+      Submission subOther =
+          Submission.builder().teamId(UUID.randomUUID()).build(); // Not in session
       given(submissionRepository.findByRoundNo(ROUND_NO)).willReturn(List.of(subA, subOther));
 
       List<Submission> result = roundUseCase.getSubmissions(ROUND_NO, SESSION_ID);

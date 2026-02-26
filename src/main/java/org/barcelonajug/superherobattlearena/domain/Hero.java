@@ -2,12 +2,10 @@ package org.barcelonajug.superherobattlearena.domain;
 
 import static java.util.Objects.requireNonNull;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
-
 import org.jspecify.annotations.Nullable;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /** Represents a superhero with stats and role. */
 @Schema(description = "Detailed information about a superhero")
@@ -18,11 +16,20 @@ public record Hero(
     @Schema(description = "Power statistics of the hero") PowerStats powerstats,
     @Schema(description = "Combat role of the hero", example = "Tank") String role,
     @Schema(description = "Cost of selecting this hero", example = "15") Integer cost,
-    @Schema(description = "Alignment of the hero", example = "good") @org.jspecify.annotations.Nullable String alignment,
-    @Schema(description = "Publisher of the hero's comics", example = "DC Comics") @org.jspecify.annotations.Nullable String publisher,
-    @Schema(description = "Physical appearance details") @org.jspecify.annotations.Nullable Appearance appearance,
-    @Schema(description = "Biographical details") @org.jspecify.annotations.Nullable Biography biography,
-    @Schema(description = "List of tags associated with the hero", example = "[\"flying\", \"super-strength\"]") List<String> tags,
+    @Schema(description = "Alignment of the hero", example = "good")
+        @org.jspecify.annotations.Nullable
+        String alignment,
+    @Schema(description = "Publisher of the hero's comics", example = "DC Comics")
+        @org.jspecify.annotations.Nullable
+        String publisher,
+    @Schema(description = "Physical appearance details") @org.jspecify.annotations.Nullable
+        Appearance appearance,
+    @Schema(description = "Biographical details") @org.jspecify.annotations.Nullable
+        Biography biography,
+    @Schema(
+            description = "List of tags associated with the hero",
+            example = "[\"flying\", \"super-strength\"]")
+        List<String> tags,
     @Schema(description = "URLs to hero images") @org.jspecify.annotations.Nullable Images images) {
   /** Constructs a new Hero with default values if needed. */
   public Hero {
@@ -248,8 +255,10 @@ public record Hero(
   public record Biography(
       @Schema(description = "Full name", example = "Clark Kent") @Nullable String fullName,
       @Schema(description = "Place of birth", example = "Krypton") @Nullable String placeOfBirth,
-      @Schema(description = "First appearance in comics", example = "Action Comics #1") @Nullable String firstAppearance,
-      @Schema(description = "List of aliases", example = "[\"Man of Steel\", \"Kal-El\"]") @Nullable List<String> aliases) {
+      @Schema(description = "First appearance in comics", example = "Action Comics #1")
+          @Nullable String firstAppearance,
+      @Schema(description = "List of aliases", example = "[\"Man of Steel\", \"Kal-El\"]")
+          @Nullable List<String> aliases) {
     public static Builder builder() {
       return new Builder();
     }
@@ -288,10 +297,14 @@ public record Hero(
 
   @Schema(description = "Hero images in various sizes")
   public record Images(
-      @Schema(description = "Extra small image URL", example = "https://example.com/xs.jpg") @Nullable String xs,
-      @Schema(description = "Small image URL", example = "https://example.com/sm.jpg") @Nullable String sm,
-      @Schema(description = "Medium image URL", example = "https://example.com/md.jpg") @Nullable String md,
-      @Schema(description = "Large image URL", example = "https://example.com/lg.jpg") @Nullable String lg) {
+      @Schema(description = "Extra small image URL", example = "https://example.com/xs.jpg")
+          @Nullable String xs,
+      @Schema(description = "Small image URL", example = "https://example.com/sm.jpg")
+          @Nullable String sm,
+      @Schema(description = "Medium image URL", example = "https://example.com/md.jpg")
+          @Nullable String md,
+      @Schema(description = "Large image URL", example = "https://example.com/lg.jpg")
+          @Nullable String lg) {
     public static Builder builder() {
       return new Builder();
     }

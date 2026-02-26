@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
@@ -133,8 +132,9 @@ public class BattleEngineUseCase {
       AtomicLong logicalTime) {
 
     // 1. Dodge Check
-    double dodgeChance = (double) target.hero.powerstats().combat()
-        / (target.hero.powerstats().combat() + attacker.hero.powerstats().combat() + 0.1);
+    double dodgeChance =
+        (double) target.hero.powerstats().combat()
+            / (target.hero.powerstats().combat() + attacker.hero.powerstats().combat() + 0.1);
     // Cap dodge at 50% max
     dodgeChance = Math.min(0.5, dodgeChance);
 
@@ -215,8 +215,8 @@ public class BattleEngineUseCase {
       UUID teamBId,
       Random random) {
     UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
-    List<BattleHeroUseCase> targets = allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive())
-        .toList();
+    List<BattleHeroUseCase> targets =
+        allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive()).toList();
 
     if (targets.isEmpty()) {
       return null;
@@ -227,7 +227,8 @@ public class BattleEngineUseCase {
   private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
     // Find min HP
     int minHp = targets.stream().mapToInt(h -> h.currentHp).min().orElse(0);
-    List<BattleHeroUseCase> lowestHpTargets = targets.stream().filter(h -> h.currentHp == minHp).toList();
+    List<BattleHeroUseCase> lowestHpTargets =
+        targets.stream().filter(h -> h.currentHp == minHp).toList();
 
     if (lowestHpTargets.size() == 1) {
       return lowestHpTargets.get(0);

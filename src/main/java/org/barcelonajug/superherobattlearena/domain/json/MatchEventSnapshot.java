@@ -1,20 +1,24 @@
 package org.barcelonajug.superherobattlearena.domain.json;
 
-import java.util.UUID;
-
-import org.jspecify.annotations.Nullable;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
+import org.jspecify.annotations.Nullable;
 
 /** Represents a specific event during a match in JSON format. */
 @Schema(description = "An event that occurred during a match simulation")
 public record MatchEventSnapshot(
     @Schema(description = "Type of the event", example = "HIT") Type type,
-    @Schema(description = "Timestamp when the event occurred", example = "1706784000000") long timestamp,
-    @Schema(description = "Human-readable description of the event", example = "Superman hits Batman for 25 damage") String description,
-    @Schema(description = "ID of the actor (e.g., attacker)", example = "1") @Nullable String actorId,
+    @Schema(description = "Timestamp when the event occurred", example = "1706784000000")
+        long timestamp,
+    @Schema(
+            description = "Human-readable description of the event",
+            example = "Superman hits Batman for 25 damage")
+        String description,
+    @Schema(description = "ID of the actor (e.g., attacker)", example = "1")
+        @Nullable String actorId,
     @Schema(description = "ID of the target", example = "2") @Nullable String targetId,
-    @Schema(description = "Numeric value associated with the event (e.g., damage)", example = "25") int value) {
+    @Schema(description = "Numeric value associated with the event (e.g., damage)", example = "25")
+        int value) {
 
   public enum Type {
     MATCH_START,
@@ -40,7 +44,8 @@ public record MatchEventSnapshot(
   }
 
   public static MatchEventSnapshot draw(long timestamp) {
-    return new MatchEventSnapshot(Type.MATCH_END, timestamp, "Draw - Max turns reached", null, null, 0);
+    return new MatchEventSnapshot(
+        Type.MATCH_END, timestamp, "Draw - Max turns reached", null, null, 0);
   }
 
   public static MatchEventSnapshot turnStart(int turnNumber, long timestamp) {
@@ -64,7 +69,8 @@ public record MatchEventSnapshot(
         damage);
   }
 
-  public static MatchEventSnapshot ko(String targetName, String actorId, String targetId, long timestamp) {
+  public static MatchEventSnapshot ko(
+      String targetName, String actorId, String targetId, long timestamp) {
     return new MatchEventSnapshot(Type.KO, timestamp, targetName + " is KO!", actorId, targetId, 0);
   }
 

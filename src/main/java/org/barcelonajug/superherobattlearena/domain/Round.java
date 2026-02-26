@@ -2,7 +2,6 @@ package org.barcelonajug.superherobattlearena.domain;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.jspecify.annotations.Nullable;
 

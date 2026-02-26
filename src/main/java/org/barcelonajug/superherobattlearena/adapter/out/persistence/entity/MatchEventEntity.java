@@ -1,18 +1,16 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
-import java.io.Serializable;
-import java.util.Objects;
-import java.util.UUID;
-
-import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.UUID;
+import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "match_events")
@@ -40,15 +38,12 @@ public class MatchEventEntity {
     @SuppressWarnings("NullAway.Init")
     private Integer seq;
 
-    public MatchEventId() {
-    }
+    public MatchEventId() {}
 
     @Override
     public boolean equals(Object o) {
-      if (this == o)
-        return true;
-      if (o == null || getClass() != o.getClass())
-        return false;
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
       MatchEventId that = (MatchEventId) o;
       return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
     }

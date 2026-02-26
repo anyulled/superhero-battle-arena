@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
@@ -94,9 +93,10 @@ public class MatchUseCase {
       // we might match them. THIS IS A POTENTIAL BUG.
       // For now, fixing Round bug is priority.
 
-      List<Submission> unmatchedSubmissions = allSubmissions.stream()
-          .filter(s -> !alreadyMatchedTeams.contains(s.getTeamId()))
-          .toList();
+      List<Submission> unmatchedSubmissions =
+          allSubmissions.stream()
+              .filter(s -> !alreadyMatchedTeams.contains(s.getTeamId()))
+              .toList();
       log.debug(
           "Found {} total submissions, {} unmatched",
           allSubmissions.size(),
@@ -108,14 +108,15 @@ public class MatchUseCase {
         Submission subA = unmatchedSubmissions.get(i);
         Submission subB = unmatchedSubmissions.get(i + 1);
 
-        Match match = Match.builder()
-            .matchId(UUID.randomUUID())
-            .sessionId(sessionId)
-            .teamA(subA.getTeamId())
-            .teamB(subB.getTeamId())
-            .roundNo(roundNo)
-            .status(MatchStatus.PENDING)
-            .build();
+        Match match =
+            Match.builder()
+                .matchId(UUID.randomUUID())
+                .sessionId(sessionId)
+                .teamA(subA.getTeamId())
+                .teamB(subB.getTeamId())
+                .roundNo(roundNo)
+                .status(MatchStatus.PENDING)
+                .build();
 
         matchRepository.save(match);
         matchIds.add(match.getMatchId());
@@ -135,14 +136,15 @@ public class MatchUseCase {
   }
 
   public UUID createMatch(UUID teamA, UUID teamB, Integer roundNo, UUID sessionId) {
-    Match match = Match.builder()
-        .matchId(UUID.randomUUID())
-        .sessionId(sessionId)
-        .teamA(teamA)
-        .teamB(teamB)
-        .roundNo(roundNo)
-        .status(MatchStatus.PENDING)
-        .build();
+    Match match =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .teamA(teamA)
+            .teamB(teamB)
+            .roundNo(roundNo)
+            .status(MatchStatus.PENDING)
+            .build();
     matchRepository.save(match);
     return match.getMatchId();
   }
@@ -154,13 +156,14 @@ public class MatchUseCase {
     try {
       log.info("Starting match execution - matchId={}", matchId);
 
-      Match match = matchRepository
-          .findById(matchId)
-          .orElseThrow(
-              () -> {
-                log.error("Match not found - matchId={}", matchId);
-                return new IllegalArgumentException("Match not found");
-              });
+      Match match =
+          matchRepository
+              .findById(matchId)
+              .orElseThrow(
+                  () -> {
+                    log.error("Match not found - matchId={}", matchId);
+                    return new IllegalArgumentException("Match not found");
+                  });
 
       MDC.put("roundNo", match.getRoundNo().toString());
       log.debug(
@@ -174,8 +177,10 @@ public class MatchUseCase {
         throw new IllegalStateException("Match already run or running");
       }
 
-      Optional<Submission> subA = submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-      Optional<Submission> subB = submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
+      Optional<Submission> subA =
+          submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
+      Optional<Submission> subB =
+          submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
 
       if (subA.isEmpty() || subB.isEmpty()) {
         log.error(
@@ -187,31 +192,36 @@ public class MatchUseCase {
       }
 
       log.debug("Building battle teams with fatigue applied");
-      List<Hero> teamAHeroes = buildBattleTeam(
-          match.getTeamA(),
-          Objects.requireNonNull(subA.get().getSubmissionJson()),
-          match.getRoundNo());
-      List<Hero> teamBHeroes = buildBattleTeam(
-          match.getTeamB(),
-          Objects.requireNonNull(subB.get().getSubmissionJson()),
-          match.getRoundNo());
+      List<Hero> teamAHeroes =
+          buildBattleTeam(
+              match.getTeamA(),
+              Objects.requireNonNull(subA.get().getSubmissionJson()),
+              match.getRoundNo());
+      List<Hero> teamBHeroes =
+          buildBattleTeam(
+              match.getTeamB(),
+              Objects.requireNonNull(subB.get().getSubmissionJson()),
+              match.getRoundNo());
 
       // FIX: Use findBySessionIdAndRoundNo instead of findById(Integer)
-      UUID sessionId = Objects.requireNonNull(match.getSessionId(), "Match session ID cannot be null");
-      Round round = roundRepository
-          .findBySessionIdAndRoundNo(sessionId, match.getRoundNo())
-          .orElseThrow(
-              () -> new IllegalArgumentException("Round not found: " + match.getRoundNo()));
+      UUID sessionId =
+          Objects.requireNonNull(match.getSessionId(), "Match session ID cannot be null");
+      Round round =
+          roundRepository
+              .findBySessionIdAndRoundNo(sessionId, match.getRoundNo())
+              .orElseThrow(
+                  () -> new IllegalArgumentException("Round not found: " + match.getRoundNo()));
 
       log.debug("Delegating to battle engine for simulation");
-      SimulationResult result = battleEngineUseCase.simulate(
-          matchId,
-          teamAHeroes,
-          teamBHeroes,
-          Objects.requireNonNullElse(round.getSeed(), 0L),
-          match.getTeamA(),
-          match.getTeamB(),
-          Objects.requireNonNull(round.getSpecJson()));
+      SimulationResult result =
+          battleEngineUseCase.simulate(
+              matchId,
+              teamAHeroes,
+              teamBHeroes,
+              Objects.requireNonNullElse(round.getSeed(), 0L),
+              match.getTeamA(),
+              match.getTeamB(),
+              Objects.requireNonNull(round.getSpecJson()));
 
       match.setStatus(MatchStatus.COMPLETED);
       match.setWinnerTeam(result.winnerTeamId());
@@ -223,9 +233,10 @@ public class MatchUseCase {
       matchRepository.save(match);
 
       log.debug("Persisting {} match events", result.events().size());
-      List<MatchEvent> eventsToSave = IntStream.range(0, result.events().size())
-          .mapToObj(i -> new MatchEvent(matchId, i + 1, result.events().get(i)))
-          .toList();
+      List<MatchEvent> eventsToSave =
+          IntStream.range(0, result.events().size())
+              .mapToObj(i -> new MatchEvent(matchId, i + 1, result.events().get(i)))
+              .toList();
       matchEventRepository.saveAll(eventsToSave);
 
       log.debug("Recording hero usage for both teams");
@@ -241,7 +252,8 @@ public class MatchUseCase {
       String resultStr = result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW";
       long duration = System.currentTimeMillis() - startTime;
 
-      List<Match> remainingPending = matchRepository.findPendingMatches(match.getRoundNo(), sessionId);
+      List<Match> remainingPending =
+          matchRepository.findPendingMatches(match.getRoundNo(), sessionId);
       if (remainingPending.isEmpty()) {
         round.setStatus(RoundStatus.CLOSED);
         roundRepository.save(round);
@@ -267,8 +279,7 @@ public class MatchUseCase {
     }
   }
 
-  public List<MatchEventSnapshot> getMatchEvents(
-      UUID matchId) {
+  public List<MatchEventSnapshot> getMatchEvents(UUID matchId) {
     return matchEventRepository.findByMatchId(matchId).stream().map(MatchEvent::eventJson).toList();
   }
 
@@ -306,15 +317,18 @@ public class MatchUseCase {
 
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
     List<Hero> fetchedHeroes = rosterUseCase.getHeroes(submission.heroIds());
-    Map<Integer, Hero> heroMap = fetchedHeroes.stream()
-        .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
+    Map<Integer, Hero> heroMap =
+        fetchedHeroes.stream()
+            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
 
-    List<Hero> orderedHeroes = submission.heroIds().stream()
-        .map(
-            id -> Optional.ofNullable(heroMap.get(id))
-                .orElseThrow(
-                    () -> new IllegalArgumentException("Hero not found in roster: " + id)))
-        .toList();
+    List<Hero> orderedHeroes =
+        submission.heroIds().stream()
+            .map(
+                id ->
+                    Optional.ofNullable(heroMap.get(id))
+                        .orElseThrow(
+                            () -> new IllegalArgumentException("Hero not found in roster: " + id)))
+            .toList();
     return fatigueUseCase.applyFatigue(teamId, orderedHeroes, roundNo);
   }
 

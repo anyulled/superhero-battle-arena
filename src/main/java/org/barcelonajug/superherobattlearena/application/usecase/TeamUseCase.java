@@ -4,7 +4,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.jspecify.annotations.Nullable;
@@ -59,8 +58,13 @@ public class TeamUseCase {
         log.debug("Using active session - sessionId={}", targetSessionId);
       }
 
-      Team team = new Team(UUID.randomUUID(), targetSessionId, name,
-          OffsetDateTime.now(ZoneId.systemDefault()), members);
+      Team team =
+          new Team(
+              UUID.randomUUID(),
+              targetSessionId,
+              name,
+              OffsetDateTime.now(ZoneId.systemDefault()),
+              members);
       teamRepository.save(team);
 
       MDC.put("teamId", team.teamId().toString());

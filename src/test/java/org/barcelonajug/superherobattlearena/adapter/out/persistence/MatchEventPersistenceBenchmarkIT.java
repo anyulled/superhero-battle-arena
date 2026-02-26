@@ -6,7 +6,6 @@ import static org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapsh
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.junit.jupiter.api.Test;
@@ -18,14 +17,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
-@ActiveProfiles({ "h2", "test" })
+@ActiveProfiles({"h2", "test"})
 @Transactional
 class MatchEventPersistenceBenchmarkIT {
 
   private static final Logger log = LoggerFactory.getLogger(MatchEventPersistenceBenchmarkIT.class);
 
-  @Autowired
-  private MatchEventRepositoryPort matchEventRepository;
+  @Autowired private MatchEventRepositoryPort matchEventRepository;
 
   @Test
   void benchmarkSave() {

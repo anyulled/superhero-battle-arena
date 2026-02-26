@@ -168,7 +168,8 @@ public class AdminUseCase {
   }
 
   @Transactional
-  public Map<String, Object> runAllBattles(final Integer roundNo, @Nullable final UUID sessionIdOrNull) {
+  public Map<String, Object> runAllBattles(
+      final Integer roundNo, @Nullable final UUID sessionIdOrNull) {
     final long startTime = System.currentTimeMillis();
     MDC.put("roundNo", roundNo.toString());
 
