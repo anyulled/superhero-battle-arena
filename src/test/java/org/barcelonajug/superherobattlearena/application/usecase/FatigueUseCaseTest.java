@@ -74,7 +74,7 @@ class FatigueUseCaseTest {
 
     List<HeroUsage> saved = captor.getValue();
     assertThat(saved).hasSize(2);
-    assertThat(saved.getFirst().streak()).isEqualTo(1);
+    assertThat(saved.getFirst().streak()).isOne();
     assertThat(saved.getFirst().multiplier()).isEqualByComparingTo("0.95");
   }
 

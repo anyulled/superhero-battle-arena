@@ -56,7 +56,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
     assertThat(teamBId).isNotNull();
 
     int roundNo = createConstrainedRound(sessionId);
-    assertThat(roundNo).isEqualTo(1);
+    assertThat(roundNo).isOne();
 
     // Team A: Agent Bob (10) + Alfred Pennyworth (17) + Bushido (25) = 62 ≤
     // budgetCap 80
@@ -74,7 +74,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
     int totalMatches = battleResult.get("totalMatches").asInt();
     int successfulSimulations = battleResult.get("successfulSimulations").asInt();
 
-    assertThat(totalMatches).isGreaterThanOrEqualTo(1);
+    assertThat(totalMatches).isPositive();
     assertThat(successfulSimulations).isEqualTo(totalMatches);
 
     List<UUID> completedMatchIds = extractMatchIds(battleResult);

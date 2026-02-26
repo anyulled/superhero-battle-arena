@@ -70,7 +70,7 @@ class RosterUseCaseTest {
     Optional<Hero> hero = rosterUseCase.getHero(1);
     assertThat(hero).isPresent();
     assertThat(hero.get().name()).isEqualTo("A-Bomb");
-    assertThat(hero.get().powerstats().durability()).isGreaterThan(0);
+    assertThat(hero.get().powerstats().durability()).isPositive();
   }
 
   @Test

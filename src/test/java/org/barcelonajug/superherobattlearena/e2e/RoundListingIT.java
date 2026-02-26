@@ -45,7 +45,7 @@ class RoundListingIT extends PostgresTestContainerConfig {
 
     // Create round 1
     int round1 = createRound(sessionId);
-    assertThat(round1).isEqualTo(1);
+    assertThat(round1).isOne();
 
     // Create round 2
     int round2 = createRound(sessionId);

@@ -40,7 +40,7 @@ class TeamUseCaseTest {
 
     List<Team> result = teamUseCase.getTeams(sessionId);
 
-    assertThat(result).isEqualTo(teams);
+    assertThat(result).containsExactlyElementsOf(teams);
   }
 
   @Test
@@ -54,7 +54,7 @@ class TeamUseCaseTest {
 
     List<Team> result = teamUseCase.getTeams(null);
 
-    assertThat(result).isEqualTo(teams);
+    assertThat(result).containsExactlyElementsOf(teams);
   }
 
   @Test

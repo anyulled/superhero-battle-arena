@@ -61,7 +61,7 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
 
     // Step 3: Admin creates round 1 (no constraints)
     int roundNo = createRound(sessionId);
-    assertThat(roundNo).isEqualTo(1);
+    assertThat(roundNo).isOne();
 
     // Step 4: Teams submit their hero squads (5 heroes each)
     // Using hero IDs that exist in seed data (IDs 2 and 9 are skipped in source)
@@ -82,7 +82,7 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
     int totalMatches = battleResult.get("totalMatches").asInt();
 
     // Verify battles were simulated successfully
-    assertThat(totalMatches).isGreaterThanOrEqualTo(1);
+    assertThat(totalMatches).isPositive();
     assertThat(successfulSimulations).isEqualTo(totalMatches);
 
     // Step 8: Verify match has a winner

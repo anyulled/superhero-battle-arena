@@ -60,7 +60,7 @@ class SessionUseCaseTest {
 
     Optional<Session> result = sessionUseCase.getActiveSession();
 
-    assertThat(result).isPresent().contains(active);
+    assertThat(result).isPresent().hasValue(active);
   }
 
   @Test

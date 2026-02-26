@@ -348,8 +348,16 @@
 					<exportDatatables>true</exportDatatables>
 					<activeRecipes>
 						<recipe>org.openrewrite.java.ShortenFullyQualifiedTypeReferences</recipe>
+						<recipe>org.openrewrite.java.testing.assertj.Assertj</recipe>
 					</activeRecipes>
 				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.openrewrite.recipe</groupId>
+						<artifactId>rewrite-testing-frameworks</artifactId>
+						<version>3.28.0</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 
 			<plugin>
