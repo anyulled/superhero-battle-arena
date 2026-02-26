@@ -42,9 +42,7 @@ public class ArchitectureTest {
           .beFreeOfCycles()
           .allowEmptyShould(true);
 
-  /**
-   * @Entity only in persistence adapter, never in domain or application
-   */
+  /** Entity only in persistence adapter, never in domain or application */
   @ArchTest
   static final ArchRule no_entities_in_domain_or_application =
       noClasses()
@@ -87,9 +85,7 @@ public class ArchitectureTest {
           .resideInAnyPackage(ADAPTER_IN_WEB, PORT_IN)
           .allowEmptyShould(true);
 
-  /**
-   * @Entity only in persistence adapter
-   */
+  /** Entity only in persistence adapter */
   @ArchTest
   static final ArchRule entities_are_only_in_persistence_adapter =
       classes()
@@ -99,9 +95,7 @@ public class ArchitectureTest {
           .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE)
           .allowEmptyShould(true);
 
-  /**
-   * @Repository only in adapter.out.persistence (Spring Data / DAOs)
-   */
+  /** Repository only in adapter.out.persistence (Spring Data / DAOs) */
   @ArchTest
   static final ArchRule repositories_are_only_in_persistence_adapter =
       classes()
