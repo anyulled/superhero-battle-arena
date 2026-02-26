@@ -1,7 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.TeamEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,5 +14,5 @@ public interface SpringDataTeamRepository extends JpaRepository<TeamEntity, UUID
 
   Optional<TeamEntity> findByName(String name);
 
-  java.util.List<TeamEntity> findBySessionId(UUID sessionId);
+  List<TeamEntity> findBySessionId(UUID sessionId);
 }

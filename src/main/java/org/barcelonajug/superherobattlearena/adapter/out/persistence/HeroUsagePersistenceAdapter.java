@@ -1,7 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.HeroUsageMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataHeroUsageRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
@@ -22,9 +24,9 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
 
   @Override
   public HeroUsage save(HeroUsage heroUsage) {
-    return java.util.Objects.requireNonNull(
+    return Objects.requireNonNull(
         mapper.toDomain(
-            repository.save(java.util.Objects.requireNonNull(mapper.toEntity(heroUsage)))));
+            repository.save(Objects.requireNonNull(mapper.toEntity(heroUsage)))));
   }
 
   @Override
@@ -32,8 +34,8 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
     repository.saveAll(
         heroUsages.stream()
             .map(mapper::toEntity)
-            .filter(java.util.Objects::nonNull)
-            .map(java.util.Objects::requireNonNull)
+            .filter(Objects::nonNull)
+            .map(Objects::requireNonNull)
             .toList());
   }
 
@@ -41,8 +43,8 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
   public List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
     return repository.findByTeamIdAndRoundNo(teamId, roundNo).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -50,8 +52,8 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
   public List<HeroUsage> findByTeamId(UUID teamId) {
     return repository.findByTeamId(teamId).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 

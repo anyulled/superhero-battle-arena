@@ -1,8 +1,10 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SubmissionMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataSubmissionRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
@@ -23,9 +25,9 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
 
   @Override
   public Submission save(Submission submission) {
-    return java.util.Objects.requireNonNull(
+    return Objects.requireNonNull(
         mapper.toDomain(
-            repository.save(java.util.Objects.requireNonNull(mapper.toEntity(submission)))));
+            repository.save(Objects.requireNonNull(mapper.toEntity(submission)))));
   }
 
   @Override
@@ -37,8 +39,8 @@ public class SubmissionPersistenceAdapter implements SubmissionRepositoryPort {
   public List<Submission> findByRoundNo(Integer roundNo) {
     return repository.findByRoundNo(roundNo).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 

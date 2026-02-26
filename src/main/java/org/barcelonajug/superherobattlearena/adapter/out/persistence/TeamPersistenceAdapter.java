@@ -1,7 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.TeamMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataTeamRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
@@ -40,12 +42,12 @@ public class TeamPersistenceAdapter implements TeamRepositoryPort {
   }
 
   @Override
-  public java.util.List<Team> findAll() {
+  public List<Team> findAll() {
     return repository.findAll().stream().map(mapper::toDomain).toList();
   }
 
   @Override
-  public java.util.List<Team> findBySessionId(UUID sessionId) {
+  public List<Team> findBySessionId(UUID sessionId) {
     return repository.findBySessionId(sessionId).stream().map(mapper::toDomain).toList();
   }
 

@@ -1,7 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SuperheroMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataSuperheroRepository;
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
@@ -25,8 +27,8 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
   public List<Hero> findAll() {
     return repository.findAll().stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -34,8 +36,8 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
   public List<Hero> findAll(int page, int size) {
     return repository.findAll(PageRequest.of(page, size)).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -48,8 +50,8 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
   public List<Hero> findByIds(List<Integer> ids) {
     return repository.findAllById(ids).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -57,8 +59,8 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
   public List<Hero> searchByName(String term) {
     return repository.searchByName(term).stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
@@ -67,20 +69,20 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
     if (alignment != null && publisher != null) {
       return repository.findByAlignmentAndPublisher(alignment, publisher).stream()
           .map(mapper::toDomain)
-          .filter(java.util.Objects::nonNull)
-          .map(java.util.Objects::requireNonNull)
+          .filter(Objects::nonNull)
+          .map(Objects::requireNonNull)
           .toList();
     } else if (alignment != null) {
       return repository.findByAlignment(alignment).stream()
           .map(mapper::toDomain)
-          .filter(java.util.Objects::nonNull)
-          .map(java.util.Objects::requireNonNull)
+          .filter(Objects::nonNull)
+          .map(Objects::requireNonNull)
           .toList();
     } else if (publisher != null) {
       return repository.findByPublisher(publisher).stream()
           .map(mapper::toDomain)
-          .filter(java.util.Objects::nonNull)
-          .map(java.util.Objects::requireNonNull)
+          .filter(Objects::nonNull)
+          .map(Objects::requireNonNull)
           .toList();
     } else {
       return findAll();

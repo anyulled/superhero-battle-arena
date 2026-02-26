@@ -1,6 +1,10 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SessionEntity;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SessionMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SessionRepository;
@@ -21,9 +25,9 @@ public class SessionPersistenceAdapter implements SessionRepositoryPort {
 
   @Override
   public Session save(Session session) {
-    SessionEntity entity = java.util.Objects.requireNonNull(mapper.toEntity(session));
+    SessionEntity entity = Objects.requireNonNull(mapper.toEntity(session));
     SessionEntity savedEntity = repository.save(entity);
-    return java.util.Objects.requireNonNull(mapper.toDomain(savedEntity));
+    return Objects.requireNonNull(mapper.toDomain(savedEntity));
   }
 
   @Override
@@ -32,16 +36,16 @@ public class SessionPersistenceAdapter implements SessionRepositoryPort {
   }
 
   @Override
-  public java.util.List<Session> findAll() {
+  public List<Session> findAll() {
     return repository.findAll().stream()
         .map(mapper::toDomain)
-        .filter(java.util.Objects::nonNull)
-        .map(java.util.Objects::requireNonNull)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
         .toList();
   }
 
   @Override
-  public Optional<Session> findById(java.util.UUID id) {
+  public Optional<Session> findById(UUID id) {
     return repository.findById(id).map(mapper::toDomain);
   }
 

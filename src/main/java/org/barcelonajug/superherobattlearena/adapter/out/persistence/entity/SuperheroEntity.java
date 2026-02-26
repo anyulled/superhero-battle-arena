@@ -1,5 +1,9 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.entity;
 
+import java.time.OffsetDateTime;
+
+import org.jspecify.annotations.Nullable;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -8,8 +12,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
-import org.jspecify.annotations.Nullable;
 
 @Entity
 @Table(name = "superheroes")
@@ -57,7 +59,8 @@ public class SuperheroEntity {
   @PrimaryKeyJoinColumn
   private @Nullable SuperheroImagesEntity images;
 
-  public SuperheroEntity() {}
+  public SuperheroEntity() {
+  }
 
   public Integer getId() {
     return id;
@@ -107,7 +110,7 @@ public class SuperheroEntity {
     this.createdAt = createdAt;
   }
 
-  public SuperheroPowerStatsEntity getPowerStats() {
+  public @Nullable SuperheroPowerStatsEntity getPowerStats() {
     return powerStats;
   }
 
@@ -118,7 +121,7 @@ public class SuperheroEntity {
     }
   }
 
-  public SuperheroAppearanceEntity getAppearance() {
+  public @Nullable SuperheroAppearanceEntity getAppearance() {
     return appearance;
   }
 
@@ -129,7 +132,7 @@ public class SuperheroEntity {
     }
   }
 
-  public SuperheroBiographyEntity getBiography() {
+  public @Nullable SuperheroBiographyEntity getBiography() {
     return biography;
   }
 
@@ -140,7 +143,7 @@ public class SuperheroEntity {
     }
   }
 
-  public SuperheroImagesEntity getImages() {
+  public @Nullable SuperheroImagesEntity getImages() {
     return images;
   }
 
