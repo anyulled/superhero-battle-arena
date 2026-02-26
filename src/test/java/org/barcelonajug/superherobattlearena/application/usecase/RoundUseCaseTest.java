@@ -217,7 +217,7 @@ class RoundUseCaseTest {
       List<Submission> result = roundUseCase.getSubmissions(ROUND_NO, SESSION_ID);
 
       assertThat(result).hasSize(1);
-      assertThat(result.get(0).getTeamId()).isEqualTo(teamA.teamId());
+      assertThat(result.getFirst().getTeamId()).isEqualTo(teamA.teamId());
     }
 
     @Test

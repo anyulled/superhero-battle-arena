@@ -231,7 +231,7 @@ public class BattleEngineUseCase {
         targets.stream().filter(h -> h.currentHp == minHp).toList();
 
     if (lowestHpTargets.size() == 1) {
-      return lowestHpTargets.get(0);
+      return lowestHpTargets.getFirst();
     }
 
     return lowestHpTargets.get(random.nextInt(lowestHpTargets.size()));

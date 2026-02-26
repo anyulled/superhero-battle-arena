@@ -11,17 +11,21 @@ import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositor
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
+import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc
-@org.springframework.transaction.annotation.Transactional(
-    propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
+@Transactional(propagation = Propagation.NOT_SUPPORTED)
 class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
 
   private static final Logger log = LoggerFactory.getLogger(AdminControllerPerformanceIT.class);
@@ -31,9 +35,9 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
   @Autowired private MockMvc mockMvc;
   @Autowired private MatchRepositoryPort matchRepository;
   @Autowired private RoundRepositoryPort roundRepository;
-  @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+  @Autowired private JdbcTemplate jdbcTemplate;
 
-  @org.junit.jupiter.api.AfterEach
+  @AfterEach
   void tearDown() {
     jdbcTemplate.execute("TRUNCATE TABLE matches, rounds CASCADE");
   }
@@ -71,7 +75,7 @@ class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
     round.setRoundId(UUID.randomUUID());
     round.setRoundNo(roundNo);
     round.setSessionId(sessionId);
-    round.setStatus(org.barcelonajug.superherobattlearena.domain.RoundStatus.OPEN);
+    round.setStatus(RoundStatus.OPEN);
     roundRepository.save(round);
   }
 

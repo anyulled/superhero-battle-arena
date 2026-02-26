@@ -38,7 +38,7 @@ public class FatigueUseCase {
         teamId,
         hero.id(),
         currentRoundNo);
-    return applyFatigue(teamId, List.of(hero), currentRoundNo).get(0);
+    return applyFatigue(teamId, List.of(hero), currentRoundNo).getFirst();
   }
 
   private Hero applyFatigueWithHistory(

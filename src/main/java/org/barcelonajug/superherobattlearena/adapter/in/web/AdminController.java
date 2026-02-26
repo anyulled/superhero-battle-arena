@@ -18,6 +18,7 @@ import org.barcelonajug.superherobattlearena.domain.Session;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -117,8 +118,7 @@ public class AdminController {
   @ApiResponse(responseCode = "200", description = "Match completed")
   @PostMapping("/matches/{matchId}/run")
   public ResponseEntity<String> runMatch(
-      @Parameter(description = "ID of the match to run", required = true)
-          @org.springframework.web.bind.annotation.PathVariable
+      @Parameter(description = "ID of the match to run", required = true) @PathVariable
           UUID matchId) {
     return ResponseEntity.ok("Match completed. Winner: " + adminUseCase.runMatch(matchId));
   }

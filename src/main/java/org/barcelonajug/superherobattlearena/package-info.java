@@ -1,2 +1,4 @@
-@org.jspecify.annotations.NullMarked
+@NullMarked
 package org.barcelonajug.superherobattlearena;
+
+import org.jspecify.annotations.NullMarked;

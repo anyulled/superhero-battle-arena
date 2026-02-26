@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
@@ -138,7 +139,7 @@ class RoundListingIT extends PostgresTestContainerConfig {
             .andReturn();
 
     JsonNode rounds = objectMapper.readTree(result.getResponse().getContentAsString());
-    return java.util.stream.StreamSupport.stream(rounds.spliterator(), false)
+    return StreamSupport.stream(rounds.spliterator(), false)
         .map(r -> r.get("roundNo").asInt())
         .toList();
   }

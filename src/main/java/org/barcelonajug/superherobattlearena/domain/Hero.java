@@ -16,21 +16,16 @@ public record Hero(
     @Schema(description = "Power statistics of the hero") PowerStats powerstats,
     @Schema(description = "Combat role of the hero", example = "Tank") String role,
     @Schema(description = "Cost of selecting this hero", example = "15") Integer cost,
-    @Schema(description = "Alignment of the hero", example = "good")
-        @org.jspecify.annotations.Nullable
-        String alignment,
+    @Schema(description = "Alignment of the hero", example = "good") @Nullable String alignment,
     @Schema(description = "Publisher of the hero's comics", example = "DC Comics")
-        @org.jspecify.annotations.Nullable
-        String publisher,
-    @Schema(description = "Physical appearance details") @org.jspecify.annotations.Nullable
-        Appearance appearance,
-    @Schema(description = "Biographical details") @org.jspecify.annotations.Nullable
-        Biography biography,
+        @Nullable String publisher,
+    @Schema(description = "Physical appearance details") @Nullable Appearance appearance,
+    @Schema(description = "Biographical details") @Nullable Biography biography,
     @Schema(
             description = "List of tags associated with the hero",
             example = "[\"flying\", \"super-strength\"]")
         List<String> tags,
-    @Schema(description = "URLs to hero images") @org.jspecify.annotations.Nullable Images images) {
+    @Schema(description = "URLs to hero images") @Nullable Images images) {
   /** Constructs a new Hero with default values if needed. */
   public Hero {
     if (role == null) {

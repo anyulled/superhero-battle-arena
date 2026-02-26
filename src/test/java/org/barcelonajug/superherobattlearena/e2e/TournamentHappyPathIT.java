@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
 import net.datafaker.Faker;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
@@ -236,7 +237,7 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
     if (arrayNode == null || !arrayNode.isArray()) {
       return Collections.emptyList();
     }
-    return java.util.stream.StreamSupport.stream(arrayNode.spliterator(), false)
+    return StreamSupport.stream(arrayNode.spliterator(), false)
         .map(JsonNode::asText)
         .map(UUID::fromString)
         .toList();

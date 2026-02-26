@@ -74,8 +74,8 @@ class FatigueUseCaseTest {
 
     List<HeroUsage> saved = captor.getValue();
     assertThat(saved).hasSize(2);
-    assertThat(saved.get(0).streak()).isEqualTo(1);
-    assertThat(saved.get(0).multiplier()).isEqualByComparingTo("0.95");
+    assertThat(saved.getFirst().streak()).isEqualTo(1);
+    assertThat(saved.getFirst().multiplier()).isEqualByComparingTo("0.95");
   }
 
   @Test
@@ -93,8 +93,8 @@ class FatigueUseCaseTest {
 
     List<HeroUsage> saved = captor.getValue();
     assertThat(saved).hasSize(1);
-    assertThat(saved.get(0).streak()).isEqualTo(2);
-    assertThat(saved.get(0).multiplier()).isEqualByComparingTo("0.90");
+    assertThat(saved.getFirst().streak()).isEqualTo(2);
+    assertThat(saved.getFirst().multiplier()).isEqualByComparingTo("0.90");
   }
 
   @Test
@@ -110,7 +110,7 @@ class FatigueUseCaseTest {
     List<Hero> results = fatigueUseCase.applyFatigue(teamId, List.of(h1, h2), 1);
 
     assertThat(results).hasSize(2);
-    assertThat(results.get(0).powerstats().durability()).isEqualTo(95);
+    assertThat(results.getFirst().powerstats().durability()).isEqualTo(95);
     assertThat(results.get(1).powerstats().durability()).isEqualTo(200); // No streak for h2
   }
 

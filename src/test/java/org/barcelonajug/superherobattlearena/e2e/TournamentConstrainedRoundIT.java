@@ -225,7 +225,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
     if (arrayNode == null || !arrayNode.isArray()) {
       return Collections.emptyList();
     }
-    return java.util.stream.StreamSupport.stream(arrayNode.spliterator(), false)
+    return StreamSupport.stream(arrayNode.spliterator(), false)
         .map(JsonNode::asText)
         .map(UUID::fromString)
         .toList();

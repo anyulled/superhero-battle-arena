@@ -10,6 +10,7 @@ import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepos
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 class RosterUseCaseTest {
 
@@ -82,7 +83,7 @@ class RosterUseCaseTest {
   void shouldGetAllHeroesWithPagination() {
     when(repository.findAll(0, 10)).thenReturn(List.of());
     assertThat(rosterUseCase.getAllHeroes(0, 10)).isEmpty();
-    org.mockito.Mockito.verify(repository).findAll(0, 10);
+    Mockito.verify(repository).findAll(0, 10);
   }
 
   @Test
@@ -90,7 +91,7 @@ class RosterUseCaseTest {
     List<Integer> ids = List.of(1, 2);
     when(repository.findByIds(ids)).thenReturn(List.of());
     assertThat(rosterUseCase.getHeroes(ids)).isEmpty();
-    org.mockito.Mockito.verify(repository).findByIds(ids);
+    Mockito.verify(repository).findByIds(ids);
   }
 
   @Test
@@ -98,7 +99,7 @@ class RosterUseCaseTest {
     String term = "Spider";
     when(repository.searchByName(term)).thenReturn(List.of());
     assertThat(rosterUseCase.searchHeroes(term)).isEmpty();
-    org.mockito.Mockito.verify(repository).searchByName(term);
+    Mockito.verify(repository).searchByName(term);
   }
 
   @Test
@@ -107,13 +108,13 @@ class RosterUseCaseTest {
     String publisher = "Marvel Comics";
     when(repository.findByAlignmentAndPublisher(alignment, publisher)).thenReturn(List.of());
     assertThat(rosterUseCase.filterHeroes(alignment, publisher)).isEmpty();
-    org.mockito.Mockito.verify(repository).findByAlignmentAndPublisher(alignment, publisher);
+    Mockito.verify(repository).findByAlignmentAndPublisher(alignment, publisher);
   }
 
   @Test
   void shouldCountHeroes() {
     when(repository.count()).thenReturn(100L);
     assertThat(rosterUseCase.countHeroes()).isEqualTo(100L);
-    org.mockito.Mockito.verify(repository).count();
+    Mockito.verify(repository).count();
   }
 }

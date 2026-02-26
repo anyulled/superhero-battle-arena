@@ -20,6 +20,7 @@ import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepo
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
+import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
@@ -75,8 +76,7 @@ class MatchUseCaseTest {
     when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(new ArrayList<>());
-    when(matchRepository.save(any(org.barcelonajug.superherobattlearena.domain.Match.class)))
-        .thenAnswer(i -> i.getArgument(0));
+    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
 
     // When: autoMatch is called
     List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
@@ -137,7 +137,7 @@ class MatchUseCaseTest {
         Match.builder()
             .matchId(UUID.randomUUID())
             .sessionId(sessionId)
-            .teamA(submissions.get(0).getTeamId())
+            .teamA(submissions.getFirst().getTeamId())
             .teamB(submissions.get(1).getTeamId())
             .roundNo(roundNo)
             .status(MatchStatus.PENDING)
@@ -160,9 +160,9 @@ class MatchUseCaseTest {
     List<Match> newMatches = matchCaptor.getAllValues();
 
     for (Match match : newMatches) {
-      assertThat(match.getTeamA()).isNotEqualTo(submissions.get(0).getTeamId());
+      assertThat(match.getTeamA()).isNotEqualTo(submissions.getFirst().getTeamId());
       assertThat(match.getTeamA()).isNotEqualTo(submissions.get(1).getTeamId());
-      assertThat(match.getTeamB()).isNotEqualTo(submissions.get(0).getTeamId());
+      assertThat(match.getTeamB()).isNotEqualTo(submissions.getFirst().getTeamId());
       assertThat(match.getTeamB()).isNotEqualTo(submissions.get(1).getTeamId());
     }
   }
@@ -184,8 +184,7 @@ class MatchUseCaseTest {
 
     // Then: 2 matches created (5 teams / 2 = 2, with 1 team left unmatched)
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(2))
-        .save(any(org.barcelonajug.superherobattlearena.domain.Match.class));
+    verify(matchRepository, times(2)).save(any(Match.class));
   }
 
   @Test
@@ -239,8 +238,7 @@ class MatchUseCaseTest {
     when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
         .thenReturn(simResult);
 
-    org.barcelonajug.superherobattlearena.domain.Hero mockHero =
-        mock(org.barcelonajug.superherobattlearena.domain.Hero.class);
+    Hero mockHero = mock(Hero.class);
     when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
     when(mockHero.id()).thenReturn(1);
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
@@ -299,8 +297,7 @@ class MatchUseCaseTest {
         .thenReturn(simResult);
 
     // Mock heroes for buildBattleTeam
-    org.barcelonajug.superherobattlearena.domain.Hero mockHero =
-        mock(org.barcelonajug.superherobattlearena.domain.Hero.class);
+    Hero mockHero = mock(Hero.class);
     when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
     when(mockHero.id()).thenReturn(1);
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
@@ -342,8 +339,8 @@ class MatchUseCaseTest {
     UUID teamB = UUID.randomUUID();
     Integer roundNo = 1;
 
-    org.barcelonajug.superherobattlearena.domain.Match match =
-        org.barcelonajug.superherobattlearena.domain.Match.builder()
+    Match match =
+        Match.builder()
             .matchId(matchId)
             .sessionId(sessionId)
             .teamA(teamA)
@@ -367,16 +364,14 @@ class MatchUseCaseTest {
     when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
         .thenReturn(simResult);
 
-    org.barcelonajug.superherobattlearena.domain.Hero mockHero =
-        mock(org.barcelonajug.superherobattlearena.domain.Hero.class);
+    Hero mockHero = mock(Hero.class);
     when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
     when(mockHero.id()).thenReturn(1);
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenReturn(List.of(mockHero));
 
     // One more pending match exists
-    when(matchRepository.findPendingMatches(roundNo, sessionId))
-        .thenReturn(List.of(new org.barcelonajug.superherobattlearena.domain.Match()));
+    when(matchRepository.findPendingMatches(roundNo, sessionId)).thenReturn(List.of(new Match()));
 
     // When
     matchUseCase.runMatch(matchId);
@@ -452,15 +447,13 @@ class MatchUseCaseTest {
   void getBattleTeam_shouldDelegateToBuildBattleTeam() {
     UUID teamId = UUID.randomUUID();
     DraftSubmission sub = new DraftSubmission(List.of(1), "Sub");
-    org.barcelonajug.superherobattlearena.domain.Hero mockHero =
-        mock(org.barcelonajug.superherobattlearena.domain.Hero.class);
+    Hero mockHero = mock(Hero.class);
     when(mockHero.id()).thenReturn(1);
     when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenReturn(List.of(mockHero));
 
-    List<org.barcelonajug.superherobattlearena.domain.Hero> result =
-        matchUseCase.getBattleTeam(teamId, sub, 1);
+    List<Hero> result = matchUseCase.getBattleTeam(teamId, sub, 1);
 
     assertThat(result).hasSize(1);
   }
@@ -510,8 +503,7 @@ class MatchUseCaseTest {
   void buildBattleTeam_shouldThrowExceptionWhenHeroNotFoundInRoster() {
     UUID teamId = UUID.randomUUID();
     DraftSubmission sub = new DraftSubmission(List.of(1, 2), "Sub");
-    org.barcelonajug.superherobattlearena.domain.Hero mockHero1 =
-        mock(org.barcelonajug.superherobattlearena.domain.Hero.class);
+    Hero mockHero1 = mock(Hero.class);
     when(mockHero1.id()).thenReturn(1);
     // Only hero 1 is found, hero 2 is missing
     when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero1));
