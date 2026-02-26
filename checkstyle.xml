@@ -9,6 +9,13 @@
     <property name="fileExtensions" value="java, xml, properties"/>
 
     <module name="TreeWalker">
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="noFullyQualifiedNames"/>
+            <property name="format" value="^(?!\s*(import|package) )(?=.*org\.barcelonajug\.superherobattlearena\.(?!adapter\.out\.persistence\.entity\.MatchEntity|domain\.)[a-z0-9.]+\.[A-Z][a-zA-Z0-9]+).*"/>
+            <property name="message" value="Do not use fully qualified class names. Import the class instead."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
         <!-- Enforce static imports for common test libraries in test classes -->
         <module name="RegexpSinglelineJava">
             <property name="id" value="requireStaticImportMockito"/>
