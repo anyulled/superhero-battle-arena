@@ -1,0 +1,22 @@
+name: Deploy to Clever Cloud
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Create or Update Clever Cloud App
+        uses: CleverCloud/clever-cloud-review-app@v2.0.2
+        env:
+          CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+          CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+          ORGA_ID: ${{ secrets.ORGA_ID }}
+        with:
+          type: 'maven'
