@@ -11,8 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,9 +30,12 @@ import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
-import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
+import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
+import org.barcelonajug.superherobattlearena.domain.mother.SessionMother;
+import org.barcelonajug.superherobattlearena.domain.mother.SubmissionMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -125,24 +126,30 @@ class AdminUseCaseTest {
 
   @Test
   void listSessions_shouldReturnAllSessions() {
-    adminUseCase.listSessions();
+    Session session = SessionMother.anActiveSession();
+    when(sessionRepository.findAll()).thenReturn(List.of(session));
+
+    List<Session> result = adminUseCase.listSessions();
+
+    assertThat(result).hasSize(1).containsExactly(session);
     verify(sessionRepository).findAll();
   }
 
   @Test
   void createRound_shouldSaveNewRoundWithCalculatedNumber() {
     UUID sessionId = UUID.randomUUID();
-    RoundSpec spec =
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA");
+    RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
     when(roundRepository.findMaxRoundNo(sessionId)).thenReturn(Optional.of(1));
     when(sessionRepository.findById(sessionId))
-        .thenReturn(Optional.of(new Session(sessionId, OffsetDateTime.now(ZoneOffset.UTC), true)));
+        .thenReturn(Optional.of(SessionMother.anActiveSession(sessionId)));
 
-    adminUseCase.createRound(sessionId, spec);
+    Integer roundId = adminUseCase.createRound(sessionId, spec);
+    assertThat(roundId).isEqualTo(2);
 
     ArgumentCaptor<Round> captor = ArgumentCaptor.forClass(Round.class);
     verify(roundRepository).save(captor.capture());
     assertThat(captor.getValue().getRoundNo()).isEqualTo(2);
+    assertThat(captor.getValue().getSeed()).isNotNull();
   }
 
   @Test
@@ -183,26 +190,16 @@ class AdminUseCaseTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
     UUID matchId = UUID.randomUUID();
-    Match match =
-        Match.builder()
-            .matchId(matchId)
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(1)
-            .status(MatchStatus.PENDING)
-            .build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+    match.setMatchId(matchId);
 
     when(matchRepository.findAll()).thenReturn(List.of(match));
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
 
-    Submission subA =
-        Submission.builder().submissionJson(new DraftSubmission(List.of(1), "Sub")).build();
-    Submission subB =
-        Submission.builder().submissionJson(new DraftSubmission(List.of(2), "Sub")).build();
+    Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+    Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(2));
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
     when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
 
@@ -229,22 +226,35 @@ class AdminUseCaseTest {
     when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
         .thenReturn(simResult);
 
-    adminUseCase.runAllBattles(1, sessionId);
+    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
 
     verify(matchRepository).save(match);
     assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
+    assertThat(result)
+        .containsEntry("total", 1)
+        .containsEntry("successCount", 1)
+        .containsKey("durationMs");
+
+    Long duration = (Long) result.get("durationMs");
+    assertThat(duration).isNotNull();
+    assertThat(duration).isGreaterThanOrEqualTo(0L);
+
+    @SuppressWarnings("unchecked")
+    List<UUID> matchIds = (List<UUID>) result.get("matchIds");
+    assertThat(matchIds).hasSize(1).contains(matchId);
+
+    verify(fatigueUseCase).recordUsage(teamA, 1, List.of(1));
+    verify(fatigueUseCase).recordUsage(teamB, 1, List.of(2));
   }
 
   @Test
   void runAllBattles_shouldHandleMissingSubmissions() {
     UUID sessionId = UUID.randomUUID();
-    Match match =
-        Match.builder().sessionId(sessionId).roundNo(1).status(MatchStatus.PENDING).build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
 
     when(matchRepository.findAll()).thenReturn(List.of(match));
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.empty());
 
@@ -255,14 +265,12 @@ class AdminUseCaseTest {
   @Test
   void runAllBattles_shouldHandleExceptionDuringSimulation() {
     UUID sessionId = UUID.randomUUID();
-    Match match =
-        Match.builder().sessionId(sessionId).roundNo(1).status(MatchStatus.PENDING).build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
 
     when(matchRepository.findAll()).thenReturn(List.of(match));
     // Internal Exception in the loop should be swallowed
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(round));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt()))
         .thenThrow(new RuntimeException("Sim Error"));
@@ -277,24 +285,15 @@ class AdminUseCaseTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
     UUID matchId = UUID.randomUUID();
-    Match match =
-        Match.builder()
-            .matchId(matchId)
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(1)
-            .status(MatchStatus.PENDING)
-            .build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+    match.setMatchId(matchId);
 
     when(matchRepository.findAll()).thenReturn(List.of(match));
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
 
-    Submission sub =
-        Submission.builder().submissionJson(new DraftSubmission(List.of(1), "Sub")).build();
+    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
     Hero hero =
         Hero.builder()
@@ -320,7 +319,7 @@ class AdminUseCaseTest {
   void createRound_shouldThrowException_whenSessionInactive() {
     UUID sessionId = UUID.randomUUID();
     when(sessionRepository.findById(sessionId))
-        .thenReturn(Optional.of(new Session(sessionId, OffsetDateTime.now(ZoneOffset.UTC), false)));
+        .thenReturn(Optional.of(SessionMother.anInactiveSession(sessionId)));
     assertThatThrownBy(() -> adminUseCase.createRound(sessionId, mock(RoundSpec.class)))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("not active");
@@ -329,14 +328,12 @@ class AdminUseCaseTest {
   @Test
   void runAllBattles_shouldInferSessionFromPendingMatches_whenSessionIdIsNull() {
     UUID sessionId = UUID.randomUUID();
-    Match match =
-        Match.builder().sessionId(sessionId).roundNo(1).status(MatchStatus.PENDING).build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
     when(matchRepository.findAll()).thenReturn(List.of(match));
     // Should find sessionId from match
 
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
 
     adminUseCase.runAllBattles(1, null);
@@ -347,8 +344,7 @@ class AdminUseCaseTest {
   @Test
   void runAllBattles_shouldThrowException_whenRoundNotFound() {
     UUID sessionId = UUID.randomUUID();
-    Match match =
-        Match.builder().sessionId(sessionId).roundNo(1).status(MatchStatus.PENDING).build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
     when(matchRepository.findAll()).thenReturn(List.of(match));
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.empty());
 
@@ -362,23 +358,14 @@ class AdminUseCaseTest {
     UUID sessionId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
-    Match match =
-        Match.builder()
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(1)
-            .status(MatchStatus.PENDING)
-            .build();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
     when(matchRepository.findAll()).thenReturn(List.of(match));
 
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Desc", 5, 100, Map.of(), Map.of(), List.of(), Map.of(), "ARENA"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
 
-    Submission sub =
-        Submission.builder().submissionJson(new DraftSubmission(List.of(1), "Sub")).build();
+    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
     when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
         .thenThrow(new IllegalArgumentException("Hero not found"));

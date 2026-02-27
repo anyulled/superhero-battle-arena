@@ -5,11 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
+import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
 import org.junit.jupiter.api.Test;
 
 class DomainCoverageTest {
@@ -39,8 +40,7 @@ class DomainCoverageTest {
   void testRound() {
     UUID roundId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
-    RoundSpec spec =
-        new RoundSpec("desc", 5, 1000, Map.of(), Map.of(), List.of(), Map.of(), "ARENA_1");
+    RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
 
     Round round = new Round();
     round.setRoundId(roundId);
@@ -103,17 +103,8 @@ class DomainCoverageTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
 
-    Match match =
-        Match.builder()
-            .matchId(matchId)
-            .sessionId(sessionId)
-            .roundNo(1)
-            .teamA(teamA)
-            .teamB(teamB)
-            .status(MatchStatus.PENDING)
-            .winnerTeam(teamA)
-            .resultJson(null)
-            .build();
+    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, 1, MatchStatus.PENDING);
+    match.setWinnerTeam(teamA);
 
     assertThat(match.getMatchId()).isEqualTo(matchId);
     assertThat(match.getSessionId()).isEqualTo(sessionId);

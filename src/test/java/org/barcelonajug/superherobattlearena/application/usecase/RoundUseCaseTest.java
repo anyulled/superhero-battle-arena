@@ -10,7 +10,6 @@ import static org.mockito.BDDMockito.then;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
@@ -22,6 +21,7 @@ import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.Team;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -249,9 +249,7 @@ class RoundUseCaseTest {
     round.setRoundNo(ROUND_NO);
     round.setSessionId(SESSION_ID);
     round.setStatus(RoundStatus.OPEN);
-    round.setSpecJson(
-        new RoundSpec(
-            "Test Round", teamSize, 1000, Map.of(), Map.of(), List.of(), Map.of(), "ARENA_1"));
+    round.setSpecJson(RoundSpecMother.aRoundSpecWithTeamSize(teamSize));
     return round;
   }
 

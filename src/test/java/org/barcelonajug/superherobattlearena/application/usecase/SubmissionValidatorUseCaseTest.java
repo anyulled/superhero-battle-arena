@@ -21,6 +21,7 @@ import org.barcelonajug.superherobattlearena.domain.exception.RoleCompositionExc
 import org.barcelonajug.superherobattlearena.domain.exception.TeamSizeException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +34,6 @@ class SubmissionValidatorUseCaseTest {
   void setUp() {
     rosterUseCase = mock(RosterUseCase.class);
 
-    // Create validation rules
     List<ValidationRule> validationRules =
         List.of(
             new CostValidationRule(),
@@ -43,47 +43,35 @@ class SubmissionValidatorUseCaseTest {
     validator = new SubmissionValidatorUseCase(rosterUseCase, validationRules);
 
     Hero h1 =
-        new Hero(
-            1,
-            "H1",
-            "h1",
-            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
-            "Tank",
-            10,
-            "good",
-            "Marvel",
-            null,
-            null,
-            List.of("A"),
-            new Hero.Images(null, null, null, null));
+        Hero.builder()
+            .id(1)
+            .name("H1")
+            .slug("h1")
+            .role("Tank")
+            .cost(10)
+            .powerstats(Hero.PowerStats.builder().build())
+            .tags(List.of("A"))
+            .build();
     Hero h2 =
-        new Hero(
-            2,
-            "H2",
-            "h2",
-            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
-            "Dps",
-            20,
-            "bad",
-            "DC",
-            null,
-            null,
-            List.of("B"),
-            new Hero.Images(null, null, null, null));
+        Hero.builder()
+            .id(2)
+            .name("H2")
+            .slug("h2")
+            .role("Dps")
+            .cost(20)
+            .powerstats(Hero.PowerStats.builder().build())
+            .tags(List.of("B"))
+            .build();
     Hero h3 =
-        new Hero(
-            3,
-            "H3",
-            "h3",
-            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
-            "Heal",
-            15,
-            "neutral",
-            "Image",
-            null,
-            null,
-            List.of("C", "Banned"),
-            new Hero.Images(null, null, null, null));
+        Hero.builder()
+            .id(3)
+            .name("H3")
+            .slug("h3")
+            .role("Heal")
+            .cost(15)
+            .powerstats(Hero.PowerStats.builder().build())
+            .tags(List.of("C", "Banned"))
+            .build();
 
     List<Hero> allHeroes = List.of(h1, h2, h3);
 
@@ -106,7 +94,7 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailWrongTeamSize() {
-    RoundSpec spec = new RoundSpec("Test", 3, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
+    RoundSpec spec = RoundSpecMother.aStandardRoundSpec(); // Default size is 5
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -116,7 +104,18 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailBudgetExceeded() {
-    RoundSpec spec = new RoundSpec("Test", 2, 25, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
+    // 25 budget, cost is 10 + 20 = 30
+    RoundSpec baseSpec = RoundSpecMother.aStandardRoundSpec();
+    RoundSpec spec =
+        new RoundSpec(
+            baseSpec.description(),
+            2,
+            25,
+            baseSpec.requiredRoles(),
+            baseSpec.maxSameRole(),
+            baseSpec.bannedTags(),
+            baseSpec.tagModifiers(),
+            baseSpec.mapType());
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Cost 10+20=30 > 25
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -175,35 +174,26 @@ class SubmissionValidatorUseCaseTest {
     DraftSubmission submission = new DraftSubmission(List.of(1, 100), "Attack");
 
     Hero h4 =
-        new Hero(
-            100,
-            "H4",
-            "h4",
-            new Hero.PowerStats(0, 0, 0, 0, 0, 0),
-            "Tank",
-            10,
-            "good",
-            "Marvel",
-            null,
-            null,
-            List.of(),
-            new Hero.Images(null, null, null, null));
+        Hero.builder()
+            .id(100)
+            .name("H4")
+            .slug("h4")
+            .role("Tank")
+            .cost(10)
+            .powerstats(Hero.PowerStats.builder().build())
+            .build();
     when(rosterUseCase.getHeroes(List.of(1, 100)))
         .thenReturn(
             List.of(
-                new Hero(
-                    1,
-                    "H1",
-                    "h1",
-                    new Hero.PowerStats(0, 0, 0, 0, 0, 0),
-                    "Tank",
-                    10,
-                    "good",
-                    "Marvel",
-                    null,
-                    null,
-                    List.of("A"),
-                    new Hero.Images(null, null, null, null)),
+                Hero.builder()
+                    .id(1)
+                    .name("H1")
+                    .slug("h1")
+                    .role("Tank")
+                    .cost(10)
+                    .powerstats(Hero.PowerStats.builder().build())
+                    .tags(List.of("A"))
+                    .build(),
                 h4));
 
     assertThatThrownBy(() -> validator.validate(submission, spec))

@@ -318,6 +318,7 @@ public class AdminUseCase {
       result.put("winners", winners);
       result.put("total", pendingMatches.size());
       result.put("successCount", successCount);
+      result.put("durationMs", duration);
       return result;
     } finally {
       MDC.remove("roundNo");

@@ -195,8 +195,7 @@ public class BattleEngineUseCase {
             .reversed());
   }
 
-  private @Nullable UUID checkWinCondition(
-      List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
+  @Nullable UUID checkWinCondition(List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
     boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
     boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
 
@@ -237,7 +236,7 @@ public class BattleEngineUseCase {
     return lowestHpTargets.get(random.nextInt(lowestHpTargets.size()));
   }
 
-  private int calculateDamage(
+  int calculateDamage(
       BattleHeroUseCase attacker, BattleHeroUseCase target, RoundSpec roundSpec, boolean isCrit) {
     double multiplier = 1.0;
 
@@ -262,13 +261,13 @@ public class BattleEngineUseCase {
     return Math.max(1, rawDamage);
   }
 
-  private boolean isTeamWipedOut(List<BattleHeroUseCase> allHeroes, UUID teamId) {
+  boolean isTeamWipedOut(List<BattleHeroUseCase> allHeroes, UUID teamId) {
     return allHeroes.stream()
         .filter(h -> h.teamId.equals(teamId))
         .noneMatch(BattleHeroUseCase::isAlive);
   }
 
-  private static class BattleHeroUseCase {
+  static class BattleHeroUseCase {
     Hero hero;
     UUID teamId;
     int currentHp;

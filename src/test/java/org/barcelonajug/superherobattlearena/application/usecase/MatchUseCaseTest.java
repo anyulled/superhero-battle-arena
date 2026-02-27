@@ -13,7 +13,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
@@ -29,7 +28,8 @@ import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
-import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
+import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
+import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -134,14 +134,13 @@ class MatchUseCaseTest {
 
     // Teams 0 and 1 are already matched
     Match existingMatch =
-        Match.builder()
-            .matchId(UUID.randomUUID())
-            .sessionId(sessionId)
-            .teamA(submissions.getFirst().getTeamId())
-            .teamB(submissions.get(1).getTeamId())
-            .roundNo(roundNo)
-            .status(MatchStatus.PENDING)
-            .build();
+        MatchMother.aMatch(
+            UUID.randomUUID(),
+            sessionId,
+            submissions.getFirst().getTeamId(),
+            submissions.get(1).getTeamId(),
+            roundNo,
+            MatchStatus.PENDING);
 
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(List.of(existingMatch));
@@ -210,14 +209,7 @@ class MatchUseCaseTest {
     Integer roundNo = 1;
 
     Match match =
-        Match.builder()
-            .matchId(matchId)
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(roundNo)
-            .status(MatchStatus.PENDING)
-            .build();
+        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
 
@@ -228,8 +220,7 @@ class MatchUseCaseTest {
 
     Round round = new Round();
     round.setSeed(12345L);
-    round.setSpecJson(
-        new RoundSpec("Test", 1, 100, Map.of(), Map.of(), List.of(), Map.of(), "Arena"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
         .thenReturn(Optional.of(round));
 
@@ -270,14 +261,7 @@ class MatchUseCaseTest {
     Integer roundNo = 1;
 
     Match match =
-        Match.builder()
-            .matchId(matchId)
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(roundNo)
-            .status(MatchStatus.PENDING)
-            .build();
+        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, roundNo))
@@ -286,8 +270,7 @@ class MatchUseCaseTest {
         .thenReturn(Optional.of(createSubmission(teamB, roundNo)));
 
     Round round = new Round();
-    round.setSpecJson(
-        new RoundSpec("Test", 1, 100, Map.of(), Map.of(), List.of(), Map.of(), "Arena"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
         .thenReturn(Optional.of(round));
 
@@ -314,13 +297,13 @@ class MatchUseCaseTest {
   void runMatch_shouldThrowException_whenSubmissionsMissing() {
     UUID matchId = UUID.randomUUID();
     Match match =
-        Match.builder()
-            .matchId(matchId)
-            .teamA(UUID.randomUUID())
-            .teamB(UUID.randomUUID())
-            .roundNo(1)
-            .status(MatchStatus.PENDING)
-            .build();
+        MatchMother.aMatch(
+            matchId,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            1,
+            MatchStatus.PENDING);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.empty());
@@ -340,14 +323,7 @@ class MatchUseCaseTest {
     Integer roundNo = 1;
 
     Match match =
-        Match.builder()
-            .matchId(matchId)
-            .sessionId(sessionId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(roundNo)
-            .status(MatchStatus.PENDING)
-            .build();
+        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt()))
@@ -355,8 +331,7 @@ class MatchUseCaseTest {
 
     Round round = new Round();
     round.setStatus(RoundStatus.OPEN);
-    round.setSpecJson(
-        new RoundSpec("Test", 1, 100, Map.of(), Map.of(), List.of(), Map.of(), "Arena"));
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
         .thenReturn(Optional.of(round));
 
@@ -393,7 +368,14 @@ class MatchUseCaseTest {
   @Test
   void runMatch_shouldThrowException_whenMatchAlreadyProcessed() {
     UUID matchId = UUID.randomUUID();
-    Match match = Match.builder().status(MatchStatus.COMPLETED).roundNo(1).build();
+    Match match =
+        MatchMother.aMatch(
+            matchId,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            1,
+            MatchStatus.COMPLETED);
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
 
     assertThatThrownBy(() -> matchUseCase.runMatch(matchId))
@@ -427,7 +409,14 @@ class MatchUseCaseTest {
   @Test
   void runMatchResult_shouldDelegateToRunMatch() {
     UUID matchId = UUID.randomUUID();
-    Match match = Match.builder().matchId(matchId).status(MatchStatus.COMPLETED).roundNo(1).build();
+    Match match =
+        MatchMother.aMatch(
+            matchId,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            1,
+            MatchStatus.COMPLETED);
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
 
     // This will throw IllegalStateException because it's already COMPLETED, but
@@ -481,13 +470,7 @@ class MatchUseCaseTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
     Match match =
-        Match.builder()
-            .matchId(matchId)
-            .teamA(teamA)
-            .teamB(teamB)
-            .roundNo(1)
-            .status(MatchStatus.PENDING)
-            .build();
+        MatchMother.aMatch(matchId, UUID.randomUUID(), teamA, teamB, 1, MatchStatus.PENDING);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1))
