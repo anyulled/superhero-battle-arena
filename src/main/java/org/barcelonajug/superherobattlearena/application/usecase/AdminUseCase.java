@@ -11,8 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -29,7 +27,6 @@ import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
-import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.jspecify.annotations.Nullable;
@@ -245,12 +242,12 @@ public class AdminUseCase {
           }
 
           final List<Hero> teamAHeroes =
-              buildBattleTeam(
+              matchUseCase.getBattleTeam(
                   match.getTeamA(),
                   requireNonNull(subA.get().getSubmissionJson()),
                   match.getRoundNo());
           final List<Hero> teamBHeroes =
-              buildBattleTeam(
+              matchUseCase.getBattleTeam(
                   match.getTeamB(),
                   requireNonNull(subB.get().getSubmissionJson()),
                   match.getRoundNo());
@@ -326,24 +323,5 @@ public class AdminUseCase {
       MDC.remove("roundNo");
       MDC.remove("sessionId");
     }
-  }
-
-  private List<Hero> buildBattleTeam(
-      final UUID teamId, final DraftSubmission submission, final int roundNo) {
-    final List<Hero> fetchedHeroes = rosterUseCase.getHeroes(submission.heroIds());
-    final Map<Integer, Hero> heroMap =
-        fetchedHeroes.stream()
-            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
-
-    final List<Hero> orderedHeroes =
-        submission.heroIds().stream()
-            .map(
-                id ->
-                    Optional.ofNullable(heroMap.get(id))
-                        .orElseThrow(
-                            () -> new IllegalArgumentException("Hero not found in roster: " + id)))
-            .toList();
-
-    return fatigueUseCase.applyFatigue(teamId, orderedHeroes, roundNo);
   }
 }
