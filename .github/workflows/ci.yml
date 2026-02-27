@@ -16,9 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-type: [unit, integration]
+        test-type: [unit, integration, mutation]
     
-    name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests (PostgreSQL)' }}
+    name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || (matrix.test-type == 'integration' && 'Integration Tests (PostgreSQL)' || 'Mutation Tests') }}
 
     permissions:
       contents: read
@@ -44,9 +44,20 @@ jobs:
       if: matrix.test-type == 'integration'
       run: ./mvnw -B clean verify -Ppostgres-tests
 
+    - name: Run Mutation Tests
+      if: matrix.test-type == 'mutation'
+      run: ./mvnw -B org.pitest:pitest-maven:mutationCoverage
+
+    - name: Upload Pitest Report
+      if: matrix.test-type == 'mutation'
+      uses: actions/upload-artifact@v4
+      with:
+        name: pit-report
+        path: target/pit-reports/
+
     - name: Publish Test Report
       uses: dorny/test-reporter@v1
-      if: always()
+      if: always() && matrix.test-type != 'mutation'
       with:
         name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
         path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/TEST-*.xml' || 'target/failsafe-reports/TEST-*.xml' }}
