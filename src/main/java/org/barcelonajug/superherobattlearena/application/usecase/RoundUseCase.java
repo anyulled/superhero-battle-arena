@@ -108,6 +108,8 @@ public class RoundUseCase {
 
       submissionRepository.save(submission);
       log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
+    } catch (IllegalArgumentException | IllegalStateException e) {
+      throw e;
     } catch (Exception e) {
       throw new RuntimeException(
           String.format("Team submission failed - teamId=%s, roundNo=%d", teamId, roundNo), e);

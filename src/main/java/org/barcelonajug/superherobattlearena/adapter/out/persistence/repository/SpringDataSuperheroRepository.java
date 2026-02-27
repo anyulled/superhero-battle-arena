@@ -1,7 +1,6 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.repository;
 
 import java.util.List;
-
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SuperheroEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

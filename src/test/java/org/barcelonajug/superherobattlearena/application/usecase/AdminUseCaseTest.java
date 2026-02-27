@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -69,17 +68,18 @@ class AdminUseCaseTest {
     teamRepository = mock(TeamRepositoryPort.class);
     heroUsageRepository = mock(HeroUsageRepositoryPort.class);
 
-    adminUseCase = new AdminUseCase(
-        sessionRepository,
-        roundRepository,
-        matchUseCase,
-        matchRepository,
-        submissionRepository,
-        matchEventRepository,
-        battleEngineUseCase,
-        fatigueUseCase,
-        teamRepository,
-        heroUsageRepository);
+    adminUseCase =
+        new AdminUseCase(
+            sessionRepository,
+            roundRepository,
+            matchUseCase,
+            matchRepository,
+            submissionRepository,
+            matchEventRepository,
+            battleEngineUseCase,
+            fatigueUseCase,
+            teamRepository,
+            heroUsageRepository);
   }
 
   @Test
@@ -88,14 +88,15 @@ class AdminUseCaseTest {
     adminUseCase.resetDatabase();
 
     // Then
-    InOrder inOrder = inOrder(
-        matchEventRepository,
-        matchRepository,
-        heroUsageRepository,
-        submissionRepository,
-        roundRepository,
-        teamRepository,
-        sessionRepository);
+    InOrder inOrder =
+        inOrder(
+            matchEventRepository,
+            matchRepository,
+            heroUsageRepository,
+            submissionRepository,
+            roundRepository,
+            teamRepository,
+            sessionRepository);
 
     inOrder.verify(matchEventRepository).deleteAll();
     inOrder.verify(matchRepository).deleteAll();
@@ -199,20 +200,22 @@ class AdminUseCaseTest {
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
     when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
 
-    Hero heroA = Hero.builder()
-        .id(1)
-        .name("A")
-        .slug("a")
-        .powerstats(Hero.PowerStats.builder().build())
-        .role("F")
-        .build();
-    Hero heroB = Hero.builder()
-        .id(2)
-        .name("B")
-        .slug("b")
-        .powerstats(Hero.PowerStats.builder().build())
-        .role("F")
-        .build();
+    Hero heroA =
+        Hero.builder()
+            .id(1)
+            .name("A")
+            .slug("a")
+            .powerstats(Hero.PowerStats.builder().build())
+            .role("F")
+            .build();
+    Hero heroB =
+        Hero.builder()
+            .id(2)
+            .name("B")
+            .slug("b")
+            .powerstats(Hero.PowerStats.builder().build())
+            .role("F")
+            .build();
     when(matchUseCase.getBattleTeam(eq(teamA), any(), anyInt())).thenReturn(List.of(heroA));
     when(matchUseCase.getBattleTeam(eq(teamB), any(), anyInt())).thenReturn(List.of(heroB));
 
@@ -289,13 +292,14 @@ class AdminUseCaseTest {
 
     Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    Hero hero = Hero.builder()
-        .id(1)
-        .name("H")
-        .slug("h")
-        .powerstats(Hero.PowerStats.builder().build())
-        .role("F")
-        .build();
+    Hero hero =
+        Hero.builder()
+            .id(1)
+            .name("H")
+            .slug("h")
+            .powerstats(Hero.PowerStats.builder().build())
+            .role("F")
+            .build();
     when(matchUseCase.getBattleTeam(any(), any(), anyInt())).thenReturn(List.of(hero));
 
     SimulationResult simResult = new SimulationResult(null, 10, List.of());
