@@ -90,7 +90,7 @@ $(document).ready(async function () {
 
         // 2b. Load Round Info to get Map Type
         try {
-            const roundSpec = await API.rounds.get(state.match.roundNo);
+            const roundSpec = await API.rounds.get(state.match.roundNo, state.match.sessionId);
             const mapType = roundSpec.mapType;
             let bgImage = 'images/backgrounds/arena_1.png'; // Default
 
@@ -173,9 +173,11 @@ $(document).ready(async function () {
             case 'MATCH_START':
                 log('🏁 ====== MATCH START ======', 'special');
                 break;
+            // Backend emits TURN_START (not ROUND_START)
+            case 'TURN_START':
             case 'ROUND_START':
-                log(`🏁 --- Round ${value} Start ---`, 'special');
-                $('#roundIndicator').text(`ROUND ${value}`).removeClass('hidden');
+                log(`🔄 --- Turn ${value} ---`, 'special');
+                $('#roundIndicator').text(`TURN ${value}`).removeClass('hidden');
                 break;
             case 'ROUND_END':
                 log(`🏆 --- Round ${value} End ---`, 'special');
@@ -183,6 +185,8 @@ $(document).ready(async function () {
             case 'ATTACK_PERFORMED':
                 handleAttack(actorId, targetId, value, description);
                 break;
+            // Backend emits KO (not HERO_KNOCKED_OUT)
+            case 'KO':
             case 'HERO_KNOCKED_OUT':
                 handleKO(targetId);
                 log('☠️ ' + description, 'damage');

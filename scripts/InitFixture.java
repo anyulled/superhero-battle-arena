@@ -73,6 +73,7 @@ class InitFixture implements Callable<Integer> {
     private Faker faker;
     private Set<String> usedHeroNames;
     private String authHeader;
+    private int activeRoundNo;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new InitFixture()).execute(args);
@@ -305,6 +306,7 @@ class InitFixture implements Callable<Integer> {
         if (response.statusCode() >= 400) {
             throw new IllegalStateException("Failed to create Round 1 via Admin API: " + response.statusCode());
         }
+        activeRoundNo = 1;
         logger.info("Round 1 created via Admin API!");
         return response;
     }
@@ -332,7 +334,16 @@ class InitFixture implements Callable<Integer> {
                     "No rounds found for session %s. --skip-round was requested but no rounds exist.", sessionId));
         }
 
-        logger.info("Found {} active round(s).", rounds.size());
+        Map<String, Object> activeRound = rounds.stream()
+                .filter(r -> "OPEN".equals(r.get("status")))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(String.format(
+                        "No active (OPEN) round found for session %s. Found %d round(s), all closed.",
+                        sessionId, rounds.size())));
+
+        activeRoundNo = (Integer) activeRound.get("roundNo");
+        logger.info("Active round found: roundId={}, roundNo={}",
+                activeRound.get("roundId"), activeRoundNo);
         return response;
     }
 
@@ -372,7 +383,14 @@ class InitFixture implements Callable<Integer> {
 
     private HttpResponse<String> submitRoster(final String teamId, final List<Integer> heroIds, final Strategy strategy)
             throws Exception {
-        final String url = baseUrl + "/api/rounds/1/submit?teamId=" + teamId;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(baseUrl);
+        stringBuilder.append("/api/rounds/");
+        stringBuilder.append(activeRoundNo);
+        stringBuilder.append("/submit?teamId=");
+        stringBuilder.append(teamId);
+
+        final String url = stringBuilder.toString();
         final String heroIdsJson = heroIds.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
@@ -457,9 +475,9 @@ class InitFixture implements Callable<Integer> {
             logger.info("Total Teams: {}", teamCount);
         }
         if (!skipRound) {
-            logger.info("Round 1: Created");
+            logger.info("Round {}: Created", activeRoundNo);
         } else {
-            logger.info("Round 1: Verified (Skipped Creation)");
+            logger.info("Round {}: Verified (Skipped Creation)", activeRoundNo);
         }
         if (!skipTeams && !skipSquads) {
             logger.info("Squads Submitted");
