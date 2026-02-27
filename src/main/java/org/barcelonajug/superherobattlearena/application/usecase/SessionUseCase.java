@@ -1,9 +1,11 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.slf4j.Logger;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SessionUseCase {
 
   private static final Logger log = LoggerFactory.getLogger(SessionUseCase.class);
+  private static final String SESSION_ID_KEY = "sessionId";
 
   private final SessionRepositoryPort sessionRepository;
 
@@ -37,12 +40,12 @@ public class SessionUseCase {
               sessionRepository.save(session);
             });
 
-    Session newSession = new Session(UUID.randomUUID(), OffsetDateTime.now(), true);
+    Session newSession = new Session(UUID.randomUUID(), OffsetDateTime.now(ZoneOffset.UTC), true);
     Session savedSession = sessionRepository.save(newSession);
 
-    MDC.put("sessionId", savedSession.getSessionId().toString());
+    MDC.put(SESSION_ID_KEY, savedSession.getSessionId().toString());
     log.info("Created new session: {}", savedSession.getSessionId());
-    MDC.remove("sessionId");
+    MDC.remove(SESSION_ID_KEY);
 
     return savedSession;
   }
@@ -64,7 +67,7 @@ public class SessionUseCase {
   @Transactional
   public Session startSession(UUID sessionId) {
     UUID id = (sessionId != null) ? sessionId : UUID.randomUUID();
-    MDC.put("sessionId", id.toString());
+    MDC.put(SESSION_ID_KEY, id.toString());
 
     try {
       log.info("Starting session - sessionId={}", id);
@@ -79,12 +82,12 @@ public class SessionUseCase {
                 sessionRepository.save(existingSession);
               });
 
-      Session session = new Session(id, OffsetDateTime.now(), true);
+      Session session = new Session(id, OffsetDateTime.now(ZoneOffset.UTC), true);
       Session savedSession = sessionRepository.save(session);
       log.info("Session started successfully - sessionId={}", id);
       return savedSession;
     } finally {
-      MDC.remove("sessionId");
+      MDC.remove(SESSION_ID_KEY);
     }
   }
 

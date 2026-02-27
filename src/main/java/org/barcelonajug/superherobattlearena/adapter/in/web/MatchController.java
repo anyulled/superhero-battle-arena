@@ -1,13 +1,10 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import org.barcelonajug.superherobattlearena.application.usecase.MatchUseCase;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
@@ -18,6 +15,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/matches")
@@ -33,9 +35,7 @@ public class MatchController {
     this.matchUseCase = matchUseCase;
   }
 
-  @Operation(
-      summary = "Get match events",
-      description = "Retrieves a list of all events that occurred during a match.")
+  @Operation(summary = "Get match events", description = "Retrieves a list of all events that occurred during a match.")
   @ApiResponse(responseCode = "200", description = "List of events retrieved")
   @GetMapping("/{matchId}/events")
   public List<MatchEventSnapshot> getEvents(
@@ -49,9 +49,7 @@ public class MatchController {
     return ResponseEntity.ok(matchUseCase.getAllMatches());
   }
 
-  @Operation(
-      summary = "Get match details",
-      description = "Retrieves detailed information about a specific match.")
+  @Operation(summary = "Get match details", description = "Retrieves detailed information about a specific match.")
   @ApiResponse(responseCode = "200", description = "Match details found")
   @ApiResponse(responseCode = "404", description = "Match not found")
   @GetMapping("/{matchId}")
@@ -63,15 +61,12 @@ public class MatchController {
         .orElse(ResponseEntity.notFound().build());
   }
 
-  @Operation(
-      summary = "Stream match events",
-      description = "Streams events for a match using Server-Sent Events (SSE).")
+  @Operation(summary = "Stream match events", description = "Streams events for a match using Server-Sent Events (SSE).")
   @GetMapping("/{matchId}/events/stream")
   public SseEmitter streamEvents(
-      @Parameter(description = "ID of the match to stream", required = true) @PathVariable
-          UUID matchId) {
+      @Parameter(description = "ID of the match to stream", required = true) @PathVariable UUID matchId) {
     SseEmitter emitter = new SseEmitter(600000L); // 10 min timeout
-    executor.submit(
+    var unused = executor.submit(
         () -> {
           try {
             List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);

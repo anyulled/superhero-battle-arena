@@ -229,7 +229,7 @@
 						<arg>-XDcompilePolicy=simple</arg>
 						<arg>--should-stop=ifError=FLOW</arg>
 						<arg>-XDaddTypeAnnotationsToSymbol=true</arg>
-						<arg>-Xplugin:ErrorProne -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=org.barcelonajug.superherobattlearena -XepOpt:NullAway:TreatGeneratedAsUnannotated=true</arg>
+						<arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode -Xep:NullAway:ERROR -XepOpt:NullAway:AnnotatedPackages=org.barcelonajug.superherobattlearena -XepOpt:NullAway:TreatGeneratedAsUnannotated=true</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
 						<arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>

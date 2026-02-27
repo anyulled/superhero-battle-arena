@@ -8,23 +8,26 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 /**
- * Shared PostgreSQL container configuration for integration tests. Extend this class to use a real
+ * Shared PostgreSQL container configuration for integration tests. Extend this
+ * class to use a real
  * PostgreSQL database in tests.
  *
- * <p>The container uses PostgreSQL 16 (matching production docker-compose.yml) and is configured
+ * <p>
+ * The container uses PostgreSQL 16 (matching production docker-compose.yml) and
+ * is configured
  * with container reuse enabled for faster test execution.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles({"postgres-test", "test"})
+@ActiveProfiles({ "postgres-test", "test" })
 @Transactional
 public abstract class PostgresTestContainerConfig {
 
-  static final PostgreSQLContainer<?> postgres =
-      new PostgreSQLContainer<>("postgres:16")
-          .withDatabaseName("superhero_db")
-          .withUsername("super_user")
-          .withPassword("super_password")
-          .withReuse(true);
+  @SuppressWarnings("resource")
+  static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
+      .withDatabaseName("superhero_db")
+      .withUsername("super_user")
+      .withPassword("super_password")
+      .withReuse(true);
 
   static {
     postgres.start();
