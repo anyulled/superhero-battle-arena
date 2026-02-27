@@ -206,8 +206,22 @@ class AdminUseCaseTest {
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
     when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
 
-    Hero heroA = Hero.builder().id(1).name("A").slug("a").powerstats(Hero.PowerStats.builder().build()).role("F").build();
-    Hero heroB = Hero.builder().id(2).name("B").slug("b").powerstats(Hero.PowerStats.builder().build()).role("F").build();
+    Hero heroA =
+        Hero.builder()
+            .id(1)
+            .name("A")
+            .slug("a")
+            .powerstats(Hero.PowerStats.builder().build())
+            .role("F")
+            .build();
+    Hero heroB =
+        Hero.builder()
+            .id(2)
+            .name("B")
+            .slug("b")
+            .powerstats(Hero.PowerStats.builder().build())
+            .role("F")
+            .build();
     when(rosterUseCase.getHeroes(List.of(1))).thenReturn(List.of(heroA));
     when(rosterUseCase.getHeroes(List.of(2))).thenReturn(List.of(heroB));
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
@@ -284,7 +298,14 @@ class AdminUseCaseTest {
     Submission sub =
         Submission.builder().submissionJson(new DraftSubmission(List.of(1), "Sub")).build();
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    Hero hero = Hero.builder().id(1).name("H").slug("h").powerstats(Hero.PowerStats.builder().build()).role("F").build();
+    Hero hero =
+        Hero.builder()
+            .id(1)
+            .name("H")
+            .slug("h")
+            .powerstats(Hero.PowerStats.builder().build())
+            .role("F")
+            .build();
     when(rosterUseCase.getHeroes(anyList())).thenReturn(List.of(hero));
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenAnswer(i -> i.getArgument(1));
