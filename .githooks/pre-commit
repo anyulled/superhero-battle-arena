@@ -1,6 +1,9 @@
 #!/bin/sh
 # pre-commit hook to ensure code is formatted with Spotless
 
+echo "Running OpenRewrite Recipes..."
+./mvnw rewrite:run
+
 echo "Running Spotless Check..."
 ./mvnw spotless:apply
 ./mvnw spotless:check
