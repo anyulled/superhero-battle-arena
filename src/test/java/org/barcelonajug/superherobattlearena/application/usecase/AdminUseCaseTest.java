@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -205,11 +206,11 @@ class AdminUseCaseTest {
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
     when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
 
-    Hero heroA = mock(Hero.class);
-    Hero heroB = mock(Hero.class);
-    when(rosterUseCase.getHero(1)).thenReturn(Optional.of(heroA));
-    when(rosterUseCase.getHero(2)).thenReturn(Optional.of(heroB));
-    when(fatigueUseCase.applyFatigue(any(UUID.class), any(Hero.class), anyInt()))
+    Hero heroA = Hero.builder().id(1).name("A").slug("a").powerstats(Hero.PowerStats.builder().build()).role("F").build();
+    Hero heroB = Hero.builder().id(2).name("B").slug("b").powerstats(Hero.PowerStats.builder().build()).role("F").build();
+    when(rosterUseCase.getHeroes(List.of(1))).thenReturn(List.of(heroA));
+    when(rosterUseCase.getHeroes(List.of(2))).thenReturn(List.of(heroB));
+    when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenAnswer(i -> i.getArgument(1));
 
     SimulationResult simResult = new SimulationResult(teamA, 10, List.of());
@@ -283,8 +284,9 @@ class AdminUseCaseTest {
     Submission sub =
         Submission.builder().submissionJson(new DraftSubmission(List.of(1), "Sub")).build();
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    when(rosterUseCase.getHero(anyInt())).thenReturn(Optional.of(mock(Hero.class)));
-    when(fatigueUseCase.applyFatigue(any(UUID.class), any(Hero.class), anyInt()))
+    Hero hero = Hero.builder().id(1).name("H").slug("h").powerstats(Hero.PowerStats.builder().build()).role("F").build();
+    when(rosterUseCase.getHeroes(anyList())).thenReturn(List.of(hero));
+    when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenAnswer(i -> i.getArgument(1));
 
     SimulationResult simResult = new SimulationResult(null, 10, List.of());
@@ -361,7 +363,7 @@ class AdminUseCaseTest {
     Submission sub =
         Submission.builder().submissionJson(new DraftSubmission(List.of(1), "Sub")).build();
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    when(rosterUseCase.getHero(1)).thenReturn(Optional.empty());
+    when(rosterUseCase.getHeroes(anyList())).thenReturn(List.of());
 
     // Should be swallowed by the loop catch block and return 0 success
     Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);

@@ -57,7 +57,7 @@ public class SecurityConfig {
                     // Any other request requires authentication
                     .anyRequest()
                     .authenticated())
-        .httpBasic(_ -> {})
+        .httpBasic(customizer -> {})
         .csrf(
             csrf ->
                 csrf

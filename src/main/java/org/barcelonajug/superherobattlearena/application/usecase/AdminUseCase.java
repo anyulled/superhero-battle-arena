@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -328,16 +330,20 @@ public class AdminUseCase {
 
   private List<Hero> buildBattleTeam(
       final UUID teamId, final DraftSubmission submission, final int roundNo) {
-    final List<Hero> battleHeroes = new ArrayList<>();
-    for (final Integer heroId : submission.heroIds()) {
-      final Hero baseHero =
-          rosterUseCase
-              .getHero(heroId)
-              .orElseThrow(
-                  () -> new IllegalArgumentException("Hero not found in roster: " + heroId));
-      final Hero fatiguedHero = fatigueUseCase.applyFatigue(teamId, baseHero, roundNo);
-      battleHeroes.add(fatiguedHero);
-    }
-    return battleHeroes;
+    final List<Hero> fetchedHeroes = rosterUseCase.getHeroes(submission.heroIds());
+    final Map<Integer, Hero> heroMap =
+        fetchedHeroes.stream()
+            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
+
+    final List<Hero> orderedHeroes =
+        submission.heroIds().stream()
+            .map(
+                id ->
+                    Optional.ofNullable(heroMap.get(id))
+                        .orElseThrow(
+                            () -> new IllegalArgumentException("Hero not found in roster: " + id)))
+            .toList();
+
+    return fatigueUseCase.applyFatigue(teamId, orderedHeroes, roundNo);
   }
 }

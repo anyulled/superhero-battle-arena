@@ -319,7 +319,7 @@ public class MatchUseCase {
     List<Hero> fetchedHeroes = rosterUseCase.getHeroes(submission.heroIds());
     Map<Integer, Hero> heroMap =
         fetchedHeroes.stream()
-            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, _) -> h1));
+            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
 
     List<Hero> orderedHeroes =
         submission.heroIds().stream()
