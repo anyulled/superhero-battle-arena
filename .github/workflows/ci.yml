@@ -46,7 +46,7 @@ jobs:
 
     - name: Run Mutation Tests
       if: matrix.test-type == 'mutation'
-      run: ./mvnw -B org.pitest:pitest-maven:mutationCoverage
+      run: ./mvnw -B clean test-compile org.pitest:pitest-maven:mutationCoverage
 
     - name: Upload Pitest Report
       if: matrix.test-type == 'mutation'
