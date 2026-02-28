@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload Pitest Report
         if: matrix.test-type == 'mutation'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pit-report
           path: target/pit-reports/
@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload Javadoc
         if: matrix.test-type == 'docs'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: javadoc
           path: target/site/apidocs/
@@ -78,7 +78,7 @@ jobs:
           fail-on-error: false
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always() && (matrix.test-type == 'unit' || matrix.test-type == 'integration')
         with:
           name: jacoco-coverage-${{ matrix.test-type }}
