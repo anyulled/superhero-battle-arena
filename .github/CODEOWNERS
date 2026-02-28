@@ -1,0 +1,18 @@
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# @anyulled will be requested for review when someone opens a pull request.
+*       @anyulled
+
+# Sensitive directories mapping
+# Require owner review for GitHub configurations
+/.github/ @anyulled
+
+# Require owner review for Pom changes (dependencies, build configs)
+/pom.xml @anyulled
+/.mvn/ @anyulled
+
+# Require owner review for security configurations and architectural rules
+/AGENTS.md @anyulled
+/CLAUDE.md @anyulled
+/ARCHITECTURE.md @anyulled
+/SECURITY.md @anyulled
