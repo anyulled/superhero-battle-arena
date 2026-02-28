@@ -75,6 +75,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: markmishaev76/ai-harness-scorecard@v1
         id: scorecard
@@ -83,6 +85,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp scorecard-badge.json /tmp/scorecard-badge.json
+          cp scorecard-report.md /tmp/scorecard-report.md
+          git fetch origin scorecard
+          git checkout scorecard
+          cp /tmp/scorecard-badge.json scorecard-badge.json
+          cp /tmp/scorecard-report.md scorecard-report.md
           git add scorecard-badge.json scorecard-report.md
           git diff --cached --quiet || git commit -m "chore: update scorecard badge and report"
-          git push
+          git push origin scorecard

@@ -3,6 +3,7 @@
 ![Superhero Battle Arena Hero Image](src/main/resources/static/images/hero-image.png)
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/anyulled/superhero-battle-arena)
+[![AI Harness Scorecard](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fanyulled%2Fsuperhero-battle-arena%2Fscorecard%2Fscorecard-badge.json)](https://github.com/anyulled/superhero-battle-arena/blob/scorecard/scorecard-report.md)
 
 | | |
 | :---: | :---: |
