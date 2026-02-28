@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # Maintain dependencies for Maven
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "anyulled"
+    open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: "org.springframework.boot:spring-boot*"
+        update-types: ["version-update:semver-major"]
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    reviewers:
+      - "anyulled"

@@ -1,0 +1,23 @@
+name: Document Verification
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
+
+jobs:
+    verify-docs-sync:
+        name: Verify AGENTS.md and CLAUDE.md are identical
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Check if CLAUDE.md matches AGENTS.md
+              run: |
+                  if ! diff AGENTS.md CLAUDE.md > /dev/null ; then
+                    echo "::error file=CLAUDE.md::CLAUDE.md must be identical to AGENTS.md or properly symlinked"
+                    diff AGENTS.md CLAUDE.md
+                    exit 1
+                  else
+                    echo "AGENTS.md and CLAUDE.md are in sync."
+                  fi
