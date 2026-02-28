@@ -4,15 +4,15 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 
 ## 1. Project Context & Stack
 
-- **Language:** Java 21+ (Java 25 with preview features recommended).
-- **Framework:** Spring Boot 3.x.
+- **Language:** Java 25 with preview features.
+- **Framework:** Spring Boot 4.0.3.
 - **Pattern:** Hexagonal Architecture (Ports and Adapters).
 - **Build Tool:** Maven (`./mvnw`).
 - **Persistence:** PostgreSQL (via Testcontainers for tests, managed via docker-compose locally) & H2 memory fallback.
 
 ## 2. Zero-Tolerance Rules
 
-- **DO NOT** disable ESLint or Checkstyle/Linting rules.
+- **DO NOT** disable Checkstyle/Linting rules.
 - **DO NOT** remove or comment out git hook commands.
 - **NO INLINE COMMENTS**, doc comments, or line comments explaining WHAT the code does.
 - Code MUST be self-documenting through clear variable and function names.
