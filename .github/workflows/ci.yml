@@ -77,6 +77,23 @@ jobs:
           reporter: java-junit
           fail-on-error: false
 
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v4
+        if: always() && (matrix.test-type == 'unit' || matrix.test-type == 'integration')
+        with:
+          name: jacoco-coverage-${{ matrix.test-type }}
+          path: target/site/jacoco/
+
+      - name: Add Coverage PR Comment
+        uses: madrapps/jacoco-report@v1.7.1
+        if: github.event_name == 'pull_request' && (matrix.test-type == 'unit' || matrix.test-type == 'integration') && always()
+        with:
+          paths: target/site/jacoco/jacoco.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          min-coverage-overall: 90
+          min-coverage-changed-files: 90
+          title: "Code Coverage - ${{ matrix.test-type }}"
+
   commitlint:
     runs-on: ubuntu-latest
     steps:
