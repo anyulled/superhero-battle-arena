@@ -18,9 +18,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test-type: [unit, integration, mutation]
+        test-type: [unit, integration, mutation, docs]
 
-    name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || (matrix.test-type == 'integration' && 'Integration Tests (PostgreSQL)' || 'Mutation Tests') }}
+    name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || (matrix.test-type == 'integration' && 'Integration Tests (PostgreSQL)' || (matrix.test-type == 'mutation' && 'Mutation Tests' || 'Javadoc Generation')) }}
 
     permissions:
       contents: read
@@ -57,14 +57,34 @@ jobs:
           name: pit-report
           path: target/pit-reports/
 
+      - name: Generate Javadoc
+        if: matrix.test-type == 'docs'
+        run: ./mvnw -B javadoc:javadoc
+
+      - name: Upload Javadoc
+        if: matrix.test-type == 'docs'
+        uses: actions/upload-artifact@v4
+        with:
+          name: javadoc
+          path: target/site/apidocs/
+
       - name: Publish Test Report
         uses: dorny/test-reporter@v1
-        if: always() && matrix.test-type != 'mutation'
+        if: always() && matrix.test-type != 'mutation' && matrix.test-type != 'docs'
         with:
           name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
           path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/TEST-*.xml' || 'target/failsafe-reports/TEST-*.xml' }}
           reporter: java-junit
           fail-on-error: false
+
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: commitlint
+        uses: wagoid/commitlint-github-action@v6
 
   scorecard:
     runs-on: ubuntu-latest
