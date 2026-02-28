@@ -2,9 +2,11 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+  schedule:
+    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -17,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         test-type: [unit, integration, mutation]
-    
+
     name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || (matrix.test-type == 'integration' && 'Integration Tests (PostgreSQL)' || 'Mutation Tests') }}
 
     permissions:
@@ -27,39 +29,60 @@ jobs:
       statuses: write
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up JDK 25
-      uses: actions/setup-java@v4
-      with:
-        java-version: '25'
-        distribution: 'temurin'
-        cache: 'maven'
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: "maven"
 
-    - name: Run Unit Tests
-      if: matrix.test-type == 'unit'
-      run: ./mvnw -B clean test
+      - name: Run Unit Tests
+        if: matrix.test-type == 'unit'
+        run: ./mvnw -B clean test
 
-    - name: Run Integration Tests with Testcontainers
-      if: matrix.test-type == 'integration'
-      run: ./mvnw -B clean verify -Ppostgres-tests
+      - name: Run Integration Tests with Testcontainers
+        if: matrix.test-type == 'integration'
+        run: ./mvnw -B clean verify -Ppostgres-tests
 
-    - name: Run Mutation Tests
-      if: matrix.test-type == 'mutation'
-      run: ./mvnw -B clean test-compile org.pitest:pitest-maven:mutationCoverage
+      - name: Run Mutation Tests
+        if: matrix.test-type == 'mutation'
+        run: ./mvnw -B clean test-compile org.pitest:pitest-maven:mutationCoverage
 
-    - name: Upload Pitest Report
-      if: matrix.test-type == 'mutation'
-      uses: actions/upload-artifact@v4
-      with:
-        name: pit-report
-        path: target/pit-reports/
+      - name: Upload Pitest Report
+        if: matrix.test-type == 'mutation'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-report
+          path: target/pit-reports/
 
-    - name: Publish Test Report
-      uses: dorny/test-reporter@v1
-      if: always() && matrix.test-type != 'mutation'
-      with:
-        name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
-        path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/TEST-*.xml' || 'target/failsafe-reports/TEST-*.xml' }}
-        reporter: java-junit
-        fail-on-error: false
+      - name: Publish Test Report
+        uses: dorny/test-reporter@v1
+        if: always() && matrix.test-type != 'mutation'
+        with:
+          name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
+          path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/TEST-*.xml' || 'target/failsafe-reports/TEST-*.xml' }}
+          reporter: java-junit
+          fail-on-error: false
+
+  scorecard:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: markmishaev76/ai-harness-scorecard@v1
+        id: scorecard
+
+      - name: Commit badge and report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add scorecard-badge.json scorecard-report.md
+          git diff --cached --quiet || git commit -m "chore: update scorecard badge and report"
+          git push
