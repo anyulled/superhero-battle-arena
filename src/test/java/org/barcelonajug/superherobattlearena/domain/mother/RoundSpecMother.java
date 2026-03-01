@@ -1,6 +1,8 @@
 package org.barcelonajug.superherobattlearena.domain.mother;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+
 import java.util.List;
 import java.util.Map;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
@@ -13,14 +15,7 @@ public final class RoundSpecMother {
 
   public static RoundSpec aStandardRoundSpec() {
     return new RoundSpec(
-        "Standard 5v5 Round",
-        5,
-        100,
-        Collections.emptyMap(),
-        Collections.emptyMap(),
-        Collections.emptyList(),
-        Collections.emptyMap(),
-        "ARENA");
+        "Standard 5v5 Round", 5, 100, emptyMap(), emptyMap(), emptyList(), emptyMap(), "ARENA");
   }
 
   public static RoundSpec aRoundSpecWithTeamSize(int teamSize) {
@@ -28,24 +23,17 @@ public final class RoundSpecMother {
         "Custom Size Round",
         teamSize,
         1000,
-        Collections.emptyMap(),
-        Collections.emptyMap(),
-        Collections.emptyList(),
-        Collections.emptyMap(),
+        emptyMap(),
+        emptyMap(),
+        emptyList(),
+        emptyMap(),
         "ARENA_1");
   }
 
   public static RoundSpec aRoundSpecWithTags(
       Map<String, Double> tagModifiers, List<String> bannedTags) {
     return new RoundSpec(
-        "Tagged Round",
-        5,
-        100,
-        Collections.emptyMap(),
-        Collections.emptyMap(),
-        bannedTags,
-        tagModifiers,
-        "ARENA");
+        "Tagged Round", 5, 100, emptyMap(), emptyMap(), bannedTags, tagModifiers, "ARENA");
   }
 
   public static RoundSpec aRoundSpecWithRoles(
@@ -56,8 +44,8 @@ public final class RoundSpecMother {
         100,
         requiredRoles,
         maxSameRole,
-        Collections.emptyList(),
-        Collections.emptyMap(),
+        emptyList(),
+        emptyMap(),
         "ARENA");
   }
 }

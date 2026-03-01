@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -7,7 +8,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -46,12 +46,11 @@ class FatigueUseCasePerformanceTest {
                         "Marvel",
                         null,
                         null,
-                        Collections.emptyList(),
+                        emptyList(),
                         new Hero.Images(null, null, null, null)))
             .toList();
 
-    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
-        .thenReturn(Collections.emptyList());
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
     // Simulate usage in MatchController
     for (Hero hero : heroes) {
@@ -81,12 +80,11 @@ class FatigueUseCasePerformanceTest {
                         "Marvel",
                         null,
                         null,
-                        Collections.emptyList(),
+                        emptyList(),
                         new Hero.Images(null, null, null, null)))
             .toList();
 
-    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
-        .thenReturn(Collections.emptyList());
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
     // Use the batch method
     fatigueService.applyFatigue(teamId, heroes, 1);

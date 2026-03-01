@@ -1,8 +1,9 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import net.jqwik.api.Arbitraries;
@@ -104,9 +105,9 @@ class BattleEngineUseCasePropertyTest {
                 "Test Round",
                 5,
                 1000,
-                Collections.emptyMap(),
-                Collections.emptyMap(),
-                Collections.emptyList(),
+                emptyMap(),
+                emptyMap(),
+                emptyList(),
                 Map.of("TECH", m, "MAGIC", m),
                 "ARENA"));
   }

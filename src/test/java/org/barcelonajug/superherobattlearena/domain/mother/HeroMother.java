@@ -1,6 +1,7 @@
 package org.barcelonajug.superherobattlearena.domain.mother;
 
-import java.util.Collections;
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 
@@ -27,7 +28,7 @@ public final class HeroMother {
                 .intelligence(50)
                 .combat(40)
                 .build())
-        .tags(Collections.emptyList())
+        .tags(emptyList())
         .build();
   }
 
@@ -47,7 +48,7 @@ public final class HeroMother {
                 .intelligence(10)
                 .combat(5)
                 .build())
-        .tags(Collections.emptyList())
+        .tags(emptyList())
         .build();
   }
 
@@ -66,7 +67,7 @@ public final class HeroMother {
                 .intelligence(50)
                 .combat(40)
                 .build())
-        .tags(Collections.emptyList())
+        .tags(emptyList())
         .build();
   }
 

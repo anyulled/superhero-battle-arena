@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.e2e;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,7 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -223,7 +223,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
 
   private List<UUID> extractUuidsFromArray(JsonNode arrayNode) {
     if (arrayNode == null || !arrayNode.isArray()) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return StreamSupport.stream(arrayNode.spliterator(), false)
         .map(JsonNode::asText)

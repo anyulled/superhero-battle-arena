@@ -1,5 +1,7 @@
 package org.barcelonajug.superherobattlearena.e2e;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -8,7 +10,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
@@ -107,14 +108,7 @@ class RoundListingIT extends PostgresTestContainerConfig {
   private int createRound(UUID sessionId) throws Exception {
     RoundSpec spec =
         new RoundSpec(
-            "Test Round",
-            5,
-            1000,
-            Collections.emptyMap(),
-            Collections.emptyMap(),
-            Collections.emptyList(),
-            Collections.emptyMap(),
-            "ARENA_1");
+            "Test Round", 5, 1000, emptyMap(), emptyMap(), emptyList(), emptyMap(), "ARENA_1");
 
     CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
 

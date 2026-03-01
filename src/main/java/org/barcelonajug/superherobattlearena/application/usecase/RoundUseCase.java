@@ -1,13 +1,14 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toSet;
+
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
@@ -129,16 +130,16 @@ public class RoundUseCase {
   public List<Submission> getSubmissions(Integer roundNo, @Nullable UUID sessionId) {
     if (sessionId == null) {
       log.warn("getSubmissions called without sessionId");
-      return Collections.emptyList();
+      return emptyList();
     }
 
     Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo);
     if (round.isEmpty()) {
-      return Collections.emptyList();
+      return emptyList();
     }
 
     List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
-    Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(Collectors.toSet());
+    Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(toSet());
 
     return submissionRepository.findByRoundNo(roundNo).stream()
         .filter(s -> sessionTeamIds.contains(s.getTeamId()))

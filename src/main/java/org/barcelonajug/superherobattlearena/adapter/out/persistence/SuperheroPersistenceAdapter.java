@@ -83,9 +83,8 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
           .filter(Objects::nonNull)
           .map(Objects::requireNonNull)
           .toList();
-    } else {
-      return findAll();
     }
+    return findAll();
   }
 
   @Override

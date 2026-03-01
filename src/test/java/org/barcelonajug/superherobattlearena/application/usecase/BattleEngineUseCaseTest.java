@@ -1,8 +1,8 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,7 +33,7 @@ class BattleEngineUseCaseTest {
     assertThat(damage).isEqualTo(38);
 
     // Test with multiplier
-    spec = RoundSpecMother.aRoundSpecWithTags(Map.of("tag1", 2.0), Collections.emptyList());
+    spec = RoundSpecMother.aRoundSpecWithTags(Map.of("tag1", 2.0), emptyList());
     Hero attackerWithTag = HeroMother.aHeroWithTags(List.of("tag1"));
     bhAttacker = new BattleHeroUseCase(attackerWithTag, teamAId);
 

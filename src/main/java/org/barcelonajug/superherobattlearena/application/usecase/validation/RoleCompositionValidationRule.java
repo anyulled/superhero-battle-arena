@@ -1,8 +1,10 @@
 package org.barcelonajug.superherobattlearena.application.usecase.validation;
 
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
+
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.exception.RoleCompositionException;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
@@ -14,8 +16,7 @@ public class RoleCompositionValidationRule implements ValidationRule {
 
   @Override
   public void validate(List<Hero> heroes, RoundSpec roundSpec) {
-    Map<String, Long> roleCounts =
-        heroes.stream().collect(Collectors.groupingBy(Hero::role, Collectors.counting()));
+    Map<String, Long> roleCounts = heroes.stream().collect(groupingBy(Hero::role, counting()));
 
     validateRequiredRoles(roleCounts, roundSpec);
     validateMaxSameRole(roleCounts, roundSpec);

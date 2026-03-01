@@ -1,10 +1,11 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.stream.Collectors.toMap;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
@@ -112,8 +113,7 @@ public class FatigueUseCase {
           heroUsageRepository.findByTeamIdAndRoundNo(teamId, roundNo - 1);
 
       Map<Integer, Integer> heroIdToStreakMap =
-          previousRoundHistory.stream()
-              .collect(Collectors.toMap(HeroUsage::heroId, HeroUsage::streak));
+          previousRoundHistory.stream().collect(toMap(HeroUsage::heroId, HeroUsage::streak));
 
       List<HeroUsage> usages =
           heroIds.stream()

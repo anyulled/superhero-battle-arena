@@ -1,9 +1,9 @@
 package org.barcelonajug.superherobattlearena.domain;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.Collections;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 
@@ -129,7 +129,7 @@ public record Hero(
           publisher,
           appearance,
           biography,
-          tags != null ? tags : Collections.emptyList(),
+          tags != null ? tags : emptyList(),
           images);
     }
   }

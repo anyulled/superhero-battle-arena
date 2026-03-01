@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.stream.Collectors.toMap;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.ArrayList;
@@ -11,7 +12,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -318,8 +318,7 @@ public class MatchUseCase {
   private List<Hero> buildBattleTeam(UUID teamId, DraftSubmission submission, int roundNo) {
     List<Hero> fetchedHeroes = rosterUseCase.getHeroes(submission.heroIds());
     Map<Integer, Hero> heroMap =
-        fetchedHeroes.stream()
-            .collect(Collectors.toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
+        fetchedHeroes.stream().collect(toMap(Hero::id, Function.identity(), (h1, h2) -> h1));
 
     List<Hero> orderedHeroes =
         submission.heroIds().stream()

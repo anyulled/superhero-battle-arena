@@ -1,9 +1,10 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.ValidationRule;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.exception.DuplicateHeroException;
@@ -74,7 +75,7 @@ public class SubmissionValidatorUseCase {
   private List<Hero> resolveHeroes(List<Integer> heroIds) {
     List<Hero> heroes = rosterUseCase.getHeroes(heroIds);
     if (heroes.size() != heroIds.size()) {
-      Set<Integer> foundIds = heroes.stream().map(Hero::id).collect(Collectors.toSet());
+      Set<Integer> foundIds = heroes.stream().map(Hero::id).collect(toSet());
       for (Integer id : heroIds) {
         if (!foundIds.contains(id)) {
           throw new HeroNotFoundException(id);

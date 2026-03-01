@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -8,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
@@ -63,8 +63,7 @@ class FatigueUseCaseTest {
   @Test
   void shouldRecordUsageCorrectlyForNewHero() {
     UUID teamId = UUID.randomUUID();
-    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt()))
-        .thenReturn(Collections.emptyList());
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
     fatigueUseCase.recordUsage(teamId, 1, List.of(1, 2));
 
