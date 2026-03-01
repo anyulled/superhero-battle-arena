@@ -124,6 +124,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           cp scorecard-badge.json /tmp/scorecard-badge.json
           cp scorecard-report.md /tmp/scorecard-report.md
+          rm -f scorecard-badge.json scorecard-report.md
           git fetch origin scorecard
           git checkout scorecard
           cp /tmp/scorecard-badge.json scorecard-badge.json
