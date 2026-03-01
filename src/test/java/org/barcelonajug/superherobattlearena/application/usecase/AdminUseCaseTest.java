@@ -233,8 +233,7 @@ class AdminUseCaseTest {
         .containsKey("durationMs");
 
     Long duration = (Long) result.get("durationMs");
-    assertThat(duration).isNotNull();
-    assertThat(duration).isNotNegative();
+    assertThat(duration).isNotNull().isNotNegative();
 
     @SuppressWarnings("unchecked")
     List<UUID> matchIds = (List<UUID>) result.get("matchIds");
