@@ -308,7 +308,6 @@
 						<recipe>org.openrewrite.java.testing.testcontainers.TestContainersBestPractices</recipe>
 						<recipe>org.openrewrite.maven.BestPractices</recipe>
 						<recipe>org.openrewrite.staticanalysis.JavaApiBestPractices</recipe>
-						<recipe>org.openrewrite.recipes.rewrite.OpenRewriteRecipeBestPractices</recipe>
 					</activeRecipes>
 				</configuration>
 				<dependencies>
