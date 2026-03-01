@@ -150,7 +150,7 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --base . --offline --include-fragments *.md docs/**/*.md
+          args: --base ${{ github.workspace }} --offline --include-fragments *.md docs/**/*.md
           fail: true
 
       - name: Vale Linter
