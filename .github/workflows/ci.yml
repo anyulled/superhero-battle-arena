@@ -85,7 +85,7 @@ jobs:
           path: target/site/jacoco/
 
       - name: Add Coverage PR Comment
-        uses: madrapps/jacoco-report@v1.7.1
+        uses: madrapps/jacoco-report@v1.7.2
         if: github.event_name == 'pull_request' && (matrix.test-type == 'unit' || matrix.test-type == 'integration') && always()
         with:
           paths: target/site/jacoco/jacoco.xml
