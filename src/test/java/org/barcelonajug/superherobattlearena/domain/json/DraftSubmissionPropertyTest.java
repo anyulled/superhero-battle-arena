@@ -15,7 +15,7 @@ class DraftSubmissionPropertyTest {
 
     DraftSubmission submission = new DraftSubmission(heroIds, strategy);
 
-    assertThat(submission.heroIds()).isEqualTo(heroIds);
+    assertThat(submission.heroIds()).containsExactlyElementsOf(heroIds);
     assertThat(submission.strategy()).isEqualTo(strategy);
   }
 }

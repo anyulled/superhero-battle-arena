@@ -92,6 +92,6 @@ class FatigueUseCasePerformanceTest {
     fatigueService.applyFatigue(teamId, heroes, 1);
 
     // Verify repository was called 1 time
-    verify(heroUsageRepository, times(1)).findByTeamIdAndRoundNo(any(), anyInt());
+    verify(heroUsageRepository).findByTeamIdAndRoundNo(any(), anyInt());
   }
 }

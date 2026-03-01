@@ -3,7 +3,6 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,7 +48,7 @@ class SessionUseCaseTest {
 
     Session result = sessionUseCase.createSession();
 
-    verify(sessionRepository, times(1)).save(any(Session.class));
+    verify(sessionRepository).save(any(Session.class));
     assertThat(result.isActive()).isTrue();
   }
 
@@ -60,7 +59,7 @@ class SessionUseCaseTest {
 
     Optional<Session> result = sessionUseCase.getActiveSession();
 
-    assertThat(result).isPresent().hasValue(active);
+    assertThat(result).hasValue(active);
   }
 
   @Test

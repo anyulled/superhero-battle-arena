@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class DomainCoverageTest {
 
   @Test
-  void testSession() {
+  void session() {
     UUID id = UUID.randomUUID();
     OffsetDateTime now = OffsetDateTime.now(ZoneId.systemDefault());
     Session session = new Session(id, now, true);
@@ -37,7 +37,7 @@ class DomainCoverageTest {
   }
 
   @Test
-  void testRound() {
+  void round() {
     UUID roundId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
     RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
@@ -50,14 +50,14 @@ class DomainCoverageTest {
     round.setSpecJson(spec);
 
     assertThat(round.getRoundId()).isEqualTo(roundId);
-    assertThat(round.getRoundNo()).isEqualTo(1);
+    assertThat(round.getRoundNo()).isOne();
     assertThat(round.getSessionId()).isEqualTo(sessionId);
     assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
     assertThat(round.getSpecJson()).isEqualTo(spec);
   }
 
   @Test
-  void testSubmission() {
+  void submission() {
     UUID teamId = UUID.randomUUID();
     OffsetDateTime now = OffsetDateTime.now(ZoneId.systemDefault());
 
@@ -73,7 +73,7 @@ class DomainCoverageTest {
             .build();
 
     assertThat(sub.getTeamId()).isEqualTo(teamId);
-    assertThat(sub.getRoundNo()).isEqualTo(1);
+    assertThat(sub.getRoundNo()).isOne();
     assertThat(sub.getSubmissionJson()).isEqualTo(draft);
     assertThat(sub.getAccepted()).isTrue();
     assertThat(sub.getSubmittedAt()).isEqualTo(now);
@@ -97,7 +97,7 @@ class DomainCoverageTest {
   }
 
   @Test
-  void testMatch() {
+  void match() {
     UUID matchId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
@@ -108,7 +108,7 @@ class DomainCoverageTest {
 
     assertThat(match.getMatchId()).isEqualTo(matchId);
     assertThat(match.getSessionId()).isEqualTo(sessionId);
-    assertThat(match.getRoundNo()).isEqualTo(1);
+    assertThat(match.getRoundNo()).isOne();
     assertThat(match.getTeamA()).isEqualTo(teamA);
     assertThat(match.getTeamB()).isEqualTo(teamB);
     assertThat(match.getStatus()).isEqualTo(MatchStatus.PENDING);
@@ -134,7 +134,7 @@ class DomainCoverageTest {
   }
 
   @Test
-  void testHero() {
+  void hero() {
     Hero.Appearance appearance =
         Hero.Appearance.builder()
             .gender("Male")

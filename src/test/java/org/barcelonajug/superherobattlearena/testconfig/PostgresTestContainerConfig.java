@@ -5,7 +5,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
  * Shared PostgreSQL container configuration for integration tests. Extend this class to use a real
@@ -20,8 +20,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class PostgresTestContainerConfig {
 
   @SuppressWarnings("resource")
-  static final PostgreSQLContainer<?> postgres =
-      new PostgreSQLContainer<>("postgres:16")
+  static final PostgreSQLContainer postgres =
+      new PostgreSQLContainer("postgres:16")
           .withDatabaseName("superhero_db")
           .withUsername("super_user")
           .withPassword("super_password")

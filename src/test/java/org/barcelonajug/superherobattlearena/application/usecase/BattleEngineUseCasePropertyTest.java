@@ -27,7 +27,7 @@ class BattleEngineUseCasePropertyTest {
 
     int damage = battleEngine.calculateDamage(attacker, target, roundSpec, isCrit);
 
-    assertThat(damage).isGreaterThanOrEqualTo(1);
+    assertThat(damage).isPositive();
   }
 
   @Property

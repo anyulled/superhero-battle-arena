@@ -50,7 +50,7 @@ class BattleEngineUseCaseTest {
     Hero weakAttacker = HeroMother.aWeakHero();
     bhAttacker = new BattleHeroUseCase(weakAttacker, teamAId);
     damage = battleEngineUseCase.calculateDamage(bhAttacker, bhTarget, spec, false);
-    assertThat(damage).isEqualTo(1);
+    assertThat(damage).isOne();
   }
 
   @Test

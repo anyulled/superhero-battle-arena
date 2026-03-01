@@ -128,7 +128,7 @@ class AdminUseCaseTest {
 
     List<Session> result = adminUseCase.listSessions();
 
-    assertThat(result).hasSize(1).containsExactly(session);
+    assertThat(result).containsExactly(session);
     verify(sessionRepository).findAll();
   }
 
@@ -234,7 +234,7 @@ class AdminUseCaseTest {
 
     Long duration = (Long) result.get("durationMs");
     assertThat(duration).isNotNull();
-    assertThat(duration).isGreaterThanOrEqualTo(0L);
+    assertThat(duration).isNotNegative();
 
     @SuppressWarnings("unchecked")
     List<UUID> matchIds = (List<UUID>) result.get("matchIds");
