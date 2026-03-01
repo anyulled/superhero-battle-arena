@@ -1,18 +1,18 @@
 # AI Harness Scorecard: superhero-battle-arena
 
-**Grade: C** (61.3/100) | Basic practices present but insufficient for safe AI scaling.
+**Grade: C** (63.6/100) | Basic practices present but insufficient for safe AI scaling.
 
 - **Repository**: `/home/runner/work/superhero-battle-arena/superhero-battle-arena`
 - **Languages**: java
-- **Assessed**: 2026-03-01 12:38 UTC
-- **Checks**: 20/31 passed
+- **Assessed**: 2026-03-01 20:15 UTC
+- **Checks**: 21/31 passed
 
 ## Summary
 
 | Category | Weight | Score | Checks |
 |----------|--------|-------|--------|
 | Architectural Documentation | 20% | 100% [##########] | 5/5 |
-| Mechanical Constraints | 25% | 27% [###-------] | 2/7 |
+| Mechanical Constraints | 25% | 36% [####------] | 3/7 |
 | Testing & Stability | 25% | 42% [####------] | 4/8 |
 | Review & Drift Prevention | 15% | 100% [##########] | 6/6 |
 | AI-Specific Safeguards | 15% | 60% [######----] | 3/5 |
@@ -50,7 +50,7 @@ _DORA 2025 - AI-accessible documentation_
 **Evidence**: Doc generation found in CI
 
 
-## Mechanical Constraints (27%)
+## Mechanical Constraints (36%)
 
 ### [PASS] CI Pipeline (3/3)
 
@@ -88,13 +88,11 @@ _Blog: security infrastructure reliability_
 
 **Remediation**: Add cargo deny/audit, npm audit, pip-audit, or Snyk to CI as a blocking check.
 
-### [FAIL] Conventional Commits (0/2)
+### [PASS] Conventional Commits (2/2)
 
 _DORA 2025 - working in small batches_
 
-**Evidence**: No conventional commit enforcement found
-
-**Remediation**: Add commitlint or equivalent to CI to enforce consistent commit message format.
+**Evidence**: Commit lint config found: .commitlintrc.yml
 
 ### [FAIL] Unsafe Code Policy (0/3)
 
