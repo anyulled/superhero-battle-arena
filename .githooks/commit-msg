@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+
+# Validate commit message using npx commitlint
+# We run npx with -c and explicitly set the NODE_PATH to the transient 
+# directory to resolve @commitlint/config-conventional dynamically without a package.json.
+npx --yes --package @commitlint/cli --package @commitlint/config-conventional \
+  -c 'NODE_PATH="$(dirname $(which commitlint))/.." commitlint --edit "$1"'
+
