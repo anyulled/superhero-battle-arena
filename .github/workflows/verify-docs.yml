@@ -11,7 +11,7 @@ jobs:
         name: Verify AGENTS.md and CLAUDE.md are identical
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
             - name: Check if CLAUDE.md matches AGENTS.md
               run: |
                   if ! diff AGENTS.md CLAUDE.md > /dev/null ; then
