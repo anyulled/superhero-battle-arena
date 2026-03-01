@@ -132,11 +132,7 @@ public class BattleEngineUseCase {
       AtomicLong logicalTime) {
 
     // 1. Dodge Check
-    double dodgeChance =
-        (double) target.hero.powerstats().combat()
-            / (target.hero.powerstats().combat() + attacker.hero.powerstats().combat() + 0.1);
-    // Cap dodge at 50% max
-    dodgeChance = Math.min(0.5, dodgeChance);
+    double dodgeChance = calculateDodgeChance(attacker, target);
 
     if (random.nextDouble() < dodgeChance) {
       events.add(
@@ -150,7 +146,7 @@ public class BattleEngineUseCase {
     }
 
     // 2. Critical Hit Check
-    double critChance = attacker.hero.powerstats().intelligence() / 200.0;
+    double critChance = calculateCriticalHitChance(attacker);
     boolean isCrit = random.nextDouble() < critChance;
 
     // 3. Damage Calculation
@@ -221,6 +217,18 @@ public class BattleEngineUseCase {
       return null;
     }
     return selectTarget(targets, random);
+  }
+
+  public double calculateDodgeChance(BattleHeroUseCase attacker, BattleHeroUseCase target) {
+    double dodgeChance =
+        target.hero.powerstats().combat()
+            / (target.hero.powerstats().combat() + attacker.hero.powerstats().combat() + 0.1);
+    // Cap dodge at 50% max
+    return Math.min(0.5, dodgeChance);
+  }
+
+  public double calculateCriticalHitChance(BattleHeroUseCase attacker) {
+    return attacker.hero.powerstats().intelligence() / 200.0;
   }
 
   private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
