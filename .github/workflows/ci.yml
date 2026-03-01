@@ -96,6 +96,7 @@ jobs:
 
   commitlint:
     runs-on: ubuntu-latest
+    name: Commit Lint
     steps:
       - uses: actions/checkout@v6
         with:
@@ -105,6 +106,7 @@ jobs:
 
   scorecard:
     runs-on: ubuntu-latest
+    name: AI Hardness Scorecard
     if: github.event_name != 'pull_request'
 
     permissions:
@@ -135,6 +137,7 @@ jobs:
 
   quality:
     runs-on: ubuntu-latest
+    name: Documentation Quality Checks
     steps:
       - uses: actions/checkout@v6
 
@@ -163,6 +166,7 @@ jobs:
 
   security-audit:
     runs-on: ubuntu-latest
+    name: Security Audit
     steps:
       - uses: actions/checkout@v6
 
