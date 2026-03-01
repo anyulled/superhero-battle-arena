@@ -1,11 +1,11 @@
 # AI Harness Scorecard: superhero-battle-arena
 
-**Grade: C** (56.3/100) | Basic practices present but insufficient for safe AI scaling.
+**Grade: C** (61.3/100) | Basic practices present but insufficient for safe AI scaling.
 
 - **Repository**: `/home/runner/work/superhero-battle-arena/superhero-battle-arena`
 - **Languages**: java
-- **Assessed**: 2026-03-01 11:27 UTC
-- **Checks**: 18/31 passed
+- **Assessed**: 2026-03-01 12:06 UTC
+- **Checks**: 20/31 passed
 
 ## Summary
 
@@ -14,8 +14,8 @@
 | Architectural Documentation | 20% | 100% [##########] | 5/5 |
 | Mechanical Constraints | 25% | 27% [###-------] | 2/7 |
 | Testing & Stability | 25% | 42% [####------] | 4/8 |
-| Review & Drift Prevention | 15% | 87% [#########-] | 5/6 |
-| AI-Specific Safeguards | 15% | 40% [####------] | 2/5 |
+| Review & Drift Prevention | 15% | 100% [##########] | 6/6 |
+| AI-Specific Safeguards | 15% | 60% [######----] | 3/5 |
 
 ## Architectural Documentation (100%)
 
@@ -166,7 +166,7 @@ _DORA 2025 - stability metrics_
 **Evidence**: All test jobs are blocking: test
 
 
-## Review & Drift Prevention (87%)
+## Review & Drift Prevention (100%)
 
 ### [PASS] Code Review Required (4/4)
 
@@ -180,13 +180,11 @@ _OpenAI Harness Engineering - garbage collection agents_
 
 **Evidence**: Scheduled CI pipeline found
 
-### [FAIL] Stale Documentation Detection (0/2)
+### [PASS] Stale Documentation Detection (2/2)
 
 _OpenAI Harness Engineering - quality drift_
 
-**Evidence**: No stale documentation detection found
-
-**Remediation**: Add TODO/FIXME scanning, link checking (lychee), or prose linting (vale) to CI.
+**Evidence**: TODO/FIXME scanning found in CI
 
 ### [PASS] PR/MR Template (2/2)
 
@@ -207,7 +205,7 @@ _OpenAI Harness Engineering - curated knowledge base_
 **Evidence**: Doc sync check found in CI: diff\s+.*\.md
 
 
-## AI-Specific Safeguards (40%)
+## AI-Specific Safeguards (60%)
 
 ### [PASS] AI Usage Norms (4/4)
 
@@ -215,13 +213,11 @@ _DORA 2025 - clear organizational stance on AI use_
 
 **Evidence**: AI usage norms found in CLAUDE.md
 
-### [FAIL] Small Batch Enforcement (0/3)
+### [PASS] Small Batch Enforcement (3/3)
 
 _DORA 2025 - working in small batches_
 
-**Evidence**: No small batch enforcement found
-
-**Remediation**: Add PR size checks (Danger, pr-size-labeler) or document size guidelines in CONTRIBUTING.md. Large AI-generated PRs are harder to review.
+**Evidence**: Small batch guidelines found in CONTRIBUTING.md
 
 ### [FAIL] Design-Before-Code Culture (0/3)
 
