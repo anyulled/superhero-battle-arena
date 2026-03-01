@@ -14,13 +14,12 @@ class TeamTest {
   @Test
   void shouldCreateTeamWithTwoMembers() {
     List<String> members = List.of("Alice", "Bob");
-    Team team =
-        new Team(
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            "Avengers",
-            OffsetDateTime.now(ZoneId.of("UTC")),
-            members);
+    Team team = new Team(
+        UUID.randomUUID(),
+        UUID.randomUUID(),
+        "Avengers",
+        OffsetDateTime.now(ZoneId.of("UTC")),
+        members);
 
     assertThat(team.members()).hasSize(2);
     assertThat(team.members()).containsExactly("Alice", "Bob");
@@ -51,6 +50,7 @@ class TeamTest {
   }
 
   @Test
+  @SuppressWarnings("NullAway")
   void shouldFailToCreateTeamWithNullMembers() {
     UUID teamId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
