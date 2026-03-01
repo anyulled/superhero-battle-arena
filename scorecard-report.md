@@ -1,18 +1,18 @@
 # AI Harness Scorecard: superhero-battle-arena
 
-**Grade: C** (63.6/100) | Basic practices present but insufficient for safe AI scaling.
+**Grade: C** (68.1/100) | Basic practices present but insufficient for safe AI scaling.
 
 - **Repository**: `/home/runner/work/superhero-battle-arena/superhero-battle-arena`
 - **Languages**: java
-- **Assessed**: 2026-03-01 21:14 UTC
-- **Checks**: 21/31 passed
+- **Assessed**: 2026-03-01 21:31 UTC
+- **Checks**: 22/31 passed
 
 ## Summary
 
 | Category | Weight | Score | Checks |
 |----------|--------|-------|--------|
 | Architectural Documentation | 20% | 100% [##########] | 5/5 |
-| Mechanical Constraints | 25% | 36% [####------] | 3/7 |
+| Mechanical Constraints | 25% | 55% [#####-----] | 4/7 |
 | Testing & Stability | 25% | 42% [####------] | 4/8 |
 | Review & Drift Prevention | 15% | 100% [##########] | 6/6 |
 | AI-Specific Safeguards | 15% | 60% [######----] | 3/5 |
@@ -50,7 +50,7 @@ _DORA 2025 - AI-accessible documentation_
 **Evidence**: Doc generation found in CI
 
 
-## Mechanical Constraints (36%)
+## Mechanical Constraints (55%)
 
 ### [PASS] CI Pipeline (3/3)
 
@@ -80,13 +80,11 @@ _SlopCodeBench - preventing subtle type errors_
 
 **Evidence**: JVM language: type safety enforced by compiler
 
-### [FAIL] Dependency Auditing (0/4)
+### [PASS] Dependency Auditing (4/4)
 
 _Blog: security infrastructure reliability_
 
-**Evidence**: No dependency auditing found
-
-**Remediation**: Add cargo deny/audit, npm audit, pip-audit, or Snyk to CI as a blocking check.
+**Evidence**: Blocking dependency audit in CI: snyk\s+test
 
 ### [PASS] Conventional Commits (2/2)
 
@@ -161,7 +159,7 @@ _OpenAI Harness Engineering - mechanical constraints_
 
 _DORA 2025 - stability metrics_
 
-**Evidence**: All test jobs are blocking: test
+**Evidence**: All test jobs are blocking: test, security-audit
 
 
 ## Review & Drift Prevention (100%)
