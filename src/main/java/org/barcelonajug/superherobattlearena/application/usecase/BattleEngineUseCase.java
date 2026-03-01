@@ -220,15 +220,15 @@ public class BattleEngineUseCase {
   }
 
   public double calculateDodgeChance(BattleHeroUseCase attacker, BattleHeroUseCase target) {
-    double dodgeChance =
-        target.hero.powerstats().combat()
-            / (target.hero.powerstats().combat() + attacker.hero.powerstats().combat() + 0.1);
-    // Cap dodge at 50% max
-    return Math.min(0.5, dodgeChance);
+    double combatTarget = Math.max(0.0, target.hero.powerstats().combat());
+    double combatAttacker = Math.max(0.0, attacker.hero.powerstats().combat());
+    double dodgeChance = combatTarget / (combatTarget + combatAttacker + 0.1);
+    // Cap dodge at 50% max, and floor at 0%
+    return Math.clamp(dodgeChance, 0.0, 0.5);
   }
 
   public double calculateCriticalHitChance(BattleHeroUseCase attacker) {
-    return attacker.hero.powerstats().intelligence() / 200.0;
+    return Math.clamp(attacker.hero.powerstats().intelligence() / 200.0, 0.0, 0.5);
   }
 
   private BattleHeroUseCase selectTarget(List<BattleHeroUseCase> targets, Random random) {
@@ -262,8 +262,8 @@ public class BattleEngineUseCase {
     }
 
     // Power for attack, Strength for defense
-    int baseAtk = attacker.hero.powerstats().power();
-    int targetDef = target.hero.powerstats().strength();
+    int baseAtk = Math.max(0, attacker.hero.powerstats().power());
+    int targetDef = Math.max(0, target.hero.powerstats().strength());
 
     int rawDamage = (int) (baseAtk * multiplier - (targetDef * DAMAGE_DEF_FACTOR));
     return Math.max(1, rawDamage);

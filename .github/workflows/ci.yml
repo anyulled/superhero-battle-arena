@@ -132,3 +132,31 @@ jobs:
           git add scorecard-badge.json scorecard-report.md
           git diff --cached --quiet || git commit -m "chore: update scorecard badge and report"
           git push origin scorecard
+
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: TODO and FIXME scanner
+        run: |
+          if grep -rnw "src" -e "TODO" -e "FIXME"; then
+            echo "Found TODO/FIXME comments. Please resolve them."
+            exit 1
+          else
+            echo "No TODO/FIXME comments found."
+          fi
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --base . --offline --include-fragments *.md docs/**/*.md
+          fail: true
+
+      - name: Vale Linter
+        uses: errata-ai/vale-action@reviewdog
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: README.md docs/ CONTRIBUTING.md
+          fail_on_error: true

@@ -65,12 +65,12 @@ class BattleEngineUseCasePropertyTest {
   Arbitrary<BattleEngineUseCase.BattleHeroUseCase> battleHeroes() {
     Arbitrary<Hero.PowerStats> powerStatsArbitrary =
         Combinators.combine(
-                Arbitraries.integers().between(1, 100),
-                Arbitraries.integers().between(1, 100),
-                Arbitraries.integers().between(1, 100),
-                Arbitraries.integers().between(1, 100),
-                Arbitraries.integers().between(1, 100),
-                Arbitraries.integers().between(1, 100))
+                Arbitraries.integers(),
+                Arbitraries.integers(),
+                Arbitraries.integers(),
+                Arbitraries.integers(),
+                Arbitraries.integers(),
+                Arbitraries.integers())
             .as(
                 (dur, str, pow, spd, intel, cbt) ->
                     Hero.PowerStats.builder()
