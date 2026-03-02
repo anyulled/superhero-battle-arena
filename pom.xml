@@ -32,7 +32,7 @@
 			<dependency>
 				<groupId>com.fasterxml.jackson</groupId>
 				<artifactId>jackson-bom</artifactId>
-				<version>2.20.2</version> <!-- Align with Spring Boot 4.0.3 legacy Jackson -->
+				<version>2.21.1</version> <!-- Align with Spring Boot 4.0.3 legacy Jackson -->
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
