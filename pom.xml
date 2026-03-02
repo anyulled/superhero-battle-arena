@@ -187,7 +187,7 @@
 		<dependency>
 			<groupId>com.code-intelligence</groupId>
 			<artifactId>jazzer-junit</artifactId>
-			<version>0.23.0</version>
+			<version>0.24.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -574,6 +574,9 @@
 		<!-- Jazzer fuzz tests (regression replay mode) -->
 		<profile>
 			<id>fuzz-tests</id>
+			<properties>
+				<jacoco.skip>true</jacoco.skip>
+			</properties>
 			<build>
 				<plugins>
 					<plugin>
@@ -584,6 +587,7 @@
 							<systemPropertyVariables>
 								<jazzer.fuzz>false</jazzer.fuzz>
 								<jazzer.corpus_dir>${project.basedir}/src/test/resources/corpus</jazzer.corpus_dir>
+								<jazzer.instrumentation_includes>org/barcelonajug/**</jazzer.instrumentation_includes>
 							</systemPropertyVariables>
 						</configuration>
 					</plugin>
