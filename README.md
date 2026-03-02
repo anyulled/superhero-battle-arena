@@ -4,6 +4,12 @@
 
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/anyulled/superhero-battle-arena)
 [![AI Harness Scorecard](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fanyulled%2Fsuperhero-battle-arena%2Fscorecard%2Fscorecard-badge.json)](https://github.com/anyulled/superhero-battle-arena/blob/scorecard/scorecard-report.md)
+[![CI](https://github.com/anyulled/superhero-battle-arena/actions/workflows/ci.yml/badge.svg)](https://github.com/anyulled/superhero-battle-arena/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/anyulled/superhero-battle-arena/graph/badge.svg?token=CODECOV_TOKEN)](https://codecov.io/gh/anyulled/superhero-battle-arena)
+[![Known Vulnerabilities](https://snyk.io/test/github/anyulled/superhero-battle-arena/badge.svg)](https://snyk.io/test/github/anyulled/superhero-battle-arena)
+[![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk)](https://openjdk.org/projects/jdk/25/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?logo=spring)](https://spring.io/projects/spring-boot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 | | |
 | :---: | :---: |
