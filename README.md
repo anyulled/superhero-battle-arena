@@ -9,6 +9,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/anyulled/superhero-battle-arena/badge.svg)](https://snyk.io/test/github/anyulled/superhero-battle-arena)
 [![Java](https://img.shields.io/badge/Java-25-orange?logo=openjdk)](https://openjdk.org/projects/jdk/25/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?logo=spring)](https://spring.io/projects/spring-boot)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=anyulled_superhero-battle-arena&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=anyulled_superhero-battle-arena)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 | | |
