@@ -233,8 +233,8 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --severity-threshold=high
 
-      - name: OWASP Dependency-Check
-        run: ./mvnw org.owasp:dependency-check-maven:check
-
       - name: Sonatype OSS Index Scan
         run: ./mvnw org.sonatype.ossindex.maven:ossindex-maven-plugin:audit
+
+      - name: OWASP Dependency-Check
+        run: ./mvnw org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
