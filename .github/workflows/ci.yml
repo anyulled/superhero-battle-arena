@@ -58,7 +58,7 @@ jobs:
           path: target/site/apidocs/
 
       - name: Publish Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always() && matrix.test-type != 'docs'
         with:
           name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
