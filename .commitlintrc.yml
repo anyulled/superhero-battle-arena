@@ -4,7 +4,7 @@ rules:
   type-enum:
     - 2
     - always
-    - [feat, fix, refactor, test, docs, chore, perf, style, ci]
+    - [feat, fix, refactor, test, docs, chore, perf, style, ci, build]
   subject-case:
     - 2
     - always
