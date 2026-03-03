@@ -28,6 +28,11 @@ public class FatigueUseCase {
   public List<Hero> applyFatigue(UUID teamId, List<Hero> heroes, int currentRoundNo) {
     List<HeroUsage> previousRoundUsage =
         heroUsageRepository.findByTeamIdAndRoundNo(teamId, currentRoundNo - 1);
+    return applyFatigue(teamId, heroes, currentRoundNo, previousRoundUsage);
+  }
+
+  public List<Hero> applyFatigue(
+      UUID teamId, List<Hero> heroes, int currentRoundNo, List<HeroUsage> previousRoundUsage) {
     return heroes.stream()
         .map(hero -> applyFatigueWithHistory(hero, previousRoundUsage, currentRoundNo))
         .toList();

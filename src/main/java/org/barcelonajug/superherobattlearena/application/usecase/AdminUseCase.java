@@ -19,7 +19,11 @@ import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositor
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
+
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.HeroUsage;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
@@ -225,32 +229,41 @@ public class AdminUseCase {
               .findBySessionIdAndRoundNo(sessionId, roundNo)
               .orElseThrow(() -> new IllegalArgumentException("Round not found: " + roundNo));
 
+      // Batch fetch submissions and fatigue
+      final Map<UUID, Submission> submissionsByTeam =
+          submissionRepository.findByRoundNo(roundNo).stream()
+              .collect(toMap(Submission::getTeamId, s -> s));
+
+      final Map<UUID, List<HeroUsage>> previousUsageByTeam =
+          heroUsageRepository.findByRoundNo(roundNo - 1).stream()
+              .collect(groupingBy(HeroUsage::teamId));
+
       for (final Match match : pendingMatches) {
         try {
-          final Optional<Submission> subA =
-              submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
-          final Optional<Submission> subB =
-              submissionRepository.findByTeamIdAndRoundNo(match.getTeamB(), match.getRoundNo());
+          final Submission subA = submissionsByTeam.get(match.getTeamA());
+          final Submission subB = submissionsByTeam.get(match.getTeamB());
 
-          if (subA.isEmpty() || subB.isEmpty()) {
+          if (subA == null || subB == null) {
             log.warn(
                 "Skipping match {} - missing submissions (teamA={}, teamB={})",
                 match.getMatchId(),
-                subA.isPresent(),
-                subB.isPresent());
+                subA != null,
+                subB != null);
             continue;
           }
 
           final List<Hero> teamAHeroes =
               matchUseCase.getBattleTeam(
                   match.getTeamA(),
-                  requireNonNull(subA.get().getSubmissionJson()),
-                  match.getRoundNo());
+                  requireNonNull(subA.getSubmissionJson()),
+                  match.getRoundNo(),
+                  previousUsageByTeam.getOrDefault(match.getTeamA(), List.of()));
           final List<Hero> teamBHeroes =
               matchUseCase.getBattleTeam(
                   match.getTeamB(),
-                  requireNonNull(subB.get().getSubmissionJson()),
-                  match.getRoundNo());
+                  requireNonNull(subB.getSubmissionJson()),
+                  match.getRoundNo(),
+                  previousUsageByTeam.getOrDefault(match.getTeamB(), List.of()));
 
           final SimulationResult result =
               battleEngineUseCase.simulate(
@@ -281,11 +294,11 @@ public class AdminUseCase {
           fatigueUseCase.recordUsage(
               match.getTeamA(),
               match.getRoundNo(),
-              requireNonNull(subA.get().getSubmissionJson()).heroIds());
+              requireNonNull(subA.getSubmissionJson()).heroIds());
           fatigueUseCase.recordUsage(
               match.getTeamB(),
               match.getRoundNo(),
-              requireNonNull(subB.get().getSubmissionJson()).heroIds());
+              requireNonNull(subB.getSubmissionJson()).heroIds());
 
           matchIds.add(match.getMatchId());
           winners.put(match.getMatchId(), result.winnerTeamId());

@@ -47,6 +47,15 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
   }
 
   @Override
+  public List<HeroUsage> findByRoundNo(Integer roundNo) {
+    return repository.findByRoundNo(roundNo).stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
+  }
+
+  @Override
   public List<HeroUsage> findByTeamId(UUID teamId) {
     return repository.findByTeamId(teamId).stream()
         .map(mapper::toDomain)

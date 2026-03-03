@@ -11,5 +11,7 @@ public interface SpringDataHeroUsageRepository
     extends JpaRepository<HeroUsageEntity, HeroUsageEntity.HeroUsageId> {
   List<HeroUsageEntity> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
 
+  List<HeroUsageEntity> findByRoundNo(Integer roundNo);
+
   List<HeroUsageEntity> findByTeamId(UUID teamId);
 }

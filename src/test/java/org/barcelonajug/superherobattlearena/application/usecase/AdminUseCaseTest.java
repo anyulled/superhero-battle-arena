@@ -197,8 +197,8 @@ class AdminUseCaseTest {
 
     Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
     Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(2));
-    when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
-    when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
+    when(submissionRepository.findByRoundNo(1)).thenReturn(List.of(subA, subB));
+    when(heroUsageRepository.findByRoundNo(0)).thenReturn(List.of());
 
     Hero heroA =
         Hero.builder()
@@ -289,8 +289,11 @@ class AdminUseCaseTest {
     round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
 
-    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
+    Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+    Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(1));
+    when(submissionRepository.findByRoundNo(1)).thenReturn(List.of(subA, subB));
+    when(heroUsageRepository.findByRoundNo(0)).thenReturn(List.of());
+
     Hero hero =
         Hero.builder()
             .id(1)
