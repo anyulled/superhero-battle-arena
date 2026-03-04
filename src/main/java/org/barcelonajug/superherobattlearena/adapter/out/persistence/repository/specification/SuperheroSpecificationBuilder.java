@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SuperheroEntity;
 import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.jspecify.annotations.Nullable;
@@ -32,9 +33,9 @@ public class SuperheroSpecificationBuilder {
 
         // Handle nested fields like powerStats.strength or appearance.gender
         if (field.contains(".")) {
-          List<String> parts = com.google.common.base.Splitter.on('.').splitToList(field);
-          String joinEntity = parts.get(0);
-          String entityField = parts.get(1);
+          String[] parts = Pattern.compile("\\.").split(field);
+          String joinEntity = parts[0];
+          String entityField = parts[1];
 
           // Use Left Join so we don't drop heroes without related stats
           Join<Object, Object> join = root.join(joinEntity, JoinType.LEFT);
