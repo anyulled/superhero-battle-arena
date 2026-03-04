@@ -1,0 +1,41 @@
+--- src/test/java/org/barcelonajug/superherobattlearena/domain/DomainCoverageTest.java
++++ src/test/java/org/barcelonajug/superherobattlearena/domain/DomainCoverageTest.java
+@@ -5,6 +5,7 @@
+ import static org.assertj.core.api.Assertions.assertThat;
+
+ import java.util.List;
++import java.util.UUID;
+ import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
+ import org.barcelonajug.superherobattlearena.domain.filter.FilterOperator;
+ import org.junit.jupiter.api.Test;
+@@ -12,11 +13,12 @@
+ class DomainCoverageTest {
+
+   @Test
+   void submission() {
+-    Submission sub = Submission.builder().teamId("team1").heroIds(List.of(1, 2, 3)).build();
++    UUID id = UUID.randomUUID();
++    Submission sub = Submission.builder().teamId(id).heroIds(List.of(1, 2, 3)).build();
+     assertThat(sub).isNotNull();
+-    assertThat(sub.teamId()).isEqualTo("team1");
+-    assertThat(sub.heroIds()).containsExactly(1, 2, 3);
++    assertThat(sub.teamId()).isEqualTo(id);
++    assertThat(sub.heroIds()).containsExactly(1, 2, 3);
+   }
+
+   @Test
+@@ -31,13 +33,13 @@
+
+   @Test
+   void round() {
+-    Round round = Round.builder().build();
++    Round round = new Round(null, 1, null, null, null);
+     assertThat(round).isNotNull();
+   }
+
+   @Test
+   void session() {
+-    Session session = Session.builder().build();
++    Session session = new Session(null, null, true, null);
+     assertThat(session).isNotNull();
+   }

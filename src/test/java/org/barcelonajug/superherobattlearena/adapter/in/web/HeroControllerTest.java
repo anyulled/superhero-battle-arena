@@ -13,6 +13,8 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.barcelonajug.superherobattlearena.domain.filter.FilterOperator;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -20,15 +22,19 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser
-class HeroControllerTest {
+class HeroControllerTest extends PostgresTestContainerConfig {
 
   @Autowired private MockMvc mockMvc;
 
   private final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Captor
+  private ArgumentCaptor<List<FilterCriteria>> filterCaptor;
 
   @MockitoBean private RosterUseCase rosterUseCase;
 
@@ -68,6 +74,13 @@ class HeroControllerTest {
                 .content(objectMapper.writeValueAsString(criteria)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].name").value("Superman"));
+
+    org.mockito.Mockito.verify(rosterUseCase).filterHeroes(filterCaptor.capture());
+    List<FilterCriteria> capturedCriteria = filterCaptor.getValue();
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria).hasSize(1);
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria.get(0).field()).isEqualTo("powerStats.strength");
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria.get(0).operator()).isEqualTo(FilterOperator.GREATER_THAN);
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria.get(0).value()).isEqualTo("90");
   }
 
   @Test
@@ -116,5 +129,11 @@ class HeroControllerTest {
                 .content(objectMapper.writeValueAsString(criteria)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].name").value("Batman"));
+
+    org.mockito.Mockito.verify(rosterUseCase).filterHeroes(filterCaptor.capture());
+    List<FilterCriteria> capturedCriteria = filterCaptor.getValue();
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria).hasSize(8);
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria.get(0).field()).isEqualTo("name");
+    org.assertj.core.api.Assertions.assertThat(capturedCriteria.get(0).value()).isEqualTo("Batman");
   }
 }

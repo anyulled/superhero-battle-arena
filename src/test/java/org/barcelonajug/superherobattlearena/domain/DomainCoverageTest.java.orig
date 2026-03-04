@@ -1,0 +1,58 @@
+package org.barcelonajug.superherobattlearena.domain;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
+import org.barcelonajug.superherobattlearena.domain.filter.FilterOperator;
+import org.junit.jupiter.api.Test;
+
+class DomainCoverageTest {
+
+  @Test
+  void submission() {
+    Submission sub = Submission.builder().teamId("team1").heroIds(List.of(1, 2, 3)).build();
+    assertThat(sub).isNotNull();
+    assertThat(sub.teamId()).isEqualTo("team1");
+    assertThat(sub.heroIds()).containsExactly(1, 2, 3);
+  }
+
+  @Test
+  void hero() {
+    Hero hero = Hero.builder().id(1).name("Superman").slug("superman").build();
+    assertThat(hero).isNotNull();
+  }
+
+  @Test
+  void match() {
+    Match match = Match.builder().build();
+    assertThat(match).isNotNull();
+  }
+
+  @Test
+  void round() {
+    Round round = Round.builder().build();
+    assertThat(round).isNotNull();
+  }
+
+  @Test
+  void session() {
+    Session session = Session.builder().build();
+    assertThat(session).isNotNull();
+  }
+
+  @Test
+  void filterCriteriaAndOperator() {
+    FilterCriteria criteria =
+        new FilterCriteria("field", FilterOperator.EQUALS, "value", "value2", List.of("v1"));
+    assertThat(criteria.field()).isEqualTo("field");
+    assertThat(criteria.operator()).isEqualTo(FilterOperator.EQUALS);
+    assertThat(criteria.value()).isEqualTo("value");
+    assertThat(criteria.value2()).isEqualTo("value2");
+    assertThat(criteria.values()).containsExactly("v1");
+
+    for (FilterOperator operator : FilterOperator.values()) {
+      assertThat(FilterOperator.valueOf(operator.name())).isEqualTo(operator);
+    }
+  }
+}
