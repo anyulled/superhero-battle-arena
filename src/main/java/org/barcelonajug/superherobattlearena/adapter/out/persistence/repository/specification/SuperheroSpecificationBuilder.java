@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SuperheroEntity;
 import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.jspecify.annotations.Nullable;
@@ -31,9 +32,9 @@ public class SuperheroSpecificationBuilder {
 
         // Handle nested fields like powerStats.strength or appearance.gender
         if (field.contains(".")) {
-          String[] parts = field.split("\\.");
-          String joinEntity = parts[0];
-          String entityField = parts[1];
+          List<String> parts = com.google.common.base.Splitter.on('.').splitToList(field);
+          String joinEntity = parts.get(0);
+          String entityField = parts.get(1);
 
           // Use Left Join so we don't drop heroes without related stats
           Join<Object, Object> join = root.join(joinEntity, JoinType.LEFT);
@@ -57,54 +58,63 @@ public class SuperheroSpecificationBuilder {
       CriteriaBuilder builder, Path<?> path, FilterCriteria criteria) {
     String value = criteria.value();
 
-    switch (criteria.operator()) {
-      case EQUALS:
-        if (value == null) return builder.isNull(path);
+    return switch (criteria.operator()) {
+      case EQUALS -> {
+        if (value == null) yield builder.isNull(path);
         if (path.getJavaType().equals(String.class)) {
-          return builder.equal(builder.lower((Path<String>) path), value.toLowerCase());
+          yield builder.equal(builder.lower((Path<String>) path), value.toLowerCase(Locale.ROOT));
         }
-        return builder.equal(path, parseValue(path.getJavaType(), value));
-      case NOT_EQUALS:
-        if (value == null) return builder.isNotNull(path);
+        yield builder.equal(path, parseValue(path.getJavaType(), value));
+      }
+      case NOT_EQUALS -> {
+        if (value == null) yield builder.isNotNull(path);
         if (path.getJavaType().equals(String.class)) {
-          return builder.notEqual(builder.lower((Path<String>) path), value.toLowerCase());
+          yield builder.notEqual(
+              builder.lower((Path<String>) path), value.toLowerCase(Locale.ROOT));
         }
-        return builder.notEqual(path, parseValue(path.getJavaType(), value));
-      case GREATER_THAN:
-        if (value == null) return null;
-        return builder.greaterThan(
-            (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
-      case LESS_THAN:
-        if (value == null) return null;
-        return builder.lessThan(
-            (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
-      case GREATER_THAN_OR_EQUALS:
-        if (value == null) return null;
-        return builder.greaterThanOrEqualTo(
-            (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
-      case LESS_THAN_OR_EQUALS:
-        if (value == null) return null;
-        return builder.lessThanOrEqualTo(
-            (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
-      case LIKE:
-        if (value == null) return null;
-        return builder.like(builder.lower((Path<String>) path), "%" + value.toLowerCase() + "%");
-      case IN:
-        if (criteria.values() == null || criteria.values().isEmpty()) return null;
+        yield builder.notEqual(path, parseValue(path.getJavaType(), value));
+      }
+      case GREATER_THAN ->
+          value == null
+              ? null
+              : builder.greaterThan(
+                  (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
+      case LESS_THAN ->
+          value == null
+              ? null
+              : builder.lessThan(
+                  (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
+      case GREATER_THAN_OR_EQUALS ->
+          value == null
+              ? null
+              : builder.greaterThanOrEqualTo(
+                  (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
+      case LESS_THAN_OR_EQUALS ->
+          value == null
+              ? null
+              : builder.lessThanOrEqualTo(
+                  (Path<Comparable>) path, (Comparable) parseValue(path.getJavaType(), value));
+      case LIKE ->
+          value == null
+              ? null
+              : builder.like(
+                  builder.lower((Path<String>) path), "%" + value.toLowerCase(Locale.ROOT) + "%");
+      case IN -> {
+        if (criteria.values() == null || criteria.values().isEmpty()) yield null;
         CriteriaBuilder.In<Object> in = builder.in(path);
         for (String v : criteria.values()) {
           in.value(parseValue(path.getJavaType(), v));
         }
-        return in;
-      case BETWEEN:
-        if (value == null || criteria.value2() == null) return null;
-        return builder.between(
-            (Path<Comparable>) path,
-            (Comparable) parseValue(path.getJavaType(), value),
-            (Comparable) parseValue(path.getJavaType(), criteria.value2()));
-      default:
-        return null;
-    }
+        yield in;
+      }
+      case BETWEEN ->
+          (value == null || criteria.value2() == null)
+              ? null
+              : builder.between(
+                  (Path<Comparable>) path,
+                  (Comparable) parseValue(path.getJavaType(), value),
+                  (Comparable) parseValue(path.getJavaType(), criteria.value2()));
+    };
   }
 
   private static @Nullable Object parseValue(Class<?> type, String value) {
