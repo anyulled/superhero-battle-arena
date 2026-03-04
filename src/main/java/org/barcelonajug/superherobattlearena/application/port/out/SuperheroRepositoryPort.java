@@ -3,6 +3,8 @@ package org.barcelonajug.superherobattlearena.application.port.out;
 import java.util.List;
 import java.util.Optional;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria;
+import org.barcelonajug.superherobattlearena.domain.HeroSearchResult;
 
 public interface SuperheroRepositoryPort {
   List<Hero> findAll();
@@ -13,17 +15,11 @@ public interface SuperheroRepositoryPort {
 
   List<Hero> findByAlignmentAndPublisher(String alignment, String publisher);
 
-  // Add pagination support later or now? The plan mentions pagination.
-  // Standard approach might need a domain Page object or use Spring Data's Page.
-  // To keep it simple and dependency-free in domain, maybe List with
-  // offset/limit?
-  // Or just return List for now as per RosterService needs.
-  // Wait, HeroController needs pagination.
-  // Let's use List for now and add pagination logic in Controller or Service if
-  // needed, or simple offset/limit params here.
   List<Hero> findAll(int page, int size);
 
   List<Hero> findByIds(List<Integer> ids);
 
   long count();
+
+  HeroSearchResult search(HeroSearchCriteria criteria);
 }
