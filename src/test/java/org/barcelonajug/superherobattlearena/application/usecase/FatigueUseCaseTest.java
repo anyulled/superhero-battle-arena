@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -111,6 +112,23 @@ class FatigueUseCaseTest {
     assertThat(results).hasSize(2);
     assertThat(results.getFirst().powerstats().durability()).isEqualTo(95);
     assertThat(results.get(1).powerstats().durability()).isEqualTo(200); // No streak for h2
+  }
+
+  @Test
+  void shouldApplyFatigueToMultipleHeroesWithPreFetchedUsage() {
+    UUID teamId = UUID.randomUUID();
+    Hero h1 = createHero(1, 100);
+    Hero h2 = createHero(2, 200);
+
+    HeroUsage usage1 = new HeroUsage(teamId, 1, 0, 1, BigDecimal.valueOf(0.95));
+
+    List<HeroUsage> previousUsage = List.of(usage1);
+    List<Hero> results = fatigueUseCase.applyFatigue(teamId, List.of(h1, h2), 1, previousUsage);
+
+    assertThat(results).hasSize(2);
+    assertThat(results.getFirst().powerstats().durability()).isEqualTo(95);
+    assertThat(results.get(1).powerstats().durability()).isEqualTo(200); // No streak for h2
+    verifyNoInteractions(heroUsageRepository);
   }
 
   private Hero createHero(int id, int durability) {

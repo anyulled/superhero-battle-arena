@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -252,7 +253,27 @@ class AdminUseCaseTest {
     Round round = new Round();
     round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.empty());
+    when(submissionRepository.findByRoundNo(anyInt())).thenReturn(List.of());
+
+    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+    assertThat(result).containsEntry("successCount", 0);
+  }
+
+  @Test
+  void runAllBattles_shouldHandleOneMissingSubmission() {
+    UUID sessionId = UUID.randomUUID();
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+
+    when(matchRepository.findAll()).thenReturn(List.of(match));
+    Round round = new Round();
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
+
+    Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+    // team B is missing
+    when(submissionRepository.findByRoundNo(anyInt())).thenReturn(List.of(subA));
 
     Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
     assertThat(result).containsEntry("successCount", 0);
@@ -261,14 +282,21 @@ class AdminUseCaseTest {
   @Test
   void runAllBattles_shouldHandleExceptionDuringSimulation() {
     UUID sessionId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
 
     when(matchRepository.findAll()).thenReturn(List.of(match));
     // Internal Exception in the loop should be swallowed
     Round round = new Round();
     round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(round));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt()))
+
+    Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+    Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(2));
+    when(submissionRepository.findByRoundNo(anyInt())).thenReturn(List.of(subA, subB));
+
+    when(matchUseCase.getBattleTeam(any(), any(), anyInt(), anyList()))
         .thenThrow(new RuntimeException("Sim Error"));
 
     Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
@@ -364,9 +392,11 @@ class AdminUseCaseTest {
     round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
 
-    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
+    Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+    Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(2));
+    when(submissionRepository.findByRoundNo(anyInt())).thenReturn(List.of(subA, subB));
+
+    when(matchUseCase.getBattleTeam(any(), any(), anyInt(), anyList()))
         .thenThrow(new IllegalArgumentException("Hero not found"));
 
     // Should be swallowed by the loop catch block and return 0 success

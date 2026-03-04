@@ -448,6 +448,22 @@ class MatchUseCaseTest {
   }
 
   @Test
+  void getBattleTeam_withPreviousUsage_shouldDelegateToBuildBattleTeam() {
+    UUID teamId = UUID.randomUUID();
+    DraftSubmission sub = new DraftSubmission(List.of(1), "Sub");
+    Hero mockHero = mock(Hero.class);
+    when(mockHero.id()).thenReturn(1);
+    when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
+    when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt(), anyList()))
+        .thenReturn(List.of(mockHero));
+
+    List<Hero> result = matchUseCase.getBattleTeam(teamId, sub, 1, List.of());
+
+    assertThat(result).hasSize(1);
+    verify(fatigueUseCase).applyFatigue(any(UUID.class), anyList(), anyInt(), anyList());
+  }
+
+  @Test
   void updateUsage_shouldDelegateToFatigueUseCase() {
     UUID teamId = UUID.randomUUID();
     List<Integer> heroIds = List.of(1, 2);
