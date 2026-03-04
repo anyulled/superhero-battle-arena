@@ -3,6 +3,7 @@ package org.barcelonajug.superherobattlearena.application.port.out;
 import java.util.List;
 import java.util.Optional;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 
 public interface SuperheroRepositoryPort {
   List<Hero> findAll();
@@ -12,6 +13,8 @@ public interface SuperheroRepositoryPort {
   List<Hero> searchByName(String term);
 
   List<Hero> findByAlignmentAndPublisher(String alignment, String publisher);
+
+  List<Hero> filterHeroes(List<FilterCriteria> criteriaList);
 
   // Add pagination support later or now? The plan mentions pagination.
   // Standard approach might need a domain Page object or use Spring Data's Page.

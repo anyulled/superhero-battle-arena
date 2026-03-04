@@ -3,11 +3,15 @@ package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SuperheroEntity;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.mapper.SuperheroMapper;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.SpringDataSuperheroRepository;
+import org.barcelonajug.superherobattlearena.adapter.out.persistence.repository.specification.SuperheroSpecificationBuilder;
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -85,6 +89,17 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
           .toList();
     }
     return findAll();
+  }
+
+  @Override
+  public List<Hero> filterHeroes(List<FilterCriteria> criteriaList) {
+    Specification<SuperheroEntity> spec =
+        SuperheroSpecificationBuilder.buildSpecification(criteriaList);
+    return repository.findAll(spec).stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
   }
 
   @Override

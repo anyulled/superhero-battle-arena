@@ -5,11 +5,13 @@ import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.Supe
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SpringDataSuperheroRepository extends JpaRepository<SuperheroEntity, Integer> {
+public interface SpringDataSuperheroRepository
+    extends JpaRepository<SuperheroEntity, Integer>, JpaSpecificationExecutor<SuperheroEntity> {
 
   @Query("SELECT s FROM SuperheroEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :term, '%'))")
   List<SuperheroEntity> searchByName(String term);

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import org.barcelonajug.superherobattlearena.application.port.out.SuperheroRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -57,6 +58,13 @@ public class RosterUseCase {
         results.size(),
         alignment,
         publisher);
+    return results;
+  }
+
+  public List<Hero> filterHeroes(List<FilterCriteria> criteria) {
+    log.debug("Filtering heroes with {} dynamic criteria", criteria == null ? 0 : criteria.size());
+    List<Hero> results = superheroRepository.filterHeroes(criteria);
+    log.debug("Found {} heroes matching dynamic criteria", results.size());
     return results;
   }
 

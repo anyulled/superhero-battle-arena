@@ -7,9 +7,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.barcelonajug.superherobattlearena.application.usecase.RosterUseCase;
 import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,5 +65,14 @@ public class HeroController {
       @RequestParam(required = false) String alignment,
       @RequestParam(required = false) String publisher) {
     return rosterUseCase.filterHeroes(alignment, publisher);
+  }
+
+  @PostMapping("/v2/filter")
+  @Operation(
+      summary = "Advanced dynamic filter for heroes",
+      description =
+          "Filter heroes dynamically by numerous fields including power stats, appearance, and biography. Pass a JSON array of filter criteria.")
+  public List<Hero> filterHeroesV2(@RequestBody List<FilterCriteria> criteria) {
+    return rosterUseCase.filterHeroes(criteria);
   }
 }
