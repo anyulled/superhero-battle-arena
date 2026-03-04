@@ -1,0 +1,17 @@
+--- src/test/java/org/barcelonajug/superherobattlearena/adapter/in/web/HeroControllerTest.java
++++ src/test/java/org/barcelonajug/superherobattlearena/adapter/in/web/HeroControllerTest.java
+@@ -14,14 +14,14 @@
+ import org.barcelonajug.superherobattlearena.domain.filter.FilterOperator;
+ import org.junit.jupiter.api.Test;
+ import org.springframework.beans.factory.annotation.Autowired;
+-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
++import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+ import org.springframework.http.MediaType;
+ import org.springframework.test.context.bean.override.mockito.MockitoBean;
+ import org.springframework.test.web.servlet.MockMvc;
++import org.springframework.context.annotation.Import;
++import org.barcelonajug.superherobattlearena.adapter.config.SecurityConfig;
+
+ @WebMvcTest(HeroController.class)
++@Import({SecurityConfig.class})
+ class HeroControllerTest {

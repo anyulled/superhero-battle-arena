@@ -8,18 +8,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import org.barcelonajug.superherobattlearena.adapter.config.SecurityConfig;
 import org.barcelonajug.superherobattlearena.application.usecase.RosterUseCase;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.filter.FilterCriteria;
 import org.barcelonajug.superherobattlearena.domain.filter.FilterOperator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(HeroController.class)
+@Import({SecurityConfig.class})
+@WithMockUser
 class HeroControllerTest {
 
   @Autowired private MockMvc mockMvc;
@@ -57,6 +62,9 @@ class HeroControllerTest {
     mockMvc
         .perform(
             post("/api/heroes/v2/filter")
+                .with(
+                    org.springframework.security.test.web.servlet.request
+                        .SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(criteria)))
         .andExpect(status().isOk())
