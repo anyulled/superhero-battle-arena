@@ -33,7 +33,8 @@ public class SuperheroPersistenceAdapter implements SuperheroRepositoryPort {
   private final SuperheroMapper mapper;
 
   @SuppressWarnings("NullAway")
-  @PersistenceContext private EntityManager entityManager;
+  @PersistenceContext
+  private EntityManager entityManager;
 
   public SuperheroPersistenceAdapter(
       SpringDataSuperheroRepository repository, SuperheroMapper mapper) {
