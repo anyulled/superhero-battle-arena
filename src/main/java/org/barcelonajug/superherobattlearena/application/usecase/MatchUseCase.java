@@ -270,9 +270,6 @@ public class MatchUseCase {
           duration);
 
       return resultStr;
-    } catch (RuntimeException e) {
-      log.error("Match execution failed - matchId={}", matchId, e);
-      throw e;
     } finally {
       MDC.remove("matchId");
       MDC.remove("roundNo");

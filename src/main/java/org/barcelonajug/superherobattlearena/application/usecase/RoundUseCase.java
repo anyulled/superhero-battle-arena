@@ -113,7 +113,7 @@ public class RoundUseCase {
     } catch (IllegalArgumentException | IllegalStateException e) {
       throw e;
     } catch (RuntimeException e) {
-      throw new RuntimeException(
+      throw new IllegalStateException(
           String.format("Team submission failed - teamId=%s, roundNo=%d", teamId, roundNo), e);
     } finally {
       MDC.remove("roundNo");

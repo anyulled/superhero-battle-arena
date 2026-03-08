@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -83,7 +84,7 @@ public class MatchController {
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             emitter.completeWithError(e);
-          } catch (java.io.IOException | RuntimeException e) {
+          } catch (IOException | RuntimeException e) {
             emitter.completeWithError(e);
           }
         });

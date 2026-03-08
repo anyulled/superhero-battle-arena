@@ -70,7 +70,7 @@ public class SecurityConfig {
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
-      throw new RuntimeException("Failed to configure security filter chain", e);
+      throw new IllegalStateException("Failed to configure security filter chain", e);
     }
   }
 

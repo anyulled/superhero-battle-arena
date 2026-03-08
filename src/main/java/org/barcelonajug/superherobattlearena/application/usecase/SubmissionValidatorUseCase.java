@@ -36,22 +36,17 @@ public class SubmissionValidatorUseCase {
         submission.heroIds(),
         roundSpec.description());
 
-    try {
-      List<Integer> heroIds = submission.heroIds();
+    List<Integer> heroIds = submission.heroIds();
 
-      validateTeamSize(heroIds, roundSpec);
-      validateDuplicates(heroIds);
+    validateTeamSize(heroIds, roundSpec);
+    validateDuplicates(heroIds);
 
-      List<Hero> heroes = resolveHeroes(heroIds);
+    List<Hero> heroes = resolveHeroes(heroIds);
 
-      // Apply all validation rules using strategy pattern
-      validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
+    // Apply all validation rules using strategy pattern
+    validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
 
-      log.info("Submission validation successful - {} heroes validated", heroIds.size());
-    } catch (RuntimeException e) {
-      log.error("Submission validation failed - heroIds={}", submission.heroIds(), e);
-      throw e;
-    }
+    log.info("Submission validation successful - {} heroes validated", heroIds.size());
   }
 
   private void validateTeamSize(List<Integer> heroIds, RoundSpec roundSpec) {
