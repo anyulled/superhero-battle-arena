@@ -239,7 +239,7 @@ class BattleEngineUseCaseTest {
   }
 
   @Test
-  void testTargetSelection_multipleLowestHp_picksRandomly() {
+  void targetSelectionMultipleLowestHpPicksRandomly() {
     // A team with multiple targets at the exact same lowest HP.
     Hero attacker = HeroMother.aStandardHero();
     Hero target1 = HeroMother.aStandardHero();

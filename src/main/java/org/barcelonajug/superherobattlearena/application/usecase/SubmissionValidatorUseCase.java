@@ -48,7 +48,7 @@ public class SubmissionValidatorUseCase {
       validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
 
       log.info("Submission validation successful - {} heroes validated", heroIds.size());
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error("Submission validation failed - heroIds={}", submission.heroIds(), e);
       throw e;
     }

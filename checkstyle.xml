@@ -52,6 +52,23 @@
             <property name="ignoreComments" value="true"/>
         </module>
 
+        <!-- Error Handling Policy: Forbid catching generic Exception/Throwable/RuntimeException -->
+        <module name="IllegalCatch">
+            <property name="illegalClassNames" value="Exception, Throwable"/>
+        </module>
+
+        <!-- Error Handling Policy: Forbid throwing generic Exception/Throwable/RuntimeException -->
+        <module name="IllegalThrows">
+            <property name="illegalClassNames" value="Exception, Throwable"/>
+            <property name="ignoredMethodNames" value="main"/>
+        </module>
+
+        <!-- Enable SuppressWarnings support -->
+        <module name="SuppressWarningsHolder" />
+
         <module name="UnusedImports"/>
     </module>
+    
+    <!-- Enable SuppressWarningsFilter to read SuppressWarningsHolder -->
+    <module name="SuppressWarningsFilter" />
 </module>

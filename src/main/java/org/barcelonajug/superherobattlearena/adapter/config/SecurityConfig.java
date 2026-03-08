@@ -28,43 +28,50 @@ public class SecurityConfig {
   private String adminPassword;
 
   @Bean
+  @SuppressWarnings({"checkstyle:IllegalThrows", "checkstyle:IllegalCatch"})
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http.authorizeHttpRequests(
-            authorize ->
-                authorize
-                    // Admin endpoints require ADMIN role
-                    .requestMatchers("/api/admin/**")
-                    .hasRole("ADMIN")
-                    // Public API endpoints
-                    .requestMatchers(
-                        "/api/teams",
-                        "/api/teams/**",
-                        "/api/**",
-                        "/",
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**")
-                    .permitAll()
-                    // Static resources
-                    .requestMatchers(
-                        "/**/*.html",
-                        "/**/*.css",
-                        "/**/*.js",
-                        "/**/*.png",
-                        "/**/*.jpg",
-                        "/**/*.jpeg",
-                        "/images/**")
-                    .permitAll()
-                    // Any other request requires authentication
-                    .anyRequest()
-                    .authenticated())
-        .httpBasic(customizer -> {})
-        .csrf(
-            csrf ->
-                csrf
-                    // Disable CSRF for API endpoints to simplify implementation
-                    .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
+    try {
+      http.authorizeHttpRequests(
+              authorize ->
+                  authorize
+                      // Admin endpoints require ADMIN role
+                      .requestMatchers("/api/admin/**")
+                      .hasRole("ADMIN")
+                      // Public API endpoints
+                      .requestMatchers(
+                          "/api/teams",
+                          "/api/teams/**",
+                          "/api/**",
+                          "/",
+                          "/swagger-ui/**",
+                          "/v3/api-docs/**")
+                      .permitAll()
+                      // Static resources
+                      .requestMatchers(
+                          "/**/*.html",
+                          "/**/*.css",
+                          "/**/*.js",
+                          "/**/*.png",
+                          "/**/*.jpg",
+                          "/**/*.jpeg",
+                          "/images/**")
+                      .permitAll()
+                      // Any other request requires authentication
+                      .anyRequest()
+                      .authenticated())
+          .httpBasic(customizer -> {})
+          .csrf(
+              csrf ->
+                  csrf
+                      // Disable CSRF for API endpoints to simplify implementation
+                      .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
 
-    return http.build();
+      return http.build();
+    } catch (RuntimeException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to configure security filter chain", e);
+    }
   }
 
   @Bean

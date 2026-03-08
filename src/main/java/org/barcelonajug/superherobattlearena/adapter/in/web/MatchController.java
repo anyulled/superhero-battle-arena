@@ -83,7 +83,7 @@ public class MatchController {
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             emitter.completeWithError(e);
-          } catch (Exception e) {
+          } catch (java.io.IOException | RuntimeException e) {
             emitter.completeWithError(e);
           }
         });

@@ -270,7 +270,7 @@ public class MatchUseCase {
           duration);
 
       return resultStr;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error("Match execution failed - matchId={}", matchId, e);
       throw e;
     } finally {

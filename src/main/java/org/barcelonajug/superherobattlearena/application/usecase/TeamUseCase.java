@@ -71,7 +71,7 @@ public class TeamUseCase {
       log.info("Team registered successfully - teamId={}, name='{}'", team.teamId(), name);
 
       return team.teamId();
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       log.error("Team registration failed - name='{}'", name, e);
       throw e;
     } finally {

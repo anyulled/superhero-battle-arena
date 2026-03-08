@@ -291,7 +291,7 @@ public class AdminUseCase {
           winners.put(match.getMatchId(), result.winnerTeamId());
           successCount++;
 
-        } catch (final Exception e) {
+        } catch (final RuntimeException e) {
           log.error("Error simulating match {}: {}", match.getMatchId(), e.getMessage(), e);
         }
       }
