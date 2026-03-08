@@ -470,6 +470,7 @@
 						<exclude>org/barcelonajug/superherobattlearena/SuperheroBattleArenaApplication*</exclude>
 						<exclude>org/barcelonajug/superherobattlearena/domain/json/**</exclude>
 						<exclude>org/barcelonajug/superherobattlearena/domain/exception/**</exclude>
+						<exclude>org/barcelonajug/superherobattlearena/UnsafeCodePolicyTest*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
