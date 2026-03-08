@@ -36,6 +36,22 @@
             <property name="allowStaticMemberImports" value="true"/>
         </module>
         
+        <!-- Error Handling Policy: Forbid printStackTrace. Use a logger instead. -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="noPrintStackTrace"/>
+            <property name="format" value="\.printStackTrace\(\)"/>
+            <property name="message" value="Error Handling Policy: Do not use printStackTrace(). Use a Logger to log exceptions."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <!-- Error Handling Policy: Forbid System.out/err. Use a logger instead. -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="noSystemOutErr"/>
+            <property name="format" value="System\.(out|err)\.print"/>
+            <property name="message" value="Error Handling Policy: Do not use System.out or System.err for logging. Use a Logger."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
         <module name="UnusedImports"/>
     </module>
 </module>
