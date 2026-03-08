@@ -63,6 +63,26 @@
             <property name="ignoredMethodNames" value="main"/>
         </module>
 
+        <!-- Unsafe Code Policy: Forbid sun.misc.Unsafe -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="sun.misc"/>
+        </module>
+
+        <!-- Unsafe Code Policy: Forbid System.exit() and Runtime.halt() -->
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="noSystemExit"/>
+            <property name="format" value="System\.exit\("/>
+            <property name="message" value="Unsafe Code Policy: Do not use System.exit()."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="noRuntimeHalt"/>
+            <property name="format" value="Runtime\.getRuntime\(\)\.halt\("/>
+            <property name="message" value="Unsafe Code Policy: Do not use Runtime.halt()."/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+
         <!-- Enable SuppressWarnings support -->
         <module name="SuppressWarningsHolder" />
 
