@@ -1,19 +1,19 @@
 # AI Harness Scorecard: superhero-battle-arena
 
-**Grade: C** (68.1/100) | Basic practices present but insufficient for safe AI scaling.
+**Grade: B** (82.7/100) | Good foundation. Some gaps in enforcement or feedback loops.
 
 - **Repository**: `/home/runner/work/superhero-battle-arena/superhero-battle-arena`
 - **Languages**: java
-- **Assessed**: 2026-03-09 15:02 UTC
-- **Checks**: 22/31 passed
+- **Assessed**: 2026-03-16 07:03 UTC
+- **Checks**: 27/31 passed
 
 ## Summary
 
 | Category | Weight | Score | Checks |
 |----------|--------|-------|--------|
 | Architectural Documentation | 20% | 100% [##########] | 5/5 |
-| Mechanical Constraints | 25% | 55% [#####-----] | 4/7 |
-| Testing & Stability | 25% | 42% [####------] | 4/8 |
+| Mechanical Constraints | 25% | 73% [#######---] | 6/7 |
+| Testing & Stability | 25% | 82% [########--] | 7/8 |
 | Review & Drift Prevention | 15% | 100% [##########] | 6/6 |
 | AI-Specific Safeguards | 15% | 60% [######----] | 3/5 |
 
@@ -50,7 +50,7 @@ _DORA 2025 - AI-accessible documentation_
 **Evidence**: Doc generation found in CI
 
 
-## Mechanical Constraints (55%)
+## Mechanical Constraints (73%)
 
 ### [PASS] CI Pipeline (3/3)
 
@@ -58,21 +58,21 @@ _DORA 2025 Report_
 
 **Evidence**: CI detected: github, github, github, github, github
 
-### [FAIL] Linter Enforcement (0/4)
+### [PASS] Linter Enforcement (2/4)
 
 _OpenAI Harness Engineering - mechanical constraints_
 
-**Evidence**: No linter found in CI
+**Evidence**: Checkstyle config found but not confirmed in CI
 
-**Remediation**: Add a linter to CI that blocks merges on violations (e.g. cargo clippy -- -D warnings, eslint --max-warnings 0).
+**Remediation**: Add checkstyle to your CI pipeline as a blocking job.
 
-### [FAIL] Formatter Enforcement (0/3)
+### [PASS] Formatter Enforcement (2/3)
 
 _OpenAI Harness Engineering - mechanical constraints_
 
-**Evidence**: No formatter check found in CI
+**Evidence**: Spotless plugin found but not confirmed in CI
 
-**Remediation**: Add a formatter check to CI (e.g. cargo fmt --all -- --check, prettier --check).
+**Remediation**: Add spotless:check to your CI pipeline.
 
 ### [PASS] Type Safety (3/3)
 
@@ -90,7 +90,7 @@ _Blog: security infrastructure reliability_
 
 _DORA 2025 - working in small batches_
 
-**Evidence**: Commit lint config found: .commitlintrc.yml
+**Evidence**: Conventional commit enforcement found in CI
 
 ### [FAIL] Unsafe Code Policy (0/3)
 
@@ -101,7 +101,7 @@ _Blog: 80% problem in AI-generated code_
 **Remediation**: Add unsafe_code = forbid (Rust), security linting (semgrep/bandit), or ESLint rules against dangerous patterns.
 
 
-## Testing & Stability (42%)
+## Testing & Stability (82%)
 
 ### [PASS] Test Suite (2/3)
 
@@ -117,13 +117,11 @@ _DORA 2025 - stability through comprehensive testing_
 
 **Evidence**: Multiple test jobs in CI: test, mutation, fuzz, security-audit
 
-### [FAIL] Code Coverage (0/4)
+### [PASS] Code Coverage (4/4)
 
 _DORA 2025 - stability feedback loops_
 
-**Evidence**: No code coverage measurement found
-
-**Remediation**: Add cargo llvm-cov, pytest-cov, istanbul/c8, or equivalent to CI. Even informational coverage provides a feedback loop.
+**Evidence**: Coverage measurement in CI: jacoco|cobertura
 
 ### [PASS] Mutation Testing (4/4)
 
@@ -131,21 +129,17 @@ _SlopCodeBench - code that 'appears correct but is unreliable'_
 
 **Evidence**: Mutation testing found in CI
 
-### [FAIL] Property-Based Testing (0/3)
+### [PASS] Property-Based Testing (3/3)
 
 _Blog: catching edge cases in AI-generated code_
 
-**Evidence**: No property-based testing found
+**Evidence**: Property-based testing library found in pom.xml
 
-**Remediation**: Add proptest (Rust), hypothesis (Python), or fast-check (JS/TS) for testing invariants with random structured inputs.
-
-### [FAIL] Fuzz Testing (0/3)
+### [PASS] Fuzz Testing (3/3)
 
 _Blog: 80% problem - catching what AI misses_
 
-**Evidence**: No fuzz testing found
-
-**Remediation**: Add fuzz targets for parsing-heavy and input-handling code paths.
+**Evidence**: Jazzer fuzz testing library found in pom.xml
 
 ### [FAIL] Contract / Compatibility Tests (0/3)
 
