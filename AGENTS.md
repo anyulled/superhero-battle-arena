@@ -5,7 +5,7 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 ## 1. Project Context & Stack
 
 - **Language:** Java 25 with preview features.
-- **Framework:** Spring Boot 4.0.3.
+- **Framework:** Spring Boot 4.0.4.
 - **Pattern:** Hexagonal Architecture (Ports and Adapters).
 - **Build Tool:** Maven (`./mvnw`).
 - **Persistence:** PostgreSQL (via Testcontainers for tests, managed via docker-compose locally) & H2 memory fallback.
