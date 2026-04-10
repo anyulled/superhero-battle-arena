@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -186,6 +187,25 @@ class MatchUseCaseTest {
     // Then: 2 matches created (5 teams / 2 = 2, with 1 team left unmatched)
     assertThat(matchIds).hasSize(2);
     verify(matchRepository).saveAll(anyList());
+  }
+
+  @Test
+  void autoMatch_shouldNotSaveAnything_whenNoUnmatchedTeamsExist() {
+    // Given: 0 teams with submissions
+    UUID sessionId = UUID.randomUUID();
+    Integer roundNo = 1;
+
+    List<Submission> submissions = new ArrayList<>();
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
+        .thenReturn(new ArrayList<>());
+
+    // When: autoMatch is called
+    List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
+
+    // Then: 0 matches created, saveAll is not called
+    assertThat(matchIds).isEmpty();
+    verify(matchRepository, never()).saveAll(anyList());
   }
 
   @Test
