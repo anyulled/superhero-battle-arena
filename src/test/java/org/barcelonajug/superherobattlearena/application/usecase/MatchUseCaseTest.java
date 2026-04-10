@@ -76,14 +76,14 @@ class MatchUseCaseTest {
     when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(new ArrayList<>());
-    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
+    when(matchRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
     // When: autoMatch is called
     List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
     // Then: 2 matches should be created (4 teams / 2)
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(2)).save(any(Match.class));
+    verify(matchRepository).saveAll(anyList());
   }
 
   @Test
@@ -98,7 +98,7 @@ class MatchUseCaseTest {
     // First call: no existing matches
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(new ArrayList<>());
-    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
+    when(matchRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
     // When: autoMatch is called first time
     List<UUID> firstCallMatchIds = matchUseCase.autoMatch(sessionId, roundNo);
@@ -107,9 +107,10 @@ class MatchUseCaseTest {
     assertThat(firstCallMatchIds).hasSize(2);
 
     // Capture the matches that were created
-    ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
-    verify(matchRepository, times(2)).save(matchCaptor.capture());
-    List<Match> createdMatches = matchCaptor.getAllValues();
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Match>> matchCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(matchRepository).saveAll(matchCaptor.capture());
+    List<Match> createdMatches = matchCaptor.getValue();
 
     // Second call: existing matches present
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(createdMatches);
@@ -119,8 +120,8 @@ class MatchUseCaseTest {
 
     // Then: 0 new matches created (all teams already matched)
     assertThat(secondCallMatchIds).isEmpty();
-    // Verify save was only called 2 times total (from first call)
-    verify(matchRepository, times(2)).save(any(Match.class));
+    // Verify saveAll was only called once total (from first call)
+    verify(matchRepository, times(1)).saveAll(anyList());
   }
 
   @Test
@@ -144,19 +145,20 @@ class MatchUseCaseTest {
 
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(List.of(existingMatch));
-    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
+    when(matchRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
     // When: autoMatch is called
     List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
     // Then: 2 new matches created for the 4 unmatched teams
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(2)).save(any(Match.class));
+    verify(matchRepository).saveAll(anyList());
 
     // Verify the new matches don't include already-matched teams
-    ArgumentCaptor<Match> matchCaptor = ArgumentCaptor.forClass(Match.class);
-    verify(matchRepository, times(2)).save(matchCaptor.capture());
-    List<Match> newMatches = matchCaptor.getAllValues();
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<List<Match>> matchCaptor = ArgumentCaptor.forClass((Class) List.class);
+    verify(matchRepository).saveAll(matchCaptor.capture());
+    List<Match> newMatches = matchCaptor.getValue();
 
     for (Match match : newMatches) {
       assertThat(match.getTeamA()).isNotEqualTo(submissions.getFirst().getTeamId());
@@ -176,14 +178,14 @@ class MatchUseCaseTest {
     when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(new ArrayList<>());
-    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
+    when(matchRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
     // When: autoMatch is called
     List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
     // Then: 2 matches created (5 teams / 2 = 2, with 1 team left unmatched)
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(2)).save(any(Match.class));
+    verify(matchRepository).saveAll(anyList());
   }
 
   @Test
