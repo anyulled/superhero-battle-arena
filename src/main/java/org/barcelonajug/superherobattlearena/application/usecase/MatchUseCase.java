@@ -103,6 +103,7 @@ public class MatchUseCase {
           unmatchedSubmissions.size());
 
       List<UUID> matchIds = new ArrayList<>();
+      List<Match> matchesToSave = new ArrayList<>();
 
       for (int i = 0; i < unmatchedSubmissions.size() - 1; i += 2) {
         Submission subA = unmatchedSubmissions.get(i);
@@ -118,13 +119,17 @@ public class MatchUseCase {
                 .status(MatchStatus.PENDING)
                 .build();
 
-        matchRepository.save(match);
+        matchesToSave.add(match);
         matchIds.add(match.getMatchId());
         log.debug(
             "Created match {} between teams {} and {}",
             match.getMatchId(),
             subA.getTeamId(),
             subB.getTeamId());
+      }
+
+      if (!matchesToSave.isEmpty()) {
+        matchRepository.saveAll(matchesToSave);
       }
 
       log.info("Auto-match completed - created {} matches for round {}", matchIds.size(), roundNo);
