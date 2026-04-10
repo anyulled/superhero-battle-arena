@@ -22,6 +22,7 @@ import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositor
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Match;
+import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
@@ -29,8 +30,10 @@ import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
+import org.barcelonajug.superherobattlearena.domain.mother.HeroMother;
 import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
 import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
+import org.barcelonajug.superherobattlearena.domain.mother.SubmissionMother;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -421,6 +424,20 @@ class MatchUseCaseTest {
   }
 
   @Test
+  void getMatchEvents_shouldReturnSnapshots() {
+    UUID matchId = UUID.randomUUID();
+    MatchEvent event1 = mock(MatchEvent.class);
+    MatchEventSnapshot snapshot1 = mock(MatchEventSnapshot.class);
+    when(event1.eventJson()).thenReturn(snapshot1);
+
+    when(matchEventRepository.findByMatchId(matchId)).thenReturn(List.of(event1));
+
+    List<MatchEventSnapshot> events = matchUseCase.getMatchEvents(matchId);
+    assertThat(events).hasSize(1);
+    assertThat(events.get(0)).isEqualTo(snapshot1);
+  }
+
+  @Test
   void getMatchEventEntities_shouldDelegateToRepository() {
     UUID matchId = UUID.randomUUID();
     when(matchEventRepository.findByMatchId(matchId)).thenReturn(List.of());
@@ -432,19 +449,80 @@ class MatchUseCaseTest {
   void runMatchResult_shouldDelegateToRunMatch() {
     UUID matchId = UUID.randomUUID();
     Match match =
-        MatchMother.aMatch(
-            matchId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            1,
-            MatchStatus.COMPLETED);
+        Match.builder()
+            .matchId(matchId)
+            .status(MatchStatus.COMPLETED)
+            .roundNo(1)
+            .sessionId(UUID.randomUUID())
+            .teamA(UUID.randomUUID())
+            .teamB(UUID.randomUUID())
+            .build();
+
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
 
-    // This will throw IllegalStateException because it's already COMPLETED, but
-    // proves delegation
+    // this will call runMatch(matchId), which will throw IllegalStateException
     assertThatThrownBy(() -> matchUseCase.runMatchResult(match))
-        .isInstanceOf(IllegalStateException.class);
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Match already run or running");
+  }
+
+  @Test
+  void runMatch_shouldThrowException_whenRoundNotFound() {
+    UUID matchId = UUID.randomUUID();
+    UUID sessionId = UUID.randomUUID();
+    Integer roundNo = 1;
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+
+    Match match =
+        Match.builder()
+            .matchId(matchId)
+            .sessionId(sessionId)
+            .roundNo(roundNo)
+            .teamA(teamA)
+            .teamB(teamB)
+            .status(MatchStatus.PENDING)
+            .build();
+
+    when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
+
+    Submission subA = SubmissionMother.aSubmission(teamA, roundNo, List.of(1, 2, 3));
+    Submission subB = SubmissionMother.aSubmission(teamB, roundNo, List.of(1, 2, 3));
+
+    when(submissionRepository.findByTeamIdAndRoundNo(teamA, roundNo)).thenReturn(Optional.of(subA));
+    when(submissionRepository.findByTeamIdAndRoundNo(teamB, roundNo)).thenReturn(Optional.of(subB));
+
+    Hero hero1 = HeroMother.aHeroWithRole("Tank");
+    Hero hero2 = HeroMother.aHeroWithRole("Damage");
+    Hero hero3 = HeroMother.aHeroWithRole("Support");
+    List<Hero> rosterHeroes = List.of(hero1, hero2, hero3);
+
+    Hero matchedHero1 = HeroMother.aHeroWithRole("Tank");
+    Hero matchedHero2 = HeroMother.aHeroWithRole("Damage");
+    Hero matchedHero3 = HeroMother.aHeroWithRole("Support");
+    // Java 25 record fields can't be easily mutated, so let's mock the getHeroes map manually.
+    // Instead of using field injection, we'll configure rosterUseCase to return the correct heroes.
+    // But since buildBattleTeam looks up heroes by their actual id(), we must ensure they match.
+    // Let's just create heroes with constructor if possible, or mock them.
+    Hero h1 = mock(Hero.class);
+    when(h1.id()).thenReturn(1);
+    Hero h2 = mock(Hero.class);
+    when(h2.id()).thenReturn(2);
+    Hero h3 = mock(Hero.class);
+    when(h3.id()).thenReturn(3);
+
+    List<Hero> matchedRoster = List.of(h1, h2, h3);
+
+    when(rosterUseCase.getHeroes(anyList())).thenReturn(matchedRoster);
+    when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), any(Integer.class)))
+        .thenReturn(matchedRoster);
+
+    when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
+        .thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> matchUseCase.runMatch(matchId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Round not found");
   }
 
   @Test
