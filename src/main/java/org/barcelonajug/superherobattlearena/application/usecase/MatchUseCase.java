@@ -103,7 +103,7 @@ public class MatchUseCase {
           unmatchedSubmissions.size());
 
       List<UUID> matchIds = new ArrayList<>();
-      List<Match> matchesToSave = new ArrayList<>(unmatchedSubmissions.size() / 2);
+      List<Match> matchesToSave = new ArrayList<>();
 
       for (int i = 0; i < unmatchedSubmissions.size() - 1; i += 2) {
         Submission subA = unmatchedSubmissions.get(i);
