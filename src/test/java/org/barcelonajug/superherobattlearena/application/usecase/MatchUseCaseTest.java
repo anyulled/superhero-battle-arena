@@ -111,10 +111,10 @@ class MatchUseCaseTest {
     assertThat(firstCallMatchIds).hasSize(2);
 
     // Capture the matches that were created
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<Match>> matchCaptor = ArgumentCaptor.forClass((Class) List.class);
+    ArgumentCaptor<List> matchCaptor = ArgumentCaptor.forClass(List.class);
     verify(matchRepository).saveAll(matchCaptor.capture());
-    List<Match> createdMatches = matchCaptor.getValue();
+    List<?> rawMatches = matchCaptor.getValue();
+    List<Match> createdMatches = rawMatches.stream().map(Match.class::cast).toList();
 
     // Second call: existing matches present
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(createdMatches);
@@ -124,7 +124,6 @@ class MatchUseCaseTest {
 
     // Then: 0 new matches created (all teams already matched)
     assertThat(secondCallMatchIds).isEmpty();
-    // Verify saveAll was only called once total (from first call)
     verify(matchRepository, times(1)).saveAll(anyList());
   }
 
@@ -159,10 +158,10 @@ class MatchUseCaseTest {
     verify(matchRepository).saveAll(anyList());
 
     // Verify the new matches don't include already-matched teams
-    @SuppressWarnings("unchecked")
-    ArgumentCaptor<List<Match>> matchCaptor = ArgumentCaptor.forClass((Class) List.class);
+    ArgumentCaptor<List> matchCaptor = ArgumentCaptor.forClass(List.class);
     verify(matchRepository).saveAll(matchCaptor.capture());
-    List<Match> newMatches = matchCaptor.getValue();
+    List<?> rawMatches = matchCaptor.getValue();
+    List<Match> newMatches = rawMatches.stream().map(Match.class::cast).toList();
 
     for (Match match : newMatches) {
       assertThat(match.getTeamA()).isNotEqualTo(submissions.getFirst().getTeamId());
