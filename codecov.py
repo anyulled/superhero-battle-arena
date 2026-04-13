@@ -1,13 +1,21 @@
-import xml.etree.ElementTree as ET
+import sys
+import defusedxml.ElementTree as ET
 
-tree = ET.parse('target/site/jacoco/jacoco.xml')
-root = tree.getroot()
+try:
+    tree = ET.parse('target/site/jacoco/jacoco.xml')
+    root = tree.getroot()
+except (ET.ParseError, FileNotFoundError) as e:
+    print(f"Error parsing XML file: {e}", file=sys.stderr)
+    sys.exit(1)
 
-for package in root.findall('package'):
-    if package.attrib['name'] == 'org/barcelonajug/superherobattlearena/application/usecase':
-        for class_ in package.findall('class'):
-            if class_.attrib['name'] == 'org/barcelonajug/superherobattlearena/application/usecase/MatchUseCase':
-                for method in class_.findall('method'):
-                    for counter in method.findall('counter'):
-                        if counter.attrib['type'] == 'INSTRUCTION':
-                            print(f"Method: {method.attrib['name']}, Instructions: Missed={counter.attrib['missed']}, Covered={counter.attrib['covered']}")
+for package in root.findall('package') or []:
+    if package.attrib.get('name', '') == 'org/barcelonajug/superherobattlearena/application/usecase':
+        for class_ in package.findall('class') or []:
+            if class_.attrib.get('name', '') == 'org/barcelonajug/superherobattlearena/application/usecase/MatchUseCase':
+                for method in class_.findall('method') or []:
+                    for counter in method.findall('counter') or []:
+                        if counter.attrib.get('type', '') == 'INSTRUCTION':
+                            method_name = method.attrib.get('name', '')
+                            missed = counter.attrib.get('missed', '0')
+                            covered = counter.attrib.get('covered', '0')
+                            print(f"Method: {method_name}, Instructions: Missed={missed}, Covered={covered}")
