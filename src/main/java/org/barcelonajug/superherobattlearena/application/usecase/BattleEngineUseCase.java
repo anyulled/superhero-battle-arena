@@ -58,19 +58,21 @@ public class BattleEngineUseCase {
       events.add(MatchEventSnapshot.matchStart(logicalTime.getAndIncrement()));
 
       int turn = 0;
-      UUID winnerId = null;
 
       sortHeroesBySpeed(allHeroes);
+
+      TeamCountersUseCase counters =
+          new TeamCountersUseCase(teamAId, teamBId, teamAHeroes.size(), teamBHeroes.size());
+
+      UUID winnerId = counters.getWinnerId();
 
       while (turn < MAX_TURNS && winnerId == null) {
         turn++;
         events.add(MatchEventSnapshot.turnStart(turn, logicalTime.getAndIncrement()));
 
-        winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
-
-        if (winnerId == null) {
-          winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
-        }
+        winnerId =
+            executeTurn(
+                allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime, counters);
 
         if (turn % 10 == 0) {
           log.debug("Battle progress - turn {}/{}", turn, MAX_TURNS);
@@ -102,13 +104,14 @@ public class BattleEngineUseCase {
       RoundSpec roundSpec,
       Random random,
       List<MatchEventSnapshot> events,
-      AtomicLong logicalTime) {
+      AtomicLong logicalTime,
+      TeamCountersUseCase counters) {
     for (BattleHeroUseCase attacker : allHeroes) {
       if (!attacker.isAlive()) {
         continue;
       }
 
-      UUID winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
+      UUID winnerId = counters.getWinnerId();
       if (winnerId != null) {
         return winnerId;
       }
@@ -118,9 +121,9 @@ public class BattleEngineUseCase {
         return attacker.teamId;
       }
 
-      performAttack(attacker, target, roundSpec, random, events, logicalTime);
+      performAttack(attacker, target, roundSpec, random, events, logicalTime, counters);
     }
-    return null;
+    return counters.getWinnerId();
   }
 
   private void performAttack(
@@ -129,7 +132,8 @@ public class BattleEngineUseCase {
       RoundSpec roundSpec,
       Random random,
       List<MatchEventSnapshot> events,
-      AtomicLong logicalTime) {
+      AtomicLong logicalTime,
+      TeamCountersUseCase counters) {
 
     // 1. Dodge Check
     double dodgeChance = calculateDodgeChance(attacker, target);
@@ -175,6 +179,7 @@ public class BattleEngineUseCase {
 
     if (target.currentHp <= 0) {
       target.currentHp = 0;
+      counters.decrement(target.teamId);
       events.add(
           MatchEventSnapshot.ko(
               target.hero.name(),
@@ -189,18 +194,6 @@ public class BattleEngineUseCase {
         Comparator.comparingInt((BattleHeroUseCase bh) -> bh.hero.powerstats().speed())
             .thenComparingInt(bh -> bh.hero.powerstats().combat())
             .reversed());
-  }
-
-  @Nullable UUID checkWinCondition(List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId) {
-    boolean teamADead = isTeamWipedOut(allHeroes, teamAId);
-    boolean teamBDead = isTeamWipedOut(allHeroes, teamBId);
-
-    return switch ((teamADead ? 1 : 0) | (teamBDead ? 2 : 0)) {
-      case 3 -> null; // Both teams dead (simultaneous KO - unlikely with serial logic)
-      case 1 -> teamBId; // Team A dead, Team B wins
-      case 2 -> teamAId; // Team B dead, Team A wins
-      default -> null; // Battle continues
-    };
   }
 
   private @Nullable BattleHeroUseCase findTarget(
@@ -269,10 +262,40 @@ public class BattleEngineUseCase {
     return Math.max(1, rawDamage);
   }
 
-  boolean isTeamWipedOut(List<BattleHeroUseCase> allHeroes, UUID teamId) {
-    return allHeroes.stream()
-        .filter(h -> h.teamId.equals(teamId))
-        .noneMatch(BattleHeroUseCase::isAlive);
+  static final class TeamCountersUseCase {
+    private final UUID teamAId;
+    private final UUID teamBId;
+    private int teamACount;
+    private int teamBCount;
+
+    TeamCountersUseCase(
+        final UUID teamAId, final UUID teamBId, final int teamACount, final int teamBCount) {
+      this.teamAId = teamAId;
+      this.teamBId = teamBId;
+      this.teamACount = teamACount;
+      this.teamBCount = teamBCount;
+    }
+
+    void decrement(final UUID teamId) {
+      if (teamId.equals(teamAId)) {
+        teamACount--;
+      } else if (teamId.equals(teamBId)) {
+        teamBCount--;
+      }
+    }
+
+    @Nullable UUID getWinnerId() {
+      if (teamACount == 0 && teamBCount == 0) {
+        return null;
+      }
+      if (teamACount == 0) {
+        return teamBId;
+      }
+      if (teamBCount == 0) {
+        return teamAId;
+      }
+      return null;
+    }
   }
 
   static class BattleHeroUseCase {

@@ -54,38 +54,23 @@ class BattleEngineUseCaseTest {
   }
 
   @Test
-  void isTeamWipedOut_shouldReturnCorrectValue() {
-    Hero hero = HeroMother.aStandardHero();
-    BattleHeroUseCase bh = new BattleHeroUseCase(hero, teamAId);
-    List<BattleHeroUseCase> heroes = List.of(bh);
+  void teamCounters_shouldIdentifyWinner() {
+    BattleEngineUseCase.TeamCountersUseCase counters =
+        new BattleEngineUseCase.TeamCountersUseCase(teamAId, teamBId, 1, 1);
 
-    assertThat(battleEngineUseCase.isTeamWipedOut(heroes, teamAId)).isFalse();
-    assertThat(battleEngineUseCase.isTeamWipedOut(heroes, teamBId)).isTrue();
+    assertThat(counters.getWinnerId()).isNull();
 
-    bh.currentHp = 0;
-    assertThat(battleEngineUseCase.isTeamWipedOut(heroes, teamAId)).isTrue();
-  }
+    counters.decrement(teamAId);
+    assertThat(counters.getWinnerId()).isEqualTo(teamBId);
 
-  @Test
-  void checkWinCondition_shouldIdentifyWinner() {
-    Hero heroA = HeroMother.aStandardHero();
-    Hero heroB = HeroMother.aStandardHero();
-    BattleHeroUseCase bhA = new BattleHeroUseCase(heroA, teamAId);
-    BattleHeroUseCase bhB = new BattleHeroUseCase(heroB, teamBId);
-    List<BattleHeroUseCase> heroes = List.of(bhA, bhB);
+    counters = new BattleEngineUseCase.TeamCountersUseCase(teamAId, teamBId, 1, 1);
+    counters.decrement(teamBId);
+    assertThat(counters.getWinnerId()).isEqualTo(teamAId);
 
-    assertThat(battleEngineUseCase.checkWinCondition(heroes, teamAId, teamBId)).isNull();
-
-    bhA.currentHp = 0;
-    assertThat(battleEngineUseCase.checkWinCondition(heroes, teamAId, teamBId)).isEqualTo(teamBId);
-
-    bhA.currentHp = 10;
-    bhB.currentHp = 0;
-    assertThat(battleEngineUseCase.checkWinCondition(heroes, teamAId, teamBId)).isEqualTo(teamAId);
-
-    bhA.currentHp = 0;
-    bhB.currentHp = 0;
-    assertThat(battleEngineUseCase.checkWinCondition(heroes, teamAId, teamBId)).isNull(); // Draw
+    counters = new BattleEngineUseCase.TeamCountersUseCase(teamAId, teamBId, 1, 1);
+    counters.decrement(teamAId);
+    counters.decrement(teamBId);
+    assertThat(counters.getWinnerId()).isNull(); // Draw
   }
 
   @Test
