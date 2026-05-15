@@ -38,13 +38,13 @@ class AdminUseCaseBenchmarkIT {
     // Insert filler matches
     for (int i = 0; i < totalMatches; i++) {
       Match m = Match.builder()
-        .matchId(UUID.randomUUID())
-        .sessionId(UUID.randomUUID())
-        .roundNo(targetRoundNo)
-        .status(MatchStatus.COMPLETED)
-        .teamA(UUID.randomUUID())
-        .teamB(UUID.randomUUID())
-        .build();
+          .matchId(UUID.randomUUID())
+          .sessionId(UUID.randomUUID())
+          .roundNo(targetRoundNo)
+          .status(MatchStatus.COMPLETED)
+          .teamA(UUID.randomUUID())
+          .teamB(UUID.randomUUID())
+          .build();
       events.add(m);
     }
 
