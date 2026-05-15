@@ -1,0 +1,40 @@
+--- src/test/java/org/barcelonajug/superherobattlearena/adapter/out/persistence/MatchRepositoryIntegrationIT.java
++++ src/test/java/org/barcelonajug/superherobattlearena/adapter/out/persistence/MatchRepositoryIntegrationIT.java
+@@ -88,4 +88,36 @@
+     assertThat(pending).hasSize(2);
+     assertThat(completed).hasSize(3);
+   }
++
++  @Test
++  void shouldFindFirstByRoundNoAndStatus() {
++    // Arrange
++    UUID sessionId = UUID.randomUUID();
++    int roundNo = 2;
++
++    matchRepository.save(pendingMatch(sessionId, roundNo));
++    matchRepository.save(pendingMatch(sessionId, roundNo));
++
++    // Act
++    var firstPending = matchRepository.findFirstByRoundNoAndStatus(roundNo, MatchStatus.PENDING);
++
++    // Assert
++    assertThat(firstPending).isPresent();
++  }
++
++  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
++
++  @Test
++  void shouldFindFirstPendingMatchViaPort() {
++    // Arrange
++    UUID sessionId = UUID.randomUUID();
++    int roundNo = 3;
++
++    matchRepository.save(pendingMatch(sessionId, roundNo));
++
++    // Act
++    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
++
++    // Assert
++    assertThat(firstPending).isPresent();
++  }
+ }

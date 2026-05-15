@@ -22,6 +22,8 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
 
   @Autowired private SpringDataMatchRepository matchRepository;
 
+  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
+
   @Test
   void shouldSaveAndRetrieveMatch() {
     // Arrange
@@ -39,23 +41,6 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
     assertThat(found.get().getSessionId()).isEqualTo(sessionId);
   }
 
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
-  }
-
   @Test
   void shouldFindPendingMatchesByRoundAndSession() {
     // Arrange
@@ -67,44 +52,10 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
       matchRepository.save(pendingMatch(sessionId, roundNo));
     }
 
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
-  }
-
     // Create noise data (different session)
     for (int i = 0; i < 3; i++) {
       matchRepository.save(pendingMatch(UUID.randomUUID(), roundNo));
     }
-
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
-  }
 
     // Act
     List<MatchEntity> pending =
@@ -114,23 +65,6 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
     assertThat(pending)
         .hasSize(5)
         .allMatch(m -> Objects.requireNonNull(m.getSessionId()).equals(sessionId));
-  }
-
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
   }
 
   @Test
@@ -144,43 +78,9 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
       matchRepository.save(pendingMatch(sessionId, roundNo));
     }
 
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
-  }
-
     for (int i = 0; i < 3; i++) {
       matchRepository.save(completedMatch(sessionId, roundNo, UUID.randomUUID()));
     }
-
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
-  }
 
     // Act
     List<MatchEntity> pending =
@@ -192,23 +92,6 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
     // Assert
     assertThat(pending).hasSize(2);
     assertThat(completed).hasSize(3);
-  }
-
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
-
-  @Test
-  void shouldFindFirstPendingMatchViaPort() {
-    // Arrange
-    UUID sessionId = UUID.randomUUID();
-    int roundNo = 3;
-
-    matchRepository.save(pendingMatch(sessionId, roundNo));
-
-    // Act
-    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
-
-    // Assert
-    assertThat(firstPending).isPresent();
   }
 
   @Test
@@ -226,8 +109,6 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
     // Assert
     assertThat(firstPending).isPresent();
   }
-
-  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
 
   @Test
   void shouldFindFirstPendingMatchViaPort() {
