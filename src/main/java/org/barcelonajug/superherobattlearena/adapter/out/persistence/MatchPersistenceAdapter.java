@@ -11,6 +11,7 @@ import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositor
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.springframework.stereotype.Component;
+import org.jspecify.annotations.Nullable;
 
 @Component
 public class MatchPersistenceAdapter implements MatchRepositoryPort {
@@ -78,7 +79,7 @@ public class MatchPersistenceAdapter implements MatchRepositoryPort {
   }
 
   @Override
-  public List<Match> findPendingMatches(Integer roundNo, UUID sessionId) {
+  public List<Match> findPendingMatches(Integer roundNo, @Nullable UUID sessionId) {
     return (sessionId == null
             ? repository.findByRoundNoAndStatus(roundNo, MatchStatus.PENDING)
             : repository.findByRoundNoAndStatusAndSessionId(

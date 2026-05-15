@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.jspecify.annotations.Nullable;
 
 public interface MatchRepositoryPort {
   Match save(Match match);
