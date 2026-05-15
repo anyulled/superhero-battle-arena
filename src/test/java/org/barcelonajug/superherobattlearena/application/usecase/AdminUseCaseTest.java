@@ -325,7 +325,8 @@ class AdminUseCaseTest {
   void runAllBattles_shouldInferSessionFromPendingMatches_whenSessionIdIsNull() {
     UUID sessionId = UUID.randomUUID();
     Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
-    when(matchRepository.findPendingMatches(1, null)).thenReturn(List.of(match));
+    when(matchRepository.findFirstPendingMatch(1)).thenReturn(Optional.of(match));
+    when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of(match));
     // Should find sessionId from match
 
     Round round = new Round();
