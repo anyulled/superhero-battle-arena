@@ -22,6 +22,8 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
 
   @Autowired private SpringDataMatchRepository matchRepository;
 
+  @Autowired private MatchPersistenceAdapter matchPersistenceAdapter;
+
   @Test
   void shouldSaveAndRetrieveMatch() {
     // Arrange
@@ -90,5 +92,36 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
     // Assert
     assertThat(pending).hasSize(2);
     assertThat(completed).hasSize(3);
+  }
+
+  @Test
+  void shouldFindFirstByRoundNoAndStatus() {
+    // Arrange
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    matchRepository.save(pendingMatch(sessionId, roundNo));
+    matchRepository.save(pendingMatch(sessionId, roundNo));
+
+    // Act
+    var firstPending = matchRepository.findFirstByRoundNoAndStatus(roundNo, MatchStatus.PENDING);
+
+    // Assert
+    assertThat(firstPending).isPresent();
+  }
+
+  @Test
+  void shouldFindFirstPendingMatchViaPort() {
+    // Arrange
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 3;
+
+    matchRepository.save(pendingMatch(sessionId, roundNo));
+
+    // Act
+    var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
+
+    // Assert
+    assertThat(firstPending).isPresent();
   }
 }
