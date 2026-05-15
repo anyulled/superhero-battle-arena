@@ -37,27 +37,27 @@ class AdminUseCaseBenchmarkIT {
 
     // Insert filler matches
     for (int i = 0; i < totalMatches; i++) {
-      Match m = new Match();
-      m.setId(UUID.randomUUID());
-      m.setSessionId(UUID.randomUUID()); // Random session
-      m.setRoundNo(targetRoundNo);
-      m.setStatus(MatchStatus.FINISHED);
-      m.setTeamAId(UUID.randomUUID());
-      m.setTeamBId(UUID.randomUUID());
-      m.setLogs("log");
+      Match m = Match.builder()
+        .matchId(UUID.randomUUID())
+        .sessionId(UUID.randomUUID())
+        .roundNo(targetRoundNo)
+        .status(MatchStatus.COMPLETED)
+        .teamA(UUID.randomUUID())
+        .teamB(UUID.randomUUID())
+        .build();
       events.add(m);
     }
 
     // Insert target matches
     for (int i = 0; i < targetPendingMatches; i++) {
-      Match m = new Match();
-      m.setId(UUID.randomUUID());
-      m.setSessionId(targetSessionId); // Target session
-      m.setRoundNo(targetRoundNo);
-      m.setStatus(MatchStatus.PENDING); // Target status
-      m.setTeamAId(UUID.randomUUID());
-      m.setTeamBId(UUID.randomUUID());
-      m.setLogs("log");
+      Match m = Match.builder()
+          .matchId(UUID.randomUUID())
+          .sessionId(targetSessionId)
+          .roundNo(targetRoundNo)
+          .status(MatchStatus.PENDING)
+          .teamA(UUID.randomUUID())
+          .teamB(UUID.randomUUID())
+          .build();
       events.add(m);
     }
 
