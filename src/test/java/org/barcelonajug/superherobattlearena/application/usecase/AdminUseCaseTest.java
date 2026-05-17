@@ -339,6 +339,20 @@ class AdminUseCaseTest {
   }
 
   @Test
+  void runAllBattles_shouldInferSessionFromPendingMatches_whenSessionIdIsNull_andMatchIsEmpty() {
+    UUID sessionId = UUID.randomUUID();
+    when(matchRepository.findFirstPendingMatch(1)).thenReturn(Optional.empty());
+
+    Round round = new Round();
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+    when(roundRepository.findBySessionIdAndRoundNo(null, 1)).thenReturn(Optional.of(round));
+
+    Map<String, Object> result = adminUseCase.runAllBattles(1, null);
+
+    assertThat(result).containsEntry("total", 0);
+  }
+
+  @Test
   void runAllBattles_shouldThrowException_whenRoundNotFound() {
     UUID sessionId = UUID.randomUUID();
     Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
