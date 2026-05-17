@@ -110,7 +110,6 @@ class DomainCoverageTest {
             .teamB(teamB)
             .roundNo(1)
             .status(MatchStatus.PENDING)
-            .resultJson(null)
             .build();
     match.setWinnerTeam(teamA);
 
