@@ -1,0 +1,9 @@
+--- src/test/java/org/barcelonajug/superherobattlearena/domain/DomainCoverageTest.java
++++ src/test/java/org/barcelonajug/superherobattlearena/domain/DomainCoverageTest.java
+@@ -109,6 +109,7 @@
+             .teamB(teamB)
+             .roundNo(1)
+             .status(MatchStatus.PENDING)
++            .resultJson(null)
+             .build();
+     match.setWinnerTeam(teamA);
