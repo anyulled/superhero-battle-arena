@@ -96,26 +96,32 @@ class MatchRepositoryIntegrationIT extends PostgresTestContainerConfig {
 
   @Test
   void shouldFindFirstByRoundNoAndStatus() {
+    // Arrange
     UUID sessionId = UUID.randomUUID();
     int roundNo = 2;
 
     matchRepository.save(pendingMatch(sessionId, roundNo));
     matchRepository.save(pendingMatch(sessionId, roundNo));
 
+    // Act
     var firstPending = matchRepository.findFirstByRoundNoAndStatus(roundNo, MatchStatus.PENDING);
 
+    // Assert
     assertThat(firstPending).isPresent();
   }
 
   @Test
   void shouldFindFirstPendingMatchViaPort() {
+    // Arrange
     UUID sessionId = UUID.randomUUID();
     int roundNo = 3;
 
     matchRepository.save(pendingMatch(sessionId, roundNo));
 
+    // Act
     var firstPending = matchPersistenceAdapter.findFirstPendingMatch(roundNo);
 
+    // Assert
     assertThat(firstPending).isPresent();
   }
 }

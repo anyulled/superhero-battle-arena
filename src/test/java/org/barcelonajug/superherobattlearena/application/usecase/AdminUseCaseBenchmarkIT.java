@@ -37,27 +37,29 @@ class AdminUseCaseBenchmarkIT {
 
     // Insert filler matches
     for (int i = 0; i < totalMatches; i++) {
-      Match m = Match.builder()
-          .matchId(UUID.randomUUID())
-          .sessionId(UUID.randomUUID())
-          .roundNo(targetRoundNo)
-          .status(MatchStatus.COMPLETED)
-          .teamA(UUID.randomUUID())
-          .teamB(UUID.randomUUID())
-          .build();
+      Match m =
+          Match.builder()
+              .matchId(UUID.randomUUID())
+              .sessionId(UUID.randomUUID())
+              .roundNo(targetRoundNo)
+              .status(MatchStatus.COMPLETED)
+              .teamA(UUID.randomUUID())
+              .teamB(UUID.randomUUID())
+              .build();
       events.add(m);
     }
 
     // Insert target matches
     for (int i = 0; i < targetPendingMatches; i++) {
-      Match m = Match.builder()
-          .matchId(UUID.randomUUID())
-          .sessionId(targetSessionId)
-          .roundNo(targetRoundNo)
-          .status(MatchStatus.PENDING)
-          .teamA(UUID.randomUUID())
-          .teamB(UUID.randomUUID())
-          .build();
+      Match m =
+          Match.builder()
+              .matchId(UUID.randomUUID())
+              .sessionId(targetSessionId)
+              .roundNo(targetRoundNo)
+              .status(MatchStatus.PENDING)
+              .teamA(UUID.randomUUID())
+              .teamB(UUID.randomUUID())
+              .build();
       events.add(m);
     }
 
@@ -68,11 +70,12 @@ class AdminUseCaseBenchmarkIT {
 
     // Benchmark Old Approach
     long startOld = System.nanoTime();
-    List<Match> oldApproach = matchRepository.findAll().stream()
-        .filter(m -> m.getRoundNo().equals(targetRoundNo))
-        .filter(m -> m.getStatus() == MatchStatus.PENDING)
-        .filter(m -> targetSessionId.equals(m.getSessionId()))
-        .toList();
+    List<Match> oldApproach =
+        matchRepository.findAll().stream()
+            .filter(m -> m.getRoundNo().equals(targetRoundNo))
+            .filter(m -> m.getStatus() == MatchStatus.PENDING)
+            .filter(m -> targetSessionId.equals(m.getSessionId()))
+            .toList();
     long endOld = System.nanoTime();
     long durationOld = (endOld - startOld) / 1_000_000; // ms
 
