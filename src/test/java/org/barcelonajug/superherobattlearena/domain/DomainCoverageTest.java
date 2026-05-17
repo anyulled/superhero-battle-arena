@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
-import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
 import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
 import org.junit.jupiter.api.Test;
 
@@ -103,7 +102,15 @@ class DomainCoverageTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
 
-    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, 1, MatchStatus.PENDING);
+    Match match =
+        Match.builder()
+            .matchId(matchId)
+            .sessionId(sessionId)
+            .teamA(teamA)
+            .teamB(teamB)
+            .roundNo(1)
+            .status(MatchStatus.PENDING)
+            .build();
     match.setWinnerTeam(teamA);
 
     assertThat(match.getMatchId()).isEqualTo(matchId);
