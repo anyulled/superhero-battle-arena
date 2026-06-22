@@ -2,6 +2,7 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -21,6 +22,7 @@ import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositor
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Match;
+import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
@@ -83,7 +85,7 @@ class MatchUseCaseTest {
 
     // Then: 2 matches should be created (4 teams / 2)
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(1)).saveAll(anyList());
+    verify(matchRepository).saveAll(anyList());
   }
 
   @Test
@@ -121,7 +123,7 @@ class MatchUseCaseTest {
     // Then: 0 new matches created (all teams already matched)
     assertThat(secondCallMatchIds).isEmpty();
     // Verify save was only called 2 times total (from first call)
-    verify(matchRepository, times(1)).saveAll(anyList());
+    verify(matchRepository).saveAll(anyList());
   }
 
   @Test
@@ -152,7 +154,7 @@ class MatchUseCaseTest {
 
     // Then: 2 new matches created for the 4 unmatched teams
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(1)).saveAll(anyList());
+    verify(matchRepository).saveAll(anyList());
 
     // Verify the new matches don't include already-matched teams
     ArgumentCaptor<List> matchCaptor = ArgumentCaptor.forClass(List.class);
@@ -185,7 +187,7 @@ class MatchUseCaseTest {
 
     // Then: 2 matches created (5 teams / 2 = 2, with 1 team left unmatched)
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository, times(1)).saveAll(anyList());
+    verify(matchRepository).saveAll(anyList());
   }
 
   @Test
@@ -519,7 +521,7 @@ class MatchUseCaseTest {
 
     try {
       matchUseCase.runMatch(matchId);
-      org.junit.jupiter.api.Assertions.fail("expected exception");
+      fail("expected exception");
     } catch (IllegalArgumentException e) {
       assertThat(e.getMessage()).isEqualTo("Match not found");
     }
@@ -528,12 +530,10 @@ class MatchUseCaseTest {
   @Test
   void getMatchEvents_shouldReturnSnapshots() {
     UUID matchId = UUID.randomUUID();
-    org.barcelonajug.superherobattlearena.domain.MatchEvent event =
-        mock(org.barcelonajug.superherobattlearena.domain.MatchEvent.class);
+    MatchEvent event = mock(MatchEvent.class);
 
     when(matchEventRepository.findByMatchId(matchId)).thenReturn(List.of(event));
-    List<org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot> result =
-        matchUseCase.getMatchEvents(matchId);
+    List<MatchEventSnapshot> result = matchUseCase.getMatchEvents(matchId);
     assertThat(result).isNotNull();
   }
 }
