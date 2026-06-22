@@ -29,7 +29,7 @@ jobs:
       statuses: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -99,7 +99,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -123,7 +123,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Commit Lint
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: commitlint
@@ -161,7 +161,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -187,7 +187,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Documentation Quality Checks
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: TODO and FIXME scanner
         run: |
@@ -216,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Security Audit
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
