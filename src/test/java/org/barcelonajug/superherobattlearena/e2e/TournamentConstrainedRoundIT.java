@@ -38,7 +38,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
   private final Faker faker = new Faker();
 
   @Test
-  void shouldCompleteTournamentWithConstrainedRoundSpec() throws Exception {
+  void shouldCompleteTournamentWithRoleGenderAndRaceConstrainedRoundSpec() throws Exception {
     UUID sessionId = createSession();
     assertThat(sessionId).isNotNull();
 
@@ -58,11 +58,13 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
     int roundNo = createConstrainedRound(sessionId);
     assertThat(roundNo).isOne();
 
-    // Team A: Agent Bob (10) + Alfred Pennyworth (17) + Bushido (25) = 62 ≤
-    // budgetCap 80
+    JsonNode roundSpec = getRoundSpec(sessionId, roundNo);
+    assertThat(roundSpec.get("allowedRoles").toString()).contains("Fighter");
+    assertThat(roundSpec.get("allowedGenders").toString()).contains("Male");
+    assertThat(roundSpec.get("allowedRaces").toString()).contains("Human");
+
     submitSquad(teamAId, roundNo, List.of(10, 17, 144), "BALANCED");
-    // Team B: Ben 10 (27) + Captain Cold (24) + Big Daddy (29) = 80 = budgetCap 80
-    submitSquad(teamBId, roundNo, List.of(78, 152, 82), "DEFENSIVE");
+    submitSquad(teamBId, roundNo, List.of(1, 6, 8), "DEFENSIVE");
 
     verifySubmissionExists(teamAId, roundNo);
     verifySubmissionExists(teamBId, roundNo);
@@ -133,12 +135,17 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
         new RoundSpec(
             "Constrained Round",
             3,
-            80,
+            1000,
             Map.of("Fighter", 1),
             Map.of("Fighter", 3),
             List.of("FLYING"),
             Map.of("MAGIC", 1.2),
-            "ARENA_2");
+            "ARENA_2",
+            List.of("Fighter"),
+            List.of("Male"),
+            List.of("Human"),
+            emptyList(),
+            emptyList());
 
     CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
 
@@ -235,6 +242,16 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
     MvcResult result =
         mockMvc
             .perform(get("/api/rounds").param("sessionId", sessionId.toString()))
+            .andExpect(status().isOk())
+            .andReturn();
+
+    return objectMapper.readTree(result.getResponse().getContentAsString());
+  }
+
+  private JsonNode getRoundSpec(UUID sessionId, int roundNo) throws Exception {
+    MvcResult result =
+        mockMvc
+            .perform(get("/api/rounds/{roundNo}", roundNo).param("sessionId", sessionId.toString()))
             .andExpect(status().isOk())
             .andReturn();
 

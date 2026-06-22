@@ -183,6 +183,46 @@
                                 <option value="COSMIC">Cosmic Battlefield</option>
                             </select>
                         </div>
+                        <div class="grid md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-1">Allowed Roles</label>
+                                <select id="newRoundRoles" multiple size="4" disabled
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
+                                    <option value="" disabled selected>Loading values...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-1">Allowed Genders</label>
+                                <select id="newRoundGenders" multiple size="4" disabled
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
+                                    <option value="" disabled selected>Loading values...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-1">Allowed Races</label>
+                                <select id="newRoundRaces" multiple size="4" disabled
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
+                                    <option value="" disabled selected>Loading values...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-1">Allowed Publishers</label>
+                                <select id="newRoundPublishers" multiple size="6" disabled
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-40">
+                                    <option value="" disabled selected>Loading values...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-slate-300 mb-1">Allowed Alignments</label>
+                                <select id="newRoundAlignments" multiple size="4" disabled
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
+                                    <option value="" disabled selected>Loading values...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400">
+                            Hold Ctrl or Cmd to select multiple values. Leave a list empty to avoid constraining that attribute.
+                        </p>
                         <button onclick="createRound()"
                             class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
                             <i data-lucide="zap" class="w-5 h-5"></i>

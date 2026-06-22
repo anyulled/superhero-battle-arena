@@ -11,6 +11,7 @@ import java.util.Map;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.BannedTagValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.CostValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.RoleCompositionValidationRule;
+import org.barcelonajug.superherobattlearena.application.usecase.validation.RoundConstraintValidationRule;
 import org.barcelonajug.superherobattlearena.application.usecase.validation.ValidationRule;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.exception.BannedTagException;
@@ -18,6 +19,7 @@ import org.barcelonajug.superherobattlearena.domain.exception.BudgetExceededExce
 import org.barcelonajug.superherobattlearena.domain.exception.DuplicateHeroException;
 import org.barcelonajug.superherobattlearena.domain.exception.HeroNotFoundException;
 import org.barcelonajug.superherobattlearena.domain.exception.RoleCompositionException;
+import org.barcelonajug.superherobattlearena.domain.exception.RoundConstraintException;
 import org.barcelonajug.superherobattlearena.domain.exception.TeamSizeException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
@@ -38,6 +40,7 @@ class SubmissionValidatorUseCaseTest {
         List.of(
             new CostValidationRule(),
             new BannedTagValidationRule(),
+            new RoundConstraintValidationRule(),
             new RoleCompositionValidationRule());
 
     validator = new SubmissionValidatorUseCase(rosterUseCase, validationRules);
@@ -48,6 +51,9 @@ class SubmissionValidatorUseCaseTest {
             .name("H1")
             .slug("h1")
             .role("Tank")
+            .alignment("good")
+            .publisher("DC Comics")
+            .appearance(Hero.Appearance.builder().gender("Male").race("Human").build())
             .cost(10)
             .powerstats(Hero.PowerStats.builder().build())
             .tags(List.of("A"))
@@ -58,6 +64,9 @@ class SubmissionValidatorUseCaseTest {
             .name("H2")
             .slug("h2")
             .role("Dps")
+            .alignment("neutral")
+            .publisher("Marvel Comics")
+            .appearance(Hero.Appearance.builder().gender("Female").race("Human").build())
             .cost(20)
             .powerstats(Hero.PowerStats.builder().build())
             .tags(List.of("B"))
@@ -68,6 +77,9 @@ class SubmissionValidatorUseCaseTest {
             .name("H3")
             .slug("h3")
             .role("Heal")
+            .alignment("bad")
+            .publisher("DC Comics")
+            .appearance(Hero.Appearance.builder().gender("Male").race("Human").build())
             .cost(15)
             .powerstats(Hero.PowerStats.builder().build())
             .tags(List.of("C", "Banned"))
@@ -86,7 +98,20 @@ class SubmissionValidatorUseCaseTest {
   @Test
   void shouldValidateValidSubmission() {
     RoundSpec spec =
-        new RoundSpec("Test", 2, 50, Map.of("Tank", 1), Map.of(), List.of(), Map.of(), "Basic");
+        new RoundSpec(
+            "Test",
+            2,
+            50,
+            Map.of("Tank", 1),
+            Map.of(),
+            List.of(),
+            Map.of(),
+            "Basic",
+            List.of(),
+            List.of("Male", "Female"),
+            List.of("Human"),
+            List.of("DC Comics", "Marvel Comics"),
+            List.of("good", "neutral"));
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack");
 
     assertThatCode(() -> validator.validate(submission, spec)).doesNotThrowAnyException();
@@ -115,7 +140,12 @@ class SubmissionValidatorUseCaseTest {
             baseSpec.maxSameRole(),
             baseSpec.bannedTags(),
             baseSpec.tagModifiers(),
-            baseSpec.mapType());
+            baseSpec.mapType(),
+            baseSpec.allowedRoles(),
+            baseSpec.allowedGenders(),
+            baseSpec.allowedRaces(),
+            baseSpec.allowedPublishers(),
+            baseSpec.allowedAlignments());
     DraftSubmission submission = new DraftSubmission(List.of(1, 2), "Attack"); // Cost 10+20=30 > 25
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -126,7 +156,20 @@ class SubmissionValidatorUseCaseTest {
   @Test
   void shouldFailMissingRole() {
     RoundSpec spec =
-        new RoundSpec("Test", 2, 50, Map.of("Heal", 1), Map.of(), List.of(), Map.of(), "Basic");
+        new RoundSpec(
+            "Test",
+            2,
+            50,
+            Map.of("Heal", 1),
+            Map.of(),
+            List.of(),
+            Map.of(),
+            "Basic",
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of());
     DraftSubmission submission =
         new DraftSubmission(List.of(1, 2), "Attack"); // Tank, Dps. Missing Heal.
 
@@ -138,7 +181,20 @@ class SubmissionValidatorUseCaseTest {
   @Test
   void shouldFailBannedTag() {
     RoundSpec spec =
-        new RoundSpec("Test", 1, 50, Map.of(), Map.of(), List.of("Banned"), Map.of(), "Basic");
+        new RoundSpec(
+            "Test",
+            1,
+            50,
+            Map.of(),
+            Map.of(),
+            List.of("Banned"),
+            Map.of(),
+            "Basic",
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of());
     DraftSubmission submission = new DraftSubmission(List.of(3), "Attack"); // Has "Banned" tag
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -148,7 +204,10 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailDuplicates() {
-    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
+    RoundSpec spec =
+        new RoundSpec(
+            "Test", 2, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic", List.of(), List.of(),
+            List.of(), List.of(), List.of());
     DraftSubmission submission = new DraftSubmission(List.of(1, 1), "Attack");
 
     assertThatThrownBy(() -> validator.validate(submission, spec))
@@ -158,7 +217,10 @@ class SubmissionValidatorUseCaseTest {
 
   @Test
   void shouldFailHeroNotFound() {
-    RoundSpec spec = new RoundSpec("Test", 2, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic");
+    RoundSpec spec =
+        new RoundSpec(
+            "Test", 2, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic", List.of(), List.of(),
+            List.of(), List.of(), List.of());
     DraftSubmission submission =
         new DraftSubmission(List.of(1, 999), "Attack"); // Hero 999 does not exist
 
@@ -170,7 +232,20 @@ class SubmissionValidatorUseCaseTest {
   @Test
   void shouldFailTooManySameRole() {
     RoundSpec spec =
-        new RoundSpec("Test", 2, 50, Map.of(), Map.of("Tank", 1), List.of(), Map.of(), "Basic");
+        new RoundSpec(
+            "Test",
+            2,
+            50,
+            Map.of(),
+            Map.of("Tank", 1),
+            List.of(),
+            Map.of(),
+            "Basic",
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of());
     DraftSubmission submission = new DraftSubmission(List.of(1, 100), "Attack");
 
     Hero h4 =
@@ -199,5 +274,53 @@ class SubmissionValidatorUseCaseTest {
     assertThatThrownBy(() -> validator.validate(submission, spec))
         .isInstanceOf(RoleCompositionException.class)
         .hasMessageContaining("Too many of role");
+  }
+
+  @Test
+  void shouldFailAllowedAlignmentConstraint() {
+    RoundSpec spec =
+        new RoundSpec(
+            "Test",
+            1,
+            50,
+            Map.of(),
+            Map.of(),
+            List.of(),
+            Map.of(),
+            "Basic",
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of("good"));
+    DraftSubmission submission = new DraftSubmission(List.of(3), "Attack");
+
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(RoundConstraintException.class)
+        .hasMessageContaining("alignment");
+  }
+
+  @Test
+  void shouldFailAllowedRoleConstraint() {
+    RoundSpec spec =
+        new RoundSpec(
+            "Test",
+            1,
+            50,
+            Map.of(),
+            Map.of(),
+            List.of(),
+            Map.of(),
+            "Basic",
+            List.of("Tank"),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of());
+    DraftSubmission submission = new DraftSubmission(List.of(2), "Attack");
+
+    assertThatThrownBy(() -> validator.validate(submission, spec))
+        .isInstanceOf(RoundConstraintException.class)
+        .hasMessageContaining("role");
   }
 }

@@ -14,6 +14,8 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.BatchSimulationResult;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.application.usecase.AdminUseCase;
+import org.barcelonajug.superherobattlearena.application.usecase.RoundConstraintOptionsUseCase;
+import org.barcelonajug.superherobattlearena.domain.RoundConstraintOptions;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,9 +34,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
   private final AdminUseCase adminUseCase;
+  private final RoundConstraintOptionsUseCase roundConstraintOptionsUseCase;
 
-  public AdminController(AdminUseCase adminUseCase) {
+  public AdminController(
+      AdminUseCase adminUseCase, RoundConstraintOptionsUseCase roundConstraintOptionsUseCase) {
     this.adminUseCase = adminUseCase;
+    this.roundConstraintOptionsUseCase = roundConstraintOptionsUseCase;
   }
 
   /** Start a new tournament session */
@@ -60,6 +65,18 @@ public class AdminController {
   @GetMapping("/sessions")
   public ResponseEntity<List<Session>> listSessions() {
     return ResponseEntity.ok(adminUseCase.listSessions());
+  }
+
+  @Operation(
+      summary = "List round constraint options",
+      description = "Retrieves the available superhero values for round constraint combo boxes.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Round constraint options retrieved",
+      content = @Content(schema = @Schema(implementation = RoundConstraintOptions.class)))
+  @GetMapping("/round-constraints/options")
+  public ResponseEntity<RoundConstraintOptions> roundConstraintOptions() {
+    return ResponseEntity.ok(roundConstraintOptionsUseCase.getOptions());
   }
 
   /** Create a new round with custom constraints */

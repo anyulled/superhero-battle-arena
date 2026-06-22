@@ -2,6 +2,7 @@ let authHeader = '';
 let currentSessionId = null;
 let selectedRoundNo = null;
 let sessions = [];
+let constraintOptionsPromise = null;
 
 // Initialize Lucide icons
 lucide.createIcons();
@@ -34,6 +35,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 function showDashboard() {
     document.getElementById('loginPanel').classList.add('hidden');
     document.getElementById('adminPanel').classList.remove('hidden');
+    void loadRoundConstraintOptions().catch(error => {
+        console.error('Failed to load round constraint options:', error);
+    });
     loadSessions();
     lucide.createIcons();
 }
@@ -58,6 +62,51 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
     }
 });
+
+async function loadRoundConstraintOptions() {
+    if (constraintOptionsPromise) {
+        return constraintOptionsPromise;
+    }
+
+    constraintOptionsPromise = (async () => {
+        const response = await fetch('/api/admin/round-constraints/options', {
+            headers: { 'Authorization': authHeader }
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to load round constraint options: ${response.status}`);
+        }
+
+        const options = await response.json();
+        populateConstraintSelect('newRoundRoles', options.roles ?? []);
+        populateConstraintSelect('newRoundGenders', options.genders ?? []);
+        populateConstraintSelect('newRoundRaces', options.races ?? []);
+        populateConstraintSelect('newRoundPublishers', options.publishers ?? []);
+        populateConstraintSelect('newRoundAlignments', options.alignments ?? []);
+    })();
+
+    try {
+        return await constraintOptionsPromise;
+    } catch (error) {
+        constraintOptionsPromise = null;
+        throw error;
+    }
+}
+
+function populateConstraintSelect(selectId, values) {
+    const select = document.getElementById(selectId);
+    if (!select) {
+        return;
+    }
+
+    select.innerHTML = '';
+    values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        select.appendChild(option);
+    });
+    select.disabled = false;
+}
 
 async function loadSessions() {
     try {
@@ -198,7 +247,13 @@ async function createRound() {
         return;
     }
 
-    // roundNo manual reading removed
+    try {
+        await loadRoundConstraintOptions();
+    } catch (error) {
+        showError('roundStatus', 'Failed to load round constraint values');
+        return;
+    }
+
     const teamSize = Number.parseInt(document.getElementById('newRoundTeamSize').value);
     const budgetCap = Number.parseInt(document.getElementById('newRoundBudget').value);
     const description = document.getElementById('newRoundDescription').value;
@@ -212,7 +267,12 @@ async function createRound() {
         maxSameRole: {},
         bannedTags: [],
         tagModifiers: {},
-        mapType
+        mapType,
+        allowedRoles: getSelectedValues('newRoundRoles'),
+        allowedGenders: getSelectedValues('newRoundGenders'),
+        allowedRaces: getSelectedValues('newRoundRaces'),
+        allowedPublishers: getSelectedValues('newRoundPublishers'),
+        allowedAlignments: getSelectedValues('newRoundAlignments')
     };
 
     try {
@@ -224,7 +284,6 @@ async function createRound() {
             },
             body: JSON.stringify({
                 sessionId: currentSessionId,
-                // roundNo removed
                 spec
             })
         });
@@ -241,6 +300,11 @@ async function createRound() {
     } catch (error) {
         showError('roundStatus', 'Error: ' + error.message);
     }
+}
+
+function getSelectedValues(selectId) {
+    const select = document.getElementById(selectId);
+    return Array.from(select.selectedOptions, option => option.value).filter(value => value !== '');
 }
 
 function updateRoundSelector(roundNo) {

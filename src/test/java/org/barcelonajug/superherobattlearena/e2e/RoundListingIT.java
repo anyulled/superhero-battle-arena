@@ -108,7 +108,19 @@ class RoundListingIT extends PostgresTestContainerConfig {
   private int createRound(UUID sessionId) throws Exception {
     RoundSpec spec =
         new RoundSpec(
-            "Test Round", 5, 1000, emptyMap(), emptyMap(), emptyList(), emptyMap(), "ARENA_1");
+            "Test Round",
+            5,
+            1000,
+            emptyMap(),
+            emptyMap(),
+            emptyList(),
+            emptyMap(),
+            "ARENA_1",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList());
 
     CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
 

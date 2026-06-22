@@ -54,6 +54,10 @@ class DomainCoverageTest {
     assertThat(round.getSessionId()).isEqualTo(sessionId);
     assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
     assertThat(round.getSpecJson()).isEqualTo(spec);
+    assertThat(spec.allowedGenders()).isEmpty();
+    assertThat(spec.allowedRaces()).isEmpty();
+    assertThat(spec.allowedPublishers()).isEmpty();
+    assertThat(spec.allowedAlignments()).isEmpty();
   }
 
   @Test

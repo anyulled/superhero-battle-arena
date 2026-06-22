@@ -146,12 +146,17 @@ class TournamentHappyPathIT extends PostgresTestContainerConfig {
         new RoundSpec(
             "Test Round",
             5,
-            1000, // High budget to avoid constraints
+            1000,
             emptyMap(),
             emptyMap(),
             emptyList(),
             emptyMap(),
-            "ARENA_1");
+            "ARENA_1",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList());
 
     CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
 

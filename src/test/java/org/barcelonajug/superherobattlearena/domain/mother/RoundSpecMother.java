@@ -15,7 +15,19 @@ public final class RoundSpecMother {
 
   public static RoundSpec aStandardRoundSpec() {
     return new RoundSpec(
-        "Standard 5v5 Round", 5, 100, emptyMap(), emptyMap(), emptyList(), emptyMap(), "ARENA");
+        "Standard 5v5 Round",
+        5,
+        100,
+        emptyMap(),
+        emptyMap(),
+        emptyList(),
+        emptyMap(),
+        "ARENA",
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList());
   }
 
   public static RoundSpec aRoundSpecWithTeamSize(int teamSize) {
@@ -27,13 +39,30 @@ public final class RoundSpecMother {
         emptyMap(),
         emptyList(),
         emptyMap(),
-        "ARENA_1");
+        "ARENA_1",
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList());
   }
 
   public static RoundSpec aRoundSpecWithTags(
       Map<String, Double> tagModifiers, List<String> bannedTags) {
     return new RoundSpec(
-        "Tagged Round", 5, 100, emptyMap(), emptyMap(), bannedTags, tagModifiers, "ARENA");
+        "Tagged Round",
+        5,
+        100,
+        emptyMap(),
+        emptyMap(),
+        bannedTags,
+        tagModifiers,
+        "ARENA",
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList());
   }
 
   public static RoundSpec aRoundSpecWithRoles(
@@ -46,6 +75,11 @@ public final class RoundSpecMother {
         maxSameRole,
         emptyList(),
         emptyMap(),
-        "ARENA");
+        "ARENA",
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList());
   }
 }

@@ -109,6 +109,11 @@ class BattleEngineUseCasePropertyTest {
                 emptyMap(),
                 emptyList(),
                 Map.of("TECH", m, "MAGIC", m),
-                "ARENA"));
+                "ARENA",
+                emptyList(),
+                emptyList(),
+                emptyList(),
+                emptyList(),
+                emptyList()));
   }
 }
