@@ -1,17 +1,27 @@
 name: Deploy to Clever Cloud
 on:
-  workflow_run:
-    workflows: ["Java CI with Maven"]
+  pull_request_target:
     types:
-      - completed
+      - opened
+      - closed
+      - synchronize
+      - reopened
     branches:
       - main
-  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy to Clever Cloud
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -23,5 +33,6 @@ jobs:
           CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
           CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
           ORGA_ID: ${{ secrets.ORGA_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           type: "maven"
