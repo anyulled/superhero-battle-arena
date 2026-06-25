@@ -19,10 +19,10 @@
 		<jackson-bom.version>3.1.3</jackson-bom.version>
 		<jackson.version>${jackson-bom.version}</jackson.version>
 		<flyway.version>12.0.3</flyway.version>
+		<excluded.test.groups>fuzz</excluded.test.groups>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
-
 			<dependency>
 				<groupId>com.fasterxml.jackson.core</groupId>
 				<artifactId>jackson-core</artifactId>
@@ -422,6 +422,14 @@
 			</plugin>
 
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<excludedGroups>${excluded.test.groups}</excludedGroups>
+				</configuration>
+			</plugin>
+
+			<plugin>
 				<groupId>org.pitest</groupId>
 				<artifactId>pitest-maven</artifactId>
 				<version>1.23.1</version>
@@ -587,6 +595,7 @@
 			<id>fuzz-tests</id>
 			<properties>
 				<jacoco.skip>true</jacoco.skip>
+				<excluded.test.groups></excluded.test.groups>
 			</properties>
 			<build>
 				<plugins>
