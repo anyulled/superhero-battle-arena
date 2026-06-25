@@ -426,6 +426,9 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<excludedGroups>${excluded.test.groups}</excludedGroups>
+					<systemPropertyVariables>
+						<spring.profiles.active>h2,test</spring.profiles.active>
+					</systemPropertyVariables>
 				</configuration>
 			</plugin>
 
@@ -458,6 +461,11 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
+				<configuration>
+					<systemPropertyVariables>
+						<spring.profiles.active>h2,test</spring.profiles.active>
+					</systemPropertyVariables>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -584,6 +592,9 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-failsafe-plugin</artifactId>
 						<configuration>
+							<systemPropertyVariables>
+								<spring.profiles.active>h2,test</spring.profiles.active>
+							</systemPropertyVariables>
 							<skip>true</skip>
 						</configuration>
 					</plugin>
