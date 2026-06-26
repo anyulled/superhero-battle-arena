@@ -1,0 +1,47 @@
+name: Deploy to Clever Cloud
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: clever-cloud-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Clever Cloud
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install Clever Tools
+        run: npm install -g clever-tools
+
+      - name: Deploy to Clever Cloud
+        env:
+          CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+          CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+          ORGA_ID: ${{ secrets.ORGA_ID }}
+          CLEVER_APP_ALIAS: ${{ secrets.CLEVER_APP_ALIAS }}
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          set -euo pipefail
+
+          clever login --token "$CLEVER_TOKEN" --secret "$CLEVER_SECRET"
+
+          APP_ALIAS="${CLEVER_APP_ALIAS:-$REPOSITORY_NAME}"
+
+          if ! clever applications list --only-aliases -o "$ORGA_ID" | grep -Fxq "$APP_ALIAS"; then
+            clever create --type maven --org "$ORGA_ID" --alias "$APP_ALIAS" "$APP_ALIAS"
+          fi
+
+          git switch -c main
+          clever link "$APP_ALIAS" -o "$ORGA_ID" -a "$APP_ALIAS"
+          clever deploy -a "$APP_ALIAS" -b main

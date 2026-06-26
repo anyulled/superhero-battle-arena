@@ -1,4 +1,4 @@
-name: Deploy to Clever Cloud
+name: Review App on Clever Cloud
 on:
   pull_request_target:
     types:
