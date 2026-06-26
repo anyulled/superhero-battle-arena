@@ -69,22 +69,18 @@ class RoundListingIT extends PostgresTestContainerConfig {
 
   @Test
   void shouldOnlyReturnRoundsForSpecificSession() throws Exception {
-    // Create two sessions
     UUID sessionId1 = createSession();
+
+    createRound(sessionId1);
+    createRound(sessionId1);
+
     UUID sessionId2 = createSession();
 
-    // Create rounds for session 1 (will be 1, 2)
-    createRound(sessionId1);
-    createRound(sessionId1);
-
-    // Create rounds for session 2 (will be 1)
     createRound(sessionId2);
 
-    // List rounds for session 1 should only return its rounds
     List<Integer> rounds1 = listRounds(sessionId1);
     assertThat(rounds1).containsExactlyInAnyOrder(1, 2);
 
-    // List rounds for session 2 should only return its rounds
     List<Integer> rounds2 = listRounds(sessionId2);
     assertThat(rounds2).containsExactly(1);
   }

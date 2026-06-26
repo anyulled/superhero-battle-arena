@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Session;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -28,25 +29,7 @@ public class SessionUseCase {
   @Transactional
   public Session createSession() {
     log.info("Creating new session");
-
-    // Deactivate current active session if exists
-    sessionRepository
-        .findByActiveTrue()
-        .ifPresent(
-            session -> {
-              log.info("Deactivating previous session: {}", session.getSessionId());
-              session.setActive(false);
-              sessionRepository.save(session);
-            });
-
-    Session newSession = new Session(UUID.randomUUID(), OffsetDateTime.now(ZoneOffset.UTC), true);
-    Session savedSession = sessionRepository.save(newSession);
-
-    MDC.put(SESSION_ID_KEY, savedSession.getSessionId().toString());
-    log.info("Created new session: {}", savedSession.getSessionId());
-    MDC.remove(SESSION_ID_KEY);
-
-    return savedSession;
+    return startSession(null);
   }
 
   @Transactional(readOnly = true)
@@ -64,14 +47,12 @@ public class SessionUseCase {
   }
 
   @Transactional
-  public Session startSession(UUID sessionId) {
+  public Session startSession(@Nullable UUID sessionId) {
     UUID id = sessionId != null ? sessionId : UUID.randomUUID();
     MDC.put(SESSION_ID_KEY, id.toString());
 
     try {
       log.info("Starting session - sessionId={}", id);
-
-      // Deactivate all existing active sessions to recover from multiple-active bug
       sessionRepository.findAll().stream()
           .filter(Session::isActive)
           .forEach(
