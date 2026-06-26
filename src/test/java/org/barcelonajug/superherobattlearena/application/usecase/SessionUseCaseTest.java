@@ -30,7 +30,8 @@ class SessionUseCaseTest {
   @Test
   void createSession_shouldDeactivatePreviousAndSaveNew() {
     Session previous = new Session(UUID.randomUUID(), OffsetDateTime.now(ZoneOffset.UTC), true);
-    when(sessionRepository.findByActiveTrue()).thenReturn(Optional.of(previous));
+    Session inactive = new Session(UUID.randomUUID(), OffsetDateTime.now(ZoneOffset.UTC), false);
+    when(sessionRepository.findAll()).thenReturn(List.of(previous, inactive));
     when(sessionRepository.save(any(Session.class))).thenAnswer(i -> i.getArgument(0));
 
     Session result = sessionUseCase.createSession();
@@ -43,7 +44,7 @@ class SessionUseCaseTest {
 
   @Test
   void createSession_shouldWorkWhenNoPreviousActive() {
-    when(sessionRepository.findByActiveTrue()).thenReturn(Optional.empty());
+    when(sessionRepository.findAll()).thenReturn(List.of());
     when(sessionRepository.save(any(Session.class))).thenAnswer(i -> i.getArgument(0));
 
     Session result = sessionUseCase.createSession();

@@ -3,8 +3,6 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +43,7 @@ public class AdminUseCase {
   private static final String ROUND_NO_KEY = "roundNo";
 
   private final SessionRepositoryPort sessionRepository;
+  private final SessionUseCase sessionUseCase;
   private final RoundRepositoryPort roundRepository;
   private final MatchUseCase matchUseCase;
   private final MatchRepositoryPort matchRepository;
@@ -57,6 +56,7 @@ public class AdminUseCase {
 
   public AdminUseCase(
       final SessionRepositoryPort sessionRepository,
+      final SessionUseCase sessionUseCase,
       final RoundRepositoryPort roundRepository,
       final MatchUseCase matchUseCase,
       final MatchRepositoryPort matchRepository,
@@ -67,6 +67,7 @@ public class AdminUseCase {
       final TeamRepositoryPort teamRepository,
       final HeroUsageRepositoryPort heroUsageRepository) {
     this.sessionRepository = sessionRepository;
+    this.sessionUseCase = sessionUseCase;
     this.roundRepository = roundRepository;
     this.matchUseCase = matchUseCase;
     this.matchRepository = matchRepository;
@@ -92,19 +93,8 @@ public class AdminUseCase {
   }
 
   @Transactional
-  public UUID startSession(final UUID sessionId) {
-    final UUID id = sessionId != null ? sessionId : UUID.randomUUID();
-    MDC.put(SESSION_ID_KEY, id.toString());
-
-    try {
-      log.info("Starting new session - sessionId={}", id);
-      final Session session = new Session(id, OffsetDateTime.now(ZoneOffset.UTC), true);
-      sessionRepository.save(session);
-      log.info("Session started successfully - sessionId={}", id);
-      return session.getSessionId();
-    } finally {
-      MDC.remove(SESSION_ID_KEY);
-    }
+  public UUID startSession(@Nullable final UUID sessionId) {
+    return sessionUseCase.startSession(sessionId).getSessionId();
   }
 
   public List<Session> listSessions() {

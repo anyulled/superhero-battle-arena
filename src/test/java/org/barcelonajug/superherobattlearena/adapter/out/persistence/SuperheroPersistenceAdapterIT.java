@@ -12,35 +12,14 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria.SortDirection;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchResult;
+import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest
-@Testcontainers
 @Transactional
-class SuperheroPersistenceAdapterIT {
-
-  @Container
-  static PostgreSQLContainer<?> postgres =
-      new PostgreSQLContainer<>("postgres:17-alpine")
-          .withDatabaseName("testdb")
-          .withUsername("test")
-          .withPassword("test");
-
-  @DynamicPropertySource
-  static void configureProperties(DynamicPropertyRegistry registry) {
-    registry.add("spring.datasource.url", postgres::getJdbcUrl);
-    registry.add("spring.datasource.username", postgres::getUsername);
-    registry.add("spring.datasource.password", postgres::getPassword);
-  }
+class SuperheroPersistenceAdapterIT extends PostgresTestContainerConfig {
 
   @Autowired private SpringDataSuperheroRepository repository;
 
@@ -199,11 +178,12 @@ class SuperheroPersistenceAdapterIT {
                 "Kryptonian")));
 
     HeroSearchResult result =
-        adapter.search(
-            HeroSearchCriteria.builder().alignment("good").page(0).size(10).build());
+        adapter.search(HeroSearchCriteria.builder().alignment("good").page(0).size(10).build());
 
     assertThat(result.totalElements()).isEqualTo(3);
-    assertThat(result.heroes()).extracting(Hero::name).containsExactly("Batman", "Superman", "Wonder Woman");
+    assertThat(result.heroes())
+        .extracting(Hero::name)
+        .containsExactly("Batman", "Superman", "Wonder Woman");
     assertThat(result.hasNext()).isFalse();
     assertThat(result.hasPrevious()).isFalse();
   }

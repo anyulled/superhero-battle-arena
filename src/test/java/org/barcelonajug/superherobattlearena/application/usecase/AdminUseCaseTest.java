@@ -53,6 +53,7 @@ class AdminUseCaseTest {
   private FatigueUseCase fatigueUseCase;
   private TeamRepositoryPort teamRepository;
   private HeroUsageRepositoryPort heroUsageRepository;
+  private SessionUseCase sessionUseCase;
   private AdminUseCase adminUseCase;
 
   @BeforeEach
@@ -67,10 +68,12 @@ class AdminUseCaseTest {
     fatigueUseCase = mock(FatigueUseCase.class);
     teamRepository = mock(TeamRepositoryPort.class);
     heroUsageRepository = mock(HeroUsageRepositoryPort.class);
+    sessionUseCase = mock(SessionUseCase.class);
 
     adminUseCase =
         new AdminUseCase(
             sessionRepository,
+            sessionUseCase,
             roundRepository,
             matchUseCase,
             matchRepository,
@@ -110,15 +113,25 @@ class AdminUseCaseTest {
   @Test
   void startSession_shouldSaveNewSession() {
     UUID sessionId = UUID.randomUUID();
-    adminUseCase.startSession(sessionId);
-    verify(sessionRepository).save(any(Session.class));
+    Session session = SessionMother.anActiveSession(sessionId);
+    when(sessionUseCase.startSession(sessionId)).thenReturn(session);
+
+    UUID result = adminUseCase.startSession(sessionId);
+
+    assertThat(result).isEqualTo(sessionId);
+    verify(sessionUseCase).startSession(sessionId);
   }
 
   @Test
   @SuppressWarnings("NullAway")
   void startSession_shouldGenerateIdWhenNull() {
-    adminUseCase.startSession(null);
-    verify(sessionRepository).save(any(Session.class));
+    Session session = SessionMother.anActiveSession();
+    when(sessionUseCase.startSession(null)).thenReturn(session);
+
+    UUID result = adminUseCase.startSession(null);
+
+    assertThat(result).isEqualTo(session.getSessionId());
+    verify(sessionUseCase).startSession(null);
   }
 
   @Test
