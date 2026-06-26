@@ -93,7 +93,7 @@ public class AdminUseCase {
 
   @Transactional
   public UUID startSession(final UUID sessionId) {
-    final UUID id = (sessionId != null) ? sessionId : UUID.randomUUID();
+    final UUID id = sessionId != null ? sessionId : UUID.randomUUID();
     MDC.put(SESSION_ID_KEY, id.toString());
 
     try {

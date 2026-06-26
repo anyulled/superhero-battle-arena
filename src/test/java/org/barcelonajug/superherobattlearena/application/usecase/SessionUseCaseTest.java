@@ -98,7 +98,7 @@ class SessionUseCaseTest {
     when(sessionRepository.findAll()).thenReturn(List.of());
     when(sessionRepository.save(any(Session.class))).thenAnswer(i -> i.getArgument(0));
 
-    Session result = sessionUseCase.startSession((UUID) null);
+    Session result = sessionUseCase.startSession(null);
 
     assertThat(result.getSessionId()).isNotNull();
     verify(sessionRepository).save(result);
