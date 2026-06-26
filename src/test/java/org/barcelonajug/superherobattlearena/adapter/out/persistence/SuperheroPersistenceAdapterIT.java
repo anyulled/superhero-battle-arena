@@ -16,13 +16,31 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest
-@ActiveProfiles({"h2", "test"})
+@Testcontainers
 @Transactional
 class SuperheroPersistenceAdapterIT {
+
+  @Container
+  static PostgreSQLContainer<?> postgres =
+      new PostgreSQLContainer<>("postgres:17-alpine")
+          .withDatabaseName("testdb")
+          .withUsername("test")
+          .withPassword("test");
+
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+  }
 
   @Autowired private SpringDataSuperheroRepository repository;
 
@@ -131,6 +149,63 @@ class SuperheroPersistenceAdapterIT {
                 .build());
 
     assertThat(result.heroes()).extracting(Hero::name).containsExactly("Superman", "Batman");
+  }
+
+  @Test
+  void shouldUseDefaultSortingWhenSortByIsNotProvided() {
+    repository.saveAll(
+        List.of(
+            superhero(
+                3,
+                "Wonder Woman",
+                "wonder-woman",
+                "good",
+                "DC Comics",
+                70,
+                90,
+                85,
+                80,
+                90,
+                95,
+                "Female",
+                "Amazon"),
+            superhero(
+                1,
+                "Batman",
+                "batman",
+                "good",
+                "DC Comics",
+                60,
+                80,
+                75,
+                60,
+                85,
+                90,
+                "Male",
+                "Human"),
+            superhero(
+                2,
+                "Superman",
+                "superman",
+                "good",
+                "DC Comics",
+                90,
+                100,
+                100,
+                100,
+                100,
+                95,
+                "Male",
+                "Kryptonian")));
+
+    HeroSearchResult result =
+        adapter.search(
+            HeroSearchCriteria.builder().alignment("good").page(0).size(10).build());
+
+    assertThat(result.totalElements()).isEqualTo(3);
+    assertThat(result.heroes()).extracting(Hero::name).containsExactly("Batman", "Superman", "Wonder Woman");
+    assertThat(result.hasNext()).isFalse();
+    assertThat(result.hasPrevious()).isFalse();
   }
 
   private SuperheroEntity superhero(
