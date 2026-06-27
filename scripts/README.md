@@ -11,15 +11,16 @@ This directory contains JBang scripts for managing the Superhero Battle Arena.
 
 ### InitFixture.java
 
-Initializes fixture data for the Superhero Battle Arena using [picocli](https://picocli.info/) for a rich command-line experience.
+Initializes or advances fixture data for the Superhero Battle Arena using [picocli](https://picocli.info/) for a richer command-line flow.
 
 **Features:**
 
-- Creates a session and round 1 automatically (if not skipped)
-- Registers 20 teams with randomly generated member names using Java Faker
-- Submits squad formations for all teams with rotating battle strategies (AGGRESSIVE, DEFENSIVE, BALANCED)
-- Supports skipping specific lifecycle steps (session, round, teams, squads)
-- Verifies existing state when steps are skipped
+- Creates or reuses a session and round
+- Registers or reuses teams for the selected session
+- Builds squad submissions from the live `/api/teams/heroes` endpoint and falls back to the JSON file when needed
+- Filters hero picks against the current round constraints before submitting squads
+- Can continue the admin flow through auto-match and `run-all`
+- Supports partial reruns by skipping session, round, teams, squads, matchmaking, or battles
 
 **Usage:**
 
@@ -27,14 +28,25 @@ Initializes fixture data for the Superhero Battle Arena using [picocli](https://
 # Show help
 jbang scripts/InitFixture.java --help
 
-# Use all defaults (random session, localhost:8080, default heroes file)
+# Use the full default flow (create session, create round, register teams,
+# submit squads, auto-match, run battles)
 jbang scripts/InitFixture.java
 
-# Specific session ID and custom base URL
-jbang scripts/InitFixture.java -s my-session -u http://localhost:9090
+# Reuse the active session and round, only refresh teams and squads
+jbang scripts/InitFixture.java --skip-session --skip-round --skip-matchmaking --skip-battles
 
-# Skip session and round creation (assumes they already exist)
-jbang scripts/InitFixture.java --skip-session --skip-round
+# Drive a constrained round
+jbang scripts/InitFixture.java \
+  --allowed-role Fighter \
+  --allowed-gender Male \
+  --allowed-race Human
+
+# Reuse an existing round and only run the admin phase
+jbang scripts/InitFixture.java \
+  --skip-session \
+  --skip-round \
+  --skip-teams \
+  --skip-squads
 
 # Use a specific heroes file
 jbang scripts/InitFixture.java -f path/to/heroes.json
@@ -42,13 +54,20 @@ jbang scripts/InitFixture.java -f path/to/heroes.json
 
 **Options:**
 
-- `-s, --session-id`: Specific session ID (default: random UUID or latest existing if skipped)
+- `-s, --session-id`: Specific session ID (UUID)
+- `-r, --round-no`: Existing round number to target when `--skip-round` is used
 - `-u, --url`: Base URL of the application (default: <http://localhost:8080>)
 - `-f, --file`: Path to the heroes JSON file (default: src/main/resources/all-superheroes.json)
+- `--reset`: Reset tournament data before starting
 - `--skip-session`: Skip session initialization (verifies existing session)
-- `--skip-teams`: Skip team registration (also skips squad formations)
-- `--skip-round`: Skip round creation (verifies existing round 1)
+- `--skip-round`: Skip round creation and reuse an existing round
+- `--skip-teams`: Skip team registration and reuse existing teams
 - `--skip-squads`: Skip squad formations
+- `--skip-matchmaking`: Skip admin auto-match
+- `--skip-battles`: Skip admin `run-all`
+- `--allow-hero-reuse`: Allow heroes to be reused across teams
+- `--team-size`, `--budget-cap`, `--map-type`, `--round-description`: Configure the created round
+- `--allowed-role`, `--allowed-gender`, `--allowed-race`, `--allowed-publisher`, `--allowed-alignment`, `--banned-tag`: Configure round filters for the created round
 
 ### GenerateSuperheroSql.java
 
