@@ -21,5 +21,7 @@ public interface MatchRepositoryPort {
 
   List<Match> findPendingMatches(Integer roundNo, UUID sessionId);
 
+  Optional<Match> findFirstPendingMatch(Integer roundNo);
+
   void deleteAll();
 }

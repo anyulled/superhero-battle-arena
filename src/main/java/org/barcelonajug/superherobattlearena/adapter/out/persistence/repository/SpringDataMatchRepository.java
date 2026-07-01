@@ -1,6 +1,7 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.MatchEntity;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
@@ -12,6 +13,8 @@ public interface SpringDataMatchRepository extends JpaRepository<MatchEntity, UU
   List<MatchEntity> findByStatus(MatchStatus status);
 
   List<MatchEntity> findByRoundNoAndStatus(Integer roundNo, MatchStatus status);
+
+  Optional<MatchEntity> findFirstByRoundNoAndStatus(Integer roundNo, MatchStatus status);
 
   List<MatchEntity> findByRoundNoAndStatusAndSessionId(
       Integer roundNo, MatchStatus status, UUID sessionId);
