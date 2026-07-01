@@ -58,19 +58,28 @@ public class BattleEngineUseCase {
       events.add(MatchEventSnapshot.matchStart(logicalTime.getAndIncrement()));
 
       int turn = 0;
-      UUID winnerId = null;
 
       sortHeroesBySpeed(allHeroes);
+
+      TeamCounters counters =
+          new TeamCounters(
+              teamAId,
+              teamBId,
+              (int) allHeroes.stream().filter(h -> h.teamId.equals(teamAId) && h.isAlive()).count(),
+              (int)
+                  allHeroes.stream()
+                      .filter(h -> h.teamId.equals(teamBId) && h.isAlive())
+                      .count());
+
+      UUID winnerId = counters.getWinnerId();
 
       while (turn < MAX_TURNS && winnerId == null) {
         turn++;
         events.add(MatchEventSnapshot.turnStart(turn, logicalTime.getAndIncrement()));
 
-        winnerId = executeTurn(allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime);
-
-        if (winnerId == null) {
-          winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
-        }
+        winnerId =
+            executeTurn(
+                allHeroes, teamAId, teamBId, roundSpec, random, events, logicalTime, counters);
 
         if (turn % 10 == 0) {
           log.debug("Battle progress - turn {}/{}", turn, MAX_TURNS);
@@ -102,13 +111,14 @@ public class BattleEngineUseCase {
       RoundSpec roundSpec,
       Random random,
       List<MatchEventSnapshot> events,
-      AtomicLong logicalTime) {
+      AtomicLong logicalTime,
+      TeamCounters counters) {
     for (BattleHeroUseCase attacker : allHeroes) {
       if (!attacker.isAlive()) {
         continue;
       }
 
-      UUID winnerId = checkWinCondition(allHeroes, teamAId, teamBId);
+      UUID winnerId = counters.getWinnerId();
       if (winnerId != null) {
         return winnerId;
       }
@@ -118,9 +128,9 @@ public class BattleEngineUseCase {
         return attacker.teamId;
       }
 
-      performAttack(attacker, target, roundSpec, random, events, logicalTime);
+      performAttack(attacker, target, roundSpec, random, events, logicalTime, counters);
     }
-    return null;
+    return counters.getWinnerId();
   }
 
   private void performAttack(
@@ -129,7 +139,8 @@ public class BattleEngineUseCase {
       RoundSpec roundSpec,
       Random random,
       List<MatchEventSnapshot> events,
-      AtomicLong logicalTime) {
+      AtomicLong logicalTime,
+      TeamCounters counters) {
 
     // 1. Dodge Check
     double dodgeChance = calculateDodgeChance(attacker, target);
@@ -175,6 +186,7 @@ public class BattleEngineUseCase {
 
     if (target.currentHp <= 0) {
       target.currentHp = 0;
+      counters.decrement(target.teamId);
       events.add(
           MatchEventSnapshot.ko(
               target.hero.name(),
@@ -273,6 +285,42 @@ public class BattleEngineUseCase {
     return allHeroes.stream()
         .filter(h -> h.teamId.equals(teamId))
         .noneMatch(BattleHeroUseCase::isAlive);
+  }
+
+  private static final class TeamCounters {
+    private final UUID teamAId;
+    private final UUID teamBId;
+    private int teamACount;
+    private int teamBCount;
+
+    TeamCounters(
+        final UUID teamAId, final UUID teamBId, final int teamACount, final int teamBCount) {
+      this.teamAId = teamAId;
+      this.teamBId = teamBId;
+      this.teamACount = teamACount;
+      this.teamBCount = teamBCount;
+    }
+
+    void decrement(final UUID teamId) {
+      if (teamId.equals(teamAId)) {
+        teamACount--;
+      } else if (teamId.equals(teamBId)) {
+        teamBCount--;
+      }
+    }
+
+    @Nullable UUID getWinnerId() {
+      if (teamACount == 0 && teamBCount == 0) {
+        return null;
+      }
+      if (teamACount == 0) {
+        return teamBId;
+      }
+      if (teamBCount == 0) {
+        return teamAId;
+      }
+      return null;
+    }
   }
 
   static class BattleHeroUseCase {
