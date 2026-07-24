@@ -30,19 +30,12 @@ jobs:
           CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
           CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
           ORGA_ID: ${{ secrets.ORGA_ID }}
-          CLEVER_APP_ALIAS: ${{ secrets.CLEVER_APP_ALIAS }}
-          REPOSITORY_NAME: ${{ github.event.repository.name }}
+          APPLICATION_ID: ${{ secrets.APPLICATION_ID }}
         run: |
           set -euo pipefail
 
           clever login --token "$CLEVER_TOKEN" --secret "$CLEVER_SECRET"
 
-          APP_ALIAS="${CLEVER_APP_ALIAS:-$REPOSITORY_NAME}"
-
-          if ! clever applications list --only-aliases -o "$ORGA_ID" | grep -Fxq "$APP_ALIAS"; then
-            clever create --type maven --org "$ORGA_ID" --alias "$APP_ALIAS" "$APP_ALIAS"
-          fi
-
           git switch -c main
-          clever link "$APP_ALIAS" -o "$ORGA_ID" -a "$APP_ALIAS"
-          clever deploy -a "$APP_ALIAS" -b main
+          clever link "$APPLICATION_ID" -o "$ORGA_ID" -a deploy_app
+          clever deploy -a deploy_app -b main
