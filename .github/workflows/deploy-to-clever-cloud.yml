@@ -38,4 +38,4 @@ jobs:
 
           git checkout -B main
           clever link "$APPLICATION_ID" -o "$ORGA_ID" -a deploy_app
-          clever deploy -a deploy_app -b main
+          clever deploy -a deploy_app -b main -f
