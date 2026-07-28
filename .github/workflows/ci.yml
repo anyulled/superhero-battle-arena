@@ -238,3 +238,18 @@ jobs:
 
       - name: OWASP Dependency-Check
         run: ./mvnw org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+
+  duplication:
+    runs-on: ubuntu-latest
+    name: Code Duplication Check
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Run jscpd
+        run: npx jscpd --pattern "**/*.java" --ignore "**/.agents/**,**/.claude/**,**/.codex/**" --threshold 10
+
