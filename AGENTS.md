@@ -58,3 +58,4 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 - When resolving tasks, check the build (`./mvnw clean verify`), verify tests pass, and resolve linting/SonarQube issues before declaring a task done.
 - Always check the `/workflows` or `/skills` reference documentation if you're uncertain about a particular architectural approach.
 - Preserve deterministic file edits made by verified git hooks; do not drop them as noise.
+- **DO NOT** execute code or file modifications autonomously without first proposing the options/actions to the user and asking which action to take.
