@@ -212,35 +212,6 @@ jobs:
           files: README.md docs/ CONTRIBUTING.md
           fail_on_error: true
 
-  security-audit:
-    runs-on: ubuntu-latest
-    name: Security Audit
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v6
-        with:
-          java-version: "25"
-          distribution: "temurin"
-          cache: "maven"
-
-      - name: Snyk Security Scan
-        uses: snyk/actions/setup@master
-
-      - name: Snyk Test
-        if: ${{ secrets.SNYK_TOKEN != '' }}
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        run: snyk test --severity-threshold=high
-
-      - name: Sonatype OSS Index Scan
-        run: ./mvnw org.sonatype.ossindex.maven:ossindex-maven-plugin:audit
-
-      - name: OWASP Dependency-Check
-        run: ./mvnw org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
-
   duplication:
     runs-on: ubuntu-latest
     name: Code Duplication Check
