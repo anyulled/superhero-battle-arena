@@ -343,9 +343,7 @@
 				<version>3.10.1</version>
 				<configuration>
 					<java>
-						<googleJavaFormat>
-							<version>1.28.0</version>
-						</googleJavaFormat>
+						<googleJavaFormat />
 					</java>
 				</configuration>
 				<executions>

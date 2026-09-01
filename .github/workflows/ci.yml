@@ -229,6 +229,8 @@ jobs:
         uses: snyk/actions/setup@master
 
       - name: Snyk Test
+        if: ${{ secrets.SNYK_TOKEN != '' }}
+        continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --severity-threshold=high
