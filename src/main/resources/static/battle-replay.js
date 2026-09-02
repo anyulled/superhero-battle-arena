@@ -32,6 +32,8 @@ $(document).ready(async function () {
         winnerMembers: $('#winnerMembers')
     };
 
+    let evtSource = null;
+
     // Helper: Log message
     function log(msg, type = 'info') {
         let color;
@@ -145,7 +147,7 @@ $(document).ready(async function () {
 
         // 5. Connect SSE
         els.status.text('Connecting Stream...');
-        const evtSource = API.matches.eventsStream(matchId);
+        evtSource = API.matches.eventsStream(matchId);
 
         evtSource.onmessage = function (e) {
             const event = JSON.parse(e.data);
@@ -153,9 +155,10 @@ $(document).ready(async function () {
         };
 
         evtSource.onerror = function () {
-            els.status.text('STREAM CLOSED / FINISHED');
-            // If match is completed, we might just be done.
-            // evtSource.close();
+            els.status.text('REPLAY COMPLETE').removeClass('animate-pulse');
+            if (evtSource) {
+                evtSource.close();
+            }
         };
 
         els.status.text('LIVE REPLAY');
@@ -332,6 +335,10 @@ $(document).ready(async function () {
     }
 
     function handleWin() {
+        if (evtSource) {
+            evtSource.close();
+        }
+        els.status.text('REPLAY COMPLETE').removeClass('animate-pulse');
         log('🏆 Match Ended!', 'special');
         $('#winnerModal').removeClass('hidden').addClass('flex');
 
