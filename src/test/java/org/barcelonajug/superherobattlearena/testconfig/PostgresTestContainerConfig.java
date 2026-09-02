@@ -14,7 +14,9 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
  * <p>The container uses PostgreSQL 16 (matching production docker-compose.yml) and is configured
  * with container reuse enabled for faster test execution.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    classes = org.barcelonajug.superherobattlearena.SuperheroBattleArenaApplication.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"postgres-test", "test"})
 @Transactional
 public abstract class PostgresTestContainerConfig {
