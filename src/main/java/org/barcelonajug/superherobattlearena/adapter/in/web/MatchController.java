@@ -68,6 +68,7 @@ public class MatchController {
       summary = "Stream match events",
       description = "Streams events for a match using Server-Sent Events (SSE).")
   @GetMapping("/{matchId}/events/stream")
+  @SuppressWarnings("FutureReturnValueIgnored")
   public SseEmitter streamEvents(
       @Parameter(description = "ID of the match to stream", required = true) @PathVariable
           UUID matchId) {

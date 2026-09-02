@@ -12,6 +12,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.SuperheroAppearanceEntity;
@@ -159,7 +160,8 @@ public class SuperheroSearchQuery {
       HeroSearchCriteria criteria) {
     if (criteria.hasNameFilter()) {
       String name = Objects.requireNonNull(criteria.name());
-      predicates.add(cb.like(cb.lower(root.get(NAME_PATH)), "%" + name.toLowerCase() + "%"));
+      predicates.add(
+          cb.like(cb.lower(root.get(NAME_PATH)), "%" + name.toLowerCase(Locale.ROOT) + "%"));
     }
   }
 
@@ -251,10 +253,12 @@ public class SuperheroSearchQuery {
       Root<SuperheroEntity> root,
       SearchJoins joins,
       HeroSearchCriteria criteria) {
-    Sort.Direction direction =
-        criteria.sortDirection() == HeroSearchCriteria.SortDirection.DESC
-            ? Sort.Direction.DESC
-            : Sort.Direction.ASC;
+    Sort.Direction direction;
+    if (criteria.sortDirection() == HeroSearchCriteria.SortDirection.DESC) {
+      direction = Sort.Direction.DESC;
+    } else {
+      direction = Sort.Direction.ASC;
+    }
 
     String sortBy = Objects.requireNonNull(criteria.sortBy());
 
@@ -263,12 +267,16 @@ public class SuperheroSearchQuery {
       if (powerStatsJoin == null) {
         powerStatsJoin = root.join(POWER_STATS_PATH, JoinType.LEFT);
       }
-      return direction == Sort.Direction.ASC
-          ? cb.asc(powerStatsJoin.get(sortBy))
-          : cb.desc(powerStatsJoin.get(sortBy));
+      if (direction == Sort.Direction.ASC) {
+        return cb.asc(powerStatsJoin.get(sortBy));
+      }
+      return cb.desc(powerStatsJoin.get(sortBy));
     }
 
-    return direction == Sort.Direction.ASC ? cb.asc(root.get(sortBy)) : cb.desc(root.get(sortBy));
+    if (direction == Sort.Direction.ASC) {
+      return cb.asc(root.get(sortBy));
+    }
+    return cb.desc(root.get(sortBy));
   }
 
   private int calculateTotalPages(long totalElements, int pageSize) {

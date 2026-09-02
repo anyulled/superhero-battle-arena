@@ -3,6 +3,7 @@ package org.barcelonajug.superherobattlearena.domain.mother;
 import static java.util.Collections.emptyList;
 
 import java.util.List;
+import java.util.Locale;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 
 public final class HeroMother {
@@ -56,7 +57,7 @@ public final class HeroMother {
     return Hero.builder()
         .id(3)
         .name(role + " Hero")
-        .slug(role.toLowerCase() + "-hero")
+        .slug(role.toLowerCase(Locale.ROOT) + "-hero")
         .role(role)
         .powerstats(
             Hero.PowerStats.builder()
