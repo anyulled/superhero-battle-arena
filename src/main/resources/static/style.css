@@ -18,11 +18,28 @@ body {
 }
 
 .hero-card.ko {
-    opacity: 0.6;
+    animation: koCollapse 0.6s ease-out forwards;
     background: rgba(127, 29, 29, 0.5) !important;
     border-color: rgba(239, 68, 68, 0.4) !important;
     box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.15);
-    filter: brightness(70%) saturate(60%);
+}
+
+@keyframes koCollapse {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        filter: brightness(1);
+    }
+    50% {
+        transform: translateY(12px) rotate(-3deg);
+        opacity: 0.8;
+        filter: brightness(60%) saturate(80%);
+    }
+    100% {
+        transform: translateY(20px) rotate(4deg);
+        opacity: 0.5;
+        filter: brightness(50%) saturate(40%);
+    }
 }
 
 .hero-card.active {
@@ -34,6 +51,39 @@ body {
 .hero-card.target {
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
     border-color: #ef4444;
+}
+
+.hero-card.crit-target {
+    animation: critShake 0.5s cubic-bezier(.36, .07, .19, .97) both, critFlash 0.5s ease-in-out;
+    box-shadow: 0 0 35px rgba(245, 158, 11, 0.9);
+    border-color: #f59e0b;
+}
+
+@keyframes critFlash {
+    0% {
+        filter: brightness(1);
+    }
+    30% {
+        filter: brightness(2.2) sepia(1) hue-rotate(-20deg);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+@keyframes critShake {
+    10%, 90% {
+        transform: translate3d(-3px, 0, 0) scale(1.05);
+    }
+    20%, 80% {
+        transform: translate3d(4px, 0, 0) scale(1.08);
+    }
+    30%, 50%, 70% {
+        transform: translate3d(-7px, 0, 0) scale(1.05);
+    }
+    40%, 60% {
+        transform: translate3d(7px, 0, 0) scale(1.08);
+    }
 }
 
 .hero-card.dodge {
@@ -64,6 +114,43 @@ body {
     }
 }
 
+.hero-card.victory-glow {
+    animation: victoryGlow 1.5s infinite ease-in-out;
+    border-color: #eab308 !important;
+}
+
+@keyframes victoryGlow {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(234, 179, 8, 0.6);
+        transform: scale(1);
+    }
+    50% {
+        box-shadow: 0 0 35px rgba(234, 179, 8, 1), 0 0 50px rgba(245, 158, 11, 0.8);
+        transform: scale(1.04);
+    }
+}
+
+.hero-card.shield-block {
+    animation: shieldBlock 0.5s ease-in-out;
+    box-shadow: 0 0 25px rgba(6, 182, 212, 0.8);
+    border-color: #06b6d4;
+}
+
+@keyframes shieldBlock {
+    0% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    40% {
+        transform: scale(1.05);
+        filter: brightness(1.6) hue-rotate(140deg);
+    }
+    100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+}
+
 .damage-number {
     position: absolute;
     font-weight: bold;
@@ -74,6 +161,14 @@ body {
     animation: floatUp 1s ease-out forwards;
 }
 
+.damage-number.crit {
+    color: #f59e0b;
+    font-size: 2.2rem;
+    text-shadow: 0 0 12px rgba(245, 158, 11, 0.9), 0 2px 4px rgba(0, 0, 0, 0.9);
+    animation: floatUpCrit 1.2s ease-out forwards;
+    z-index: 20;
+}
+
 @keyframes floatUp {
     from {
         transform: translateY(0);
@@ -82,6 +177,21 @@ body {
 
     to {
         transform: translateY(-50px);
+        opacity: 0;
+    }
+}
+
+@keyframes floatUpCrit {
+    0% {
+        transform: translateY(0) scale(0.6);
+        opacity: 1;
+    }
+    20% {
+        transform: translateY(-15px) scale(1.4);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-65px) scale(1);
         opacity: 0;
     }
 }

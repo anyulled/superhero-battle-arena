@@ -198,7 +198,7 @@ $(document).ready(async function () {
                 handleAttack(actorId, targetId, value, description);
                 break;
             case 'CRITICAL_HIT':
-                handleAttack(actorId, targetId, value, description, '💫 ');
+                handleAttack(actorId, targetId, value, description, '💫 ', true);
                 break;
             case 'DODGE':
                 handleDodge(actorId, targetId, description);
@@ -206,7 +206,6 @@ $(document).ready(async function () {
             case 'HEALTH_CHANGED':
                 if (targetId) {
                     if (typeof value === 'number') {
-                        // value is assumed to be the new exact health
                         updateHealth(targetId, value, true);
                         if (description) log(description);
                     } else {
@@ -221,14 +220,10 @@ $(document).ready(async function () {
         }
     }
 
-    function handleAttack(actorId, targetId, damage, desc, prefix = '💥 ') {
-        // IDs are now composite strings from backend: teamId_heroId
-        // But we need to be careful. DOM IDs are hero-{uniqueId}
-        // Using document.getElementById to avoid any selector escaping issues
+    function handleAttack(actorId, targetId, damage, desc, prefix = '💥 ', isCritical = false) {
         const actorCard = $(document.getElementById(`hero-${actorId}`));
         const targetCard = $(document.getElementById(`hero-${targetId}`));
 
-        // Visuals
         const actorTeamId = actorId.split('_')[0];
         const isTeamA = actorTeamId === state.match.teamA;
 
@@ -240,19 +235,21 @@ $(document).ready(async function () {
         }
 
         if (targetCard.length) {
-            targetCard.addClass('target shake');
+            const targetClass = isCritical ? 'crit-target' : 'target shake';
+            targetCard.addClass(targetClass);
             setTimeout(() => {
-                targetCard.removeClass('target shake');
-            }, 500);
+                targetCard.removeClass(targetClass);
+            }, isCritical ? 600 : 500);
 
-            const dmgEl = $(`<div class="damage-number">-${damage}</div>`);
+            const dmgText = isCritical ? `⚡ CRIT -${damage}` : `-${damage}`;
+            const dmgClass = isCritical ? 'damage-number crit' : 'damage-number';
+            const dmgEl = $(`<div class="${dmgClass}">${dmgText}</div>`);
             targetCard.append(dmgEl);
-            setTimeout(() => dmgEl.remove(), 1000);
+            setTimeout(() => dmgEl.remove(), isCritical ? 1200 : 1000);
         } else {
             console.warn(`Target card not found for ID: hero-${targetId}`);
         }
 
-        // updateHealth should run regardless of UI presence to keep state consistent
         updateHealth(targetId, -damage);
 
         log(prefix + desc);
@@ -338,7 +335,6 @@ $(document).ready(async function () {
         log('🏆 Match Ended!', 'special');
         $('#winnerModal').removeClass('hidden').addClass('flex');
 
-        // Re-fetch match to get the authoritative winnerTeam from the DB
         API.matches.get(matchId).then(function (updatedMatch) {
             state.match = updatedMatch;
             const winnerTeamId = updatedMatch.winnerTeam;
@@ -350,6 +346,8 @@ $(document).ready(async function () {
                 } else {
                     els.winnerMembers.text('');
                 }
+
+                $(`[id^="hero-${winnerTeamId}_"]`).addClass('victory-glow');
             } else {
                 els.winnerName.text('Draw!');
                 els.winnerMembers.text('');
