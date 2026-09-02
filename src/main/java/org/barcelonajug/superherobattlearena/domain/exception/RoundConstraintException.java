@@ -19,6 +19,9 @@ public class RoundConstraintException extends ValidationException {
   }
 
   private static String valueLabel(@Nullable String value) {
-    return value == null ? "null" : "'" + value + "'";
+    if (value == null) {
+      return "null";
+    }
+    return "'" + value + "'";
   }
 }

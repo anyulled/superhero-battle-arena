@@ -48,7 +48,12 @@ public class SessionUseCase {
 
   @Transactional
   public Session startSession(@Nullable UUID sessionId) {
-    UUID id = sessionId != null ? sessionId : UUID.randomUUID();
+    UUID id;
+    if (sessionId != null) {
+      id = sessionId;
+    } else {
+      id = UUID.randomUUID();
+    }
     MDC.put(SESSION_ID_KEY, id.toString());
 
     try {

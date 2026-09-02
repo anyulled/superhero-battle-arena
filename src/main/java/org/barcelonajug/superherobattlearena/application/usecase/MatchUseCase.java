@@ -252,8 +252,13 @@ public class MatchUseCase {
           match.getTeamB(),
           match.getRoundNo(),
           Objects.requireNonNull(subB.get().getSubmissionJson()).heroIds());
+      String resultStr;
 
-      String resultStr = result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW";
+      if (result.winnerTeamId() != null) {
+        resultStr = result.winnerTeamId().toString();
+      } else {
+        resultStr = "DRAW";
+      }
       long duration = System.currentTimeMillis() - startTime;
 
       List<Match> remainingPending =

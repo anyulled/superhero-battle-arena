@@ -209,7 +209,12 @@ public class BattleEngineUseCase {
       UUID teamAId,
       UUID teamBId,
       Random random) {
-    UUID opposingTeamId = attacker.teamId.equals(teamAId) ? teamBId : teamAId;
+    UUID opposingTeamId;
+    if (attacker.teamId.equals(teamAId)) {
+      opposingTeamId = teamBId;
+    } else {
+      opposingTeamId = teamAId;
+    }
     List<BattleHeroUseCase> targets =
         allHeroes.stream().filter(h -> h.teamId.equals(opposingTeamId) && h.isAlive()).toList();
 
