@@ -9,10 +9,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.MatchDto;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.MatchEventSnapshotDto;
 import org.barcelonajug.superherobattlearena.application.usecase.MatchUseCase;
-import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
-import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,15 +39,15 @@ public class MatchController {
       description = "Retrieves a list of all events that occurred during a match.")
   @ApiResponse(responseCode = "200", description = "List of events retrieved")
   @GetMapping("/{matchId}/events")
-  public List<MatchEventSnapshot> getEvents(
+  public List<MatchEventSnapshotDto> getEvents(
       @Parameter(description = "ID of the match", required = true) @PathVariable UUID matchId) {
-    return matchUseCase.getMatchEvents(matchId);
+    return matchUseCase.getMatchEvents(matchId).stream().map(MatchEventSnapshotDto::from).toList();
   }
 
   @Operation(summary = "List all matches", description = "Retrieves a list of all matches.")
   @GetMapping
-  public ResponseEntity<List<Match>> getAllMatches() {
-    return ResponseEntity.ok(matchUseCase.getAllMatches());
+  public ResponseEntity<List<MatchDto>> getAllMatches() {
+    return ResponseEntity.ok(matchUseCase.getAllMatches().stream().map(MatchDto::from).toList());
   }
 
   @Operation(
@@ -56,10 +56,11 @@ public class MatchController {
   @ApiResponse(responseCode = "200", description = "Match details found")
   @ApiResponse(responseCode = "404", description = "Match not found")
   @GetMapping("/{matchId}")
-  public ResponseEntity<Match> getMatch(
+  public ResponseEntity<MatchDto> getMatch(
       @Parameter(description = "ID of the match", required = true) @PathVariable UUID matchId) {
     return matchUseCase
         .getMatch(matchId)
+        .map(MatchDto::from)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -78,7 +79,7 @@ public class MatchController {
           try {
             List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);
             for (MatchEvent event : events) {
-              emitter.send(event.eventJson());
+              emitter.send(MatchEventSnapshotDto.from(event.eventJson()));
               Thread.sleep(500);
             }
             emitter.complete();

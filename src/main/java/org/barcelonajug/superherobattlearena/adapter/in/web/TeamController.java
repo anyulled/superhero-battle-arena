@@ -9,10 +9,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.HeroDto;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.TeamDto;
 import org.barcelonajug.superherobattlearena.application.usecase.RosterUseCase;
 import org.barcelonajug.superherobattlearena.application.usecase.TeamUseCase;
-import org.barcelonajug.superherobattlearena.domain.Hero;
-import org.barcelonajug.superherobattlearena.domain.Team;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,10 +39,10 @@ public class TeamController {
   @ApiResponse(
       responseCode = "200",
       description = "List of heroes",
-      content = @Content(array = @ArraySchema(schema = @Schema(implementation = Hero.class))))
+      content = @Content(array = @ArraySchema(schema = @Schema(implementation = HeroDto.class))))
   @GetMapping("/heroes")
-  public List<Hero> getHeroes() {
-    return rosterUseCase.getAllHeroes();
+  public List<HeroDto> getHeroes() {
+    return rosterUseCase.getAllHeroes().stream().map(HeroDto::from).toList();
   }
 
   @Operation(
@@ -51,13 +51,13 @@ public class TeamController {
   @ApiResponse(
       responseCode = "200",
       description = "List of teams",
-      content = @Content(array = @ArraySchema(schema = @Schema(implementation = Team.class))))
+      content = @Content(array = @ArraySchema(schema = @Schema(implementation = TeamDto.class))))
   @GetMapping
-  public ResponseEntity<List<Team>> getTeams(
+  public ResponseEntity<List<TeamDto>> getTeams(
       @Parameter(description = "Optional session ID to filter teams")
           @RequestParam(required = false)
           UUID sessionId) {
-    return ResponseEntity.ok(teamUseCase.getTeams(sessionId));
+    return ResponseEntity.ok(teamUseCase.getTeams(sessionId).stream().map(TeamDto::from).toList());
   }
 
   @Operation(summary = "Register a team", description = "Registers a new team for the arena.")

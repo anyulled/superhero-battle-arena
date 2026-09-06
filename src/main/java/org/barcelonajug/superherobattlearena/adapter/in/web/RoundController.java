@@ -8,11 +8,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.UUID;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.DraftSubmissionDto;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.RoundDto;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.RoundSpecDto;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.SubmissionDto;
 import org.barcelonajug.superherobattlearena.application.usecase.RoundUseCase;
-import org.barcelonajug.superherobattlearena.domain.Round;
-import org.barcelonajug.superherobattlearena.domain.Submission;
-import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
-import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,11 +39,12 @@ public class RoundController {
   @ApiResponse(
       responseCode = "200",
       description = "List of rounds retrieved successfully",
-      content = @Content(schema = @Schema(implementation = Round.class)))
+      content = @Content(schema = @Schema(implementation = RoundDto.class)))
   @GetMapping
-  public ResponseEntity<List<Round>> listRounds(
+  public ResponseEntity<List<RoundDto>> listRounds(
       @Parameter(description = "Session ID", required = true) @RequestParam UUID sessionId) {
-    return ResponseEntity.ok(roundUseCase.listRounds(sessionId));
+    return ResponseEntity.ok(
+        roundUseCase.listRounds(sessionId).stream().map(RoundDto::from).toList());
   }
 
   @Operation(
@@ -52,15 +53,16 @@ public class RoundController {
   @ApiResponse(
       responseCode = "200",
       description = "Round details retrieved successfully",
-      content = @Content(schema = @Schema(implementation = RoundSpec.class)))
+      content = @Content(schema = @Schema(implementation = RoundSpecDto.class)))
   @ApiResponse(responseCode = "404", description = "Round not found")
   @GetMapping("/{roundNo}")
-  public ResponseEntity<RoundSpec> getRound(
+  public ResponseEntity<RoundSpecDto> getRound(
       @Parameter(description = "Number of the round", required = true) @PathVariable
           Integer roundNo,
       @Parameter(description = "Session ID", required = true) @RequestParam UUID sessionId) {
     return roundUseCase
         .getRoundSpec(roundNo, sessionId)
+        .map(RoundSpecDto::from)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -79,10 +81,10 @@ public class RoundController {
       @io.swagger.v3.oas.annotations.parameters.RequestBody(
               description = "Draft submission containing hero IDs and strategy",
               required = true,
-              content = @Content(schema = @Schema(implementation = DraftSubmission.class)))
+              content = @Content(schema = @Schema(implementation = DraftSubmissionDto.class)))
           @RequestBody
-          DraftSubmission draft) {
-    roundUseCase.submitTeam(roundNo, teamId, draft);
+          DraftSubmissionDto draft) {
+    roundUseCase.submitTeam(roundNo, teamId, draft.toDomain());
     return ResponseEntity.ok().build();
   }
 
@@ -92,15 +94,16 @@ public class RoundController {
   @ApiResponse(
       responseCode = "200",
       description = "Submission retrieved successfully",
-      content = @Content(schema = @Schema(implementation = DraftSubmission.class)))
+      content = @Content(schema = @Schema(implementation = DraftSubmissionDto.class)))
   @ApiResponse(responseCode = "404", description = "Submission or round not found")
   @GetMapping("/{roundNo}/submission")
-  public ResponseEntity<DraftSubmission> getSubmission(
+  public ResponseEntity<DraftSubmissionDto> getSubmission(
       @Parameter(description = "Number of the round", required = true) @PathVariable
           Integer roundNo,
       @Parameter(description = "ID of the team", required = true) @RequestParam UUID teamId) {
     return roundUseCase
         .getSubmission(roundNo, teamId)
+        .map(DraftSubmissionDto::from)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }
@@ -111,13 +114,14 @@ public class RoundController {
   @ApiResponse(
       responseCode = "200",
       description = "List of submissions retrieved successfully",
-      content = @Content(schema = @Schema(implementation = Submission.class)))
+      content = @Content(schema = @Schema(implementation = SubmissionDto.class)))
   @GetMapping("/{roundNo}/submissions")
-  public ResponseEntity<List<Submission>> getSubmissions(
+  public ResponseEntity<List<SubmissionDto>> getSubmissions(
       @Parameter(description = "Number of the round", required = true) @PathVariable
           Integer roundNo,
       @Parameter(description = "Optional session ID for validation") @RequestParam(required = false)
           UUID sessionId) {
-    return ResponseEntity.ok(roundUseCase.getSubmissions(roundNo, sessionId));
+    return ResponseEntity.ok(
+        roundUseCase.getSubmissions(roundNo, sessionId).stream().map(SubmissionDto::from).toList());
   }
 }

@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.SessionDto;
 import org.barcelonajug.superherobattlearena.application.usecase.SessionUseCase;
-import org.barcelonajug.superherobattlearena.domain.Session;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,20 +31,20 @@ public class SessionController {
   @ApiResponse(
       responseCode = "200",
       description = "Session created",
-      content = @Content(schema = @Schema(implementation = Session.class)))
+      content = @Content(schema = @Schema(implementation = SessionDto.class)))
   @PostMapping
-  public ResponseEntity<Session> createSession() {
-    return ResponseEntity.ok(sessionUseCase.createSession());
+  public ResponseEntity<SessionDto> createSession() {
+    return ResponseEntity.ok(SessionDto.from(sessionUseCase.createSession()));
   }
 
   @Operation(summary = "List all sessions", description = "Returns all tournament sessions.")
   @ApiResponse(
       responseCode = "200",
       description = "Sessions retrieved",
-      content = @Content(schema = @Schema(implementation = Session.class)))
+      content = @Content(schema = @Schema(implementation = SessionDto.class)))
   @GetMapping
-  public ResponseEntity<List<Session>> listSessions() {
-    return ResponseEntity.ok(sessionUseCase.listSessions());
+  public ResponseEntity<List<SessionDto>> listSessions() {
+    return ResponseEntity.ok(sessionUseCase.listSessions().stream().map(SessionDto::from).toList());
   }
 
   @Operation(
@@ -53,12 +53,13 @@ public class SessionController {
   @ApiResponse(
       responseCode = "200",
       description = "Active session found",
-      content = @Content(schema = @Schema(implementation = Session.class)))
+      content = @Content(schema = @Schema(implementation = SessionDto.class)))
   @ApiResponse(responseCode = "404", description = "No active session found")
   @GetMapping("/active")
-  public ResponseEntity<Session> getActiveSession() {
+  public ResponseEntity<SessionDto> getActiveSession() {
     return sessionUseCase
         .getActiveSession()
+        .map(SessionDto::from)
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build());
   }

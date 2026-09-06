@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.RoundSpecDto;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
 import org.junit.jupiter.api.Test;
@@ -118,7 +119,7 @@ class RoundListingIT extends PostgresTestContainerConfig {
             emptyList(),
             emptyList());
 
-    CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
+    CreateRoundRequest request = new CreateRoundRequest(sessionId, RoundSpecDto.from(spec));
 
     MvcResult result =
         mockMvc
