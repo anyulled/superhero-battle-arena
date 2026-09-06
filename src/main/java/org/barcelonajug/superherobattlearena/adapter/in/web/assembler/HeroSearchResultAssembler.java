@@ -2,7 +2,7 @@ package org.barcelonajug.superherobattlearena.adapter.in.web.assembler;
 
 import java.util.List;
 import java.util.Objects;
-import org.barcelonajug.superherobattlearena.domain.Hero;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.HeroDto;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchResult;
 import org.jspecify.annotations.Nullable;
@@ -15,7 +15,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 public class HeroSearchResultAssembler
-    implements RepresentationModelAssembler<HeroSearchResult, PagedModel<EntityModel<Hero>>> {
+    implements RepresentationModelAssembler<HeroSearchResult, PagedModel<EntityModel<HeroDto>>> {
 
   private final HeroModelAssembler heroModelAssembler;
 
@@ -24,13 +24,13 @@ public class HeroSearchResultAssembler
   }
 
   @Override
-  public PagedModel<EntityModel<Hero>> toModel(HeroSearchResult searchResult) {
+  public PagedModel<EntityModel<HeroDto>> toModel(HeroSearchResult searchResult) {
     return toModelWithPagination(searchResult, HeroSearchCriteria.builder().build());
   }
 
-  public PagedModel<EntityModel<Hero>> toModelWithPagination(
+  public PagedModel<EntityModel<HeroDto>> toModelWithPagination(
       HeroSearchResult searchResult, HeroSearchCriteria criteria) {
-    List<EntityModel<Hero>> heroModels =
+    List<EntityModel<HeroDto>> heroModels =
         searchResult.heroes().stream().map(heroModelAssembler::toModel).toList();
 
     PagedModel.PageMetadata metadata =
@@ -40,7 +40,7 @@ public class HeroSearchResultAssembler
             searchResult.totalElements(),
             searchResult.totalPages());
 
-    PagedModel<EntityModel<Hero>> pagedModel = PagedModel.of(heroModels, metadata);
+    PagedModel<EntityModel<HeroDto>> pagedModel = PagedModel.of(heroModels, metadata);
 
     addPaginationLinks(pagedModel, searchResult, criteria);
 
@@ -48,7 +48,7 @@ public class HeroSearchResultAssembler
   }
 
   private void addPaginationLinks(
-      PagedModel<EntityModel<Hero>> pagedModel,
+      PagedModel<EntityModel<HeroDto>> pagedModel,
       HeroSearchResult result,
       HeroSearchCriteria criteria) {
     String baseUrl = "/api/heroes/search/advanced";

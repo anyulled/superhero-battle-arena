@@ -5,8 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.barcelonajug.superherobattlearena.adapter.in.web.assembler.HeroSearchResultAssembler;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.HeroDto;
 import org.barcelonajug.superherobattlearena.application.usecase.HeroSearchUseCase;
-import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria.SortDirection;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchResult;
@@ -38,7 +38,7 @@ public class HeroAdvancedSearchController {
       summary = "Advanced hero search",
       description = "Search heroes with advanced filters, pagination, sorting, and HATEOAS links")
   @ApiResponse(responseCode = "200", description = "Search completed successfully")
-  public ResponseEntity<PagedModel<EntityModel<Hero>>> advancedSearch(
+  public ResponseEntity<PagedModel<EntityModel<HeroDto>>> advancedSearch(
       @Parameter(description = "Hero name filter (case-insensitive substring)")
           @RequestParam(required = false)
           @Nullable String name,
@@ -123,7 +123,7 @@ public class HeroAdvancedSearchController {
             .build();
 
     HeroSearchResult searchResult = heroSearchUseCase.search(criteria);
-    PagedModel<EntityModel<Hero>> response =
+    PagedModel<EntityModel<HeroDto>> response =
         heroSearchResultAssembler.toModelWithPagination(searchResult, criteria);
 
     return ResponseEntity.ok(response);

@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.stream.StreamSupport;
 import net.datafaker.Faker;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.RoundSpecDto;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
@@ -147,7 +148,7 @@ class TournamentConstrainedRoundIT extends PostgresTestContainerConfig {
             emptyList(),
             emptyList());
 
-    CreateRoundRequest request = new CreateRoundRequest(sessionId, spec);
+    CreateRoundRequest request = new CreateRoundRequest(sessionId, RoundSpecDto.from(spec));
 
     MvcResult result =
         mockMvc

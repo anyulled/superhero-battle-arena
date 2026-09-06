@@ -13,10 +13,10 @@ import java.util.Map;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.BatchSimulationResult;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.RoundConstraintOptionsDto;
+import org.barcelonajug.superherobattlearena.adapter.in.web.dto.SessionDto;
 import org.barcelonajug.superherobattlearena.application.usecase.AdminUseCase;
 import org.barcelonajug.superherobattlearena.application.usecase.RoundConstraintOptionsUseCase;
-import org.barcelonajug.superherobattlearena.domain.RoundConstraintOptions;
-import org.barcelonajug.superherobattlearena.domain.Session;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,8 +63,8 @@ public class AdminController {
       description = "Retrieves a list of all current and past tournament sessions.")
   @ApiResponse(responseCode = "200", description = "List of sessions retrieved")
   @GetMapping("/sessions")
-  public ResponseEntity<List<Session>> listSessions() {
-    return ResponseEntity.ok(adminUseCase.listSessions());
+  public ResponseEntity<List<SessionDto>> listSessions() {
+    return ResponseEntity.ok(adminUseCase.listSessions().stream().map(SessionDto::from).toList());
   }
 
   @Operation(
@@ -73,10 +73,11 @@ public class AdminController {
   @ApiResponse(
       responseCode = "200",
       description = "Round constraint options retrieved",
-      content = @Content(schema = @Schema(implementation = RoundConstraintOptions.class)))
+      content = @Content(schema = @Schema(implementation = RoundConstraintOptionsDto.class)))
   @GetMapping("/round-constraints/options")
-  public ResponseEntity<RoundConstraintOptions> roundConstraintOptions() {
-    return ResponseEntity.ok(roundConstraintOptionsUseCase.getOptions());
+  public ResponseEntity<RoundConstraintOptionsDto> roundConstraintOptions() {
+    return ResponseEntity.ok(
+        RoundConstraintOptionsDto.from(roundConstraintOptionsUseCase.getOptions()));
   }
 
   /** Create a new round with custom constraints */
@@ -94,7 +95,8 @@ public class AdminController {
               required = true)
           @RequestBody
           CreateRoundRequest request) {
-    return ResponseEntity.ok(adminUseCase.createRound(request.sessionId(), request.spec()));
+    return ResponseEntity.ok(
+        adminUseCase.createRound(request.sessionId(), request.spec().toDomain()));
   }
 
   /** Automatically match teams for a round */

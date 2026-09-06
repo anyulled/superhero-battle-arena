@@ -6,7 +6,6 @@ import java.util.List;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.hateoas.EntityModel;
 
 class HeroModelAssemblerTest {
 
@@ -21,7 +20,7 @@ class HeroModelAssemblerTest {
   void shouldConvertHeroToEntityModelWithLinks() {
     Hero hero = createTestHero(1, "Batman", "batman");
 
-    EntityModel<Hero> result = assembler.toModel(hero);
+    var result = assembler.toModel(hero);
 
     assertThat(result.getContent()).isNotNull();
     assertThat(result.getContent().name()).isEqualTo("Batman");
@@ -34,7 +33,7 @@ class HeroModelAssemblerTest {
   void shouldGenerateCorrectSelfLink() {
     Hero hero = createTestHero(42, "Spider-Man", "spider-man");
 
-    EntityModel<Hero> result = assembler.toModel(hero);
+    var result = assembler.toModel(hero);
 
     assertThat(result.getLink("self")).isPresent();
     assertThat(result.getLink("self").get().getHref()).contains("/api/heroes/42");
@@ -62,7 +61,7 @@ class HeroModelAssemblerTest {
             .tags(List.of())
             .build();
 
-    EntityModel<Hero> result = assembler.toModel(hero);
+    var result = assembler.toModel(hero);
 
     assertThat(result.getContent()).isNotNull();
     assertThat(result.getContent().images()).isNull();
