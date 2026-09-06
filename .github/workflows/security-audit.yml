@@ -1,10 +1,12 @@
 name: Security Audit
 
 on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
+  workflow_call:
+    secrets:
+      SNYK_TOKEN:
+        required: false
+      NVD_API_KEY:
+        required: false
   schedule:
     - cron: "0 6 * * 1"
 

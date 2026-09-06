@@ -1,8 +1,19 @@
 name: Deploy to Clever Cloud
 on:
-  push:
-    branches:
-      - main
+  workflow_call:
+    inputs:
+      revision:
+        required: true
+        type: string
+    secrets:
+      CLEVER_SECRET:
+        required: true
+      CLEVER_TOKEN:
+        required: true
+      ORGA_ID:
+        required: true
+      APPLICATION_ID:
+        required: true
 
 concurrency:
   group: clever-cloud-main
@@ -13,12 +24,14 @@ permissions:
 
 jobs:
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     name: Deploy to Clever Cloud
     steps:
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
+          ref: ${{ inputs.revision }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -27,12 +40,21 @@ jobs:
 
       - name: Deploy to Clever Cloud
         env:
+          VALIDATED_REVISION: ${{ inputs.revision }}
           CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
           CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
           ORGA_ID: ${{ secrets.ORGA_ID }}
           APPLICATION_ID: ${{ secrets.APPLICATION_ID }}
         run: |
           set -euo pipefail
+
+          test "$VALIDATED_REVISION" = "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$VALIDATED_REVISION"
+          current_main=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$current_main" != "$VALIDATED_REVISION" ]; then
+            echo "::error::The validated revision is no longer the current main commit."
+            exit 1
+          fi
 
           clever login --token "$CLEVER_TOKEN" --secret "$CLEVER_SECRET"
 
