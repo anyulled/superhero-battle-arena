@@ -11,7 +11,7 @@ allowed-tools: Read, Write, Bash, Glob, Grep
 parameters:
   spring_version:
     type: string
-    default: "3.2"
+    default: "4.1.1"
     description: Spring Boot version
   module:
     type: string
@@ -21,11 +21,13 @@ parameters:
 
 # Java Spring Boot Skill
 
+Use the [project skill routing and compatibility guide](../../../docs/skills.md) before applying examples. This repository uses Java 25 without preview features and Spring Boot 4.1.1; its hexagonal boundaries and Maven wrapper take precedence over generic patterns.
+
 Build production-ready Spring Boot applications with modern best practices.
 
 ## Overview
 
-This skill covers Spring Boot development including REST APIs, security configuration, data access, actuator monitoring, and cloud integration. Follows Spring Boot 3.x patterns with emphasis on production readiness.
+This skill covers Spring Boot development including REST APIs, security configuration, data access, actuator monitoring, and cloud integration. Follows Spring Boot 4.1.1 patterns with emphasis on production readiness.
 
 ## When to Use This Skill
 
@@ -86,7 +88,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@Valid @RequestBody UserRequest request) {
-        User user = userService.create(request);
+        User user = userService.create(new CreateUserCommand(request.name(), request.email(), request.age()));
         URI location = URI.create("/api/users/" + user.getId());
         return ResponseEntity.created(location).body(user);
     }
@@ -154,12 +156,9 @@ server:
 
 ## Common Patterns
 
-### Layer Architecture
-```
-Controller → Service → Repository → Database
-     ↓           ↓          ↓
-   DTOs      Entities    Entities
-```
+### Hexagonal Architecture
+
+Controllers map web DTOs to application commands. Use cases depend on outbound port interfaces in `application.port.out`. Persistence adapters implement those ports and map JPA entities to domain models. Keep JPA entities in `adapter.out.persistence` and web DTOs in `adapter.in.web`.
 
 ### Validation Patterns
 ```java
@@ -177,7 +176,7 @@ public record CreateUserRequest(
 | Problem | Cause | Solution |
 |---------|-------|----------|
 | Bean not found | Missing @Component | Add annotation or @Bean |
-| Circular dependency | Constructor injection | Use @Lazy or refactor |
+| Circular dependency | Constructor injection | Refactor the dependency cycle |
 | 401 Unauthorized | Security config | Check permitAll paths |
 | Slow startup | Heavy auto-config | Exclude unused starters |
 

@@ -22,6 +22,8 @@ parameters:
 
 # Java Testing Skill
 
+Use the [project skill routing and compatibility guide](../../../docs/skills.md) before applying examples. This repository uses Java 25 without preview features and Spring Boot 4.1.1; its hexagonal boundaries and Maven wrapper take precedence over generic patterns.
+
 Write comprehensive tests for Java applications with modern testing practices.
 
 ## Overview
@@ -58,6 +60,8 @@ Use when you need to:
 - Custom assertions
 
 ### Integration Testing
+
+Keep repository integration tests in the persistence adapter and execute against PostgreSQL Testcontainers. Application unit tests mock outbound ports, never database repositories.
 - @SpringBootTest slices
 - Testcontainers setup
 - MockMvc for APIs
@@ -65,13 +69,14 @@ Use when you need to:
 
 ## Quick Reference
 
+### Unit test with Mockito
+
 ```java
-// Unit Test with Mockito
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserRepositoryPort userRepository;
 
     @InjectMocks
     private UserService userService;
@@ -79,14 +84,11 @@ class UserServiceTest {
     @Test
     @DisplayName("Should find user by ID")
     void shouldFindUserById() {
-        // Given
         User user = new User(1L, "John");
         given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
-        // When
         Optional<User> result = userService.findById(1L);
 
-        // Then
         assertThat(result)
             .isPresent()
             .hasValueSatisfying(u ->
@@ -95,7 +97,11 @@ class UserServiceTest {
     }
 }
 
-// Parameterized Test
+```
+
+### Parameterized test
+
+```java
 @ParameterizedTest
 @CsvSource({
     "valid@email.com, true",
@@ -106,14 +112,20 @@ void shouldValidateEmail(String email, boolean expected) {
     assertThat(validator.isValid(email)).isEqualTo(expected);
 }
 
-// Integration Test with Testcontainers
+```
+
+### Persistence integration test
+
+```java
+import org.testcontainers.postgresql.PostgreSQLContainer;
+
 @Testcontainers
 @SpringBootTest
 class OrderRepositoryIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer postgres =
+        new PostgreSQLContainer("postgres:16-alpine");
 
     @DynamicPropertySource
     static void configure(DynamicPropertyRegistry registry) {
@@ -132,14 +144,21 @@ class OrderRepositoryIT {
     }
 }
 
-// API Test with MockMvc
+```
+
+### MVC slice test
+
+```java
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
     @Test
@@ -198,7 +217,7 @@ User user = aUser().withName("Jane").inactive().build();
                 <limit>
                     <counter>LINE</counter>
                     <value>COVEREDRATIO</value>
-                    <minimum>0.80</minimum>
+                    <minimum>0.90</minimum>
                 </limit>
             </limits>
         </rule>
@@ -215,7 +234,7 @@ User user = aUser().withName("Jane").inactive().build();
 | Mock not working | Missing @ExtendWith | Add MockitoExtension |
 | NPE in test | Mock not initialized | Check @InjectMocks |
 | Flaky test | Shared state | Isolate test data |
-| Context fails | Missing bean | Use @MockBean |
+| Context fails | Missing bean | Use @MockitoBean |
 
 ### Debug Checklist
 ```

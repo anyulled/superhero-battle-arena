@@ -5,6 +5,8 @@ description: JPA/Hibernate patterns for entity design, relationships, query opti
 
 # JPA/Hibernate Patterns
 
+Use the [project skill routing and compatibility guide](../../../docs/skills.md) before applying examples. This repository uses Java 25 without preview features and Spring Boot 4.1.1; its hexagonal boundaries and Maven wrapper take precedence over generic patterns.
+
 Use for data modeling, repositories, and performance tuning in Spring Boot.
 
 ## Entity Design
@@ -78,7 +80,7 @@ Page<MarketSummary> findAllBy(Pageable pageable);
 
 ## Transactions
 
-- Annotate service methods with `@Transactional`
+- Keep JPA entity access and repository transaction boundaries inside `adapter.out.persistence`; annotate the relevant adapter methods with `@Transactional`
 - Use `@Transactional(readOnly = true)` for read paths to optimize
 - Choose propagation carefully; avoid long-running transactions
 

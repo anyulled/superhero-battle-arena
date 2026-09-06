@@ -5,6 +5,8 @@ description: Backend architecture patterns, API design, database optimization, a
 
 # Backend Development Patterns
 
+Scope: JavaScript/TypeScript assets and Node tooling only. For this project’s Java backend, use [the Java skill routes](../../../docs/skills.md); do not introduce Express, Next.js, or their architecture into the Spring application.
+
 Backend architecture patterns and best practices for scalable server-side applications.
 
 ## API Design Patterns

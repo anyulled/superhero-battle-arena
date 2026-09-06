@@ -29,14 +29,14 @@ A Spring Boot application built with Hexagonal Architecture that simulates battl
 
 ## Technology Stack
 
-- **Backend**: Java 25 (Preview Features), Spring Boot 4.x
+- **Backend**: Java 25 (without preview features), Spring Boot 4.1.1
 - **Frontend**: HTML5, Tailwind CSS, jQuery, Lucide Icons
 - **Architecture**: Hexagonal (Ports & Adapters) with Use Case pattern
 - **Build Tool**: Maven
 
 ## How to Run
 
-1. **Prerequisites**: Ensure you have Java 21+ installed (Java 25 recommended for full compatibility).
+1. **Prerequisites**: Install Java 25. Maven enforces Java 25; other Java versions are unsupported. Use the committed Maven wrapper.
 2. **Build and Run**:
 
    ```bash

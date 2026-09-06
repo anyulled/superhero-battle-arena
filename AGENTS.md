@@ -4,8 +4,8 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 
 ## 1. Project Context & Stack
 
-- **Language:** Java 25 with preview features.
-- **Framework:** Spring Boot 4.0.4.
+- **Language:** Java 25, without preview features.
+- **Framework:** Spring Boot 4.1.1 (the Maven parent in `pom.xml` is authoritative).
 - **Pattern:** Hexagonal Architecture (Ports and Adapters).
 - **Build Tool:** Maven (`./mvnw`).
 - **Persistence:** PostgreSQL (via Testcontainers for tests, managed via docker-compose locally) & H2 memory fallback.
@@ -21,7 +21,8 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 ## 3. Architecture Constraints (Hexagonal)
 
 - **`domain` package:**
-  - Pure Java. Zero Spring, JPA, or web annotations.
+  - Pure Java business behavior; JSpecify nullness annotations and SLF4J logging are the only allowed external dependencies.
+  - Zero Spring, JPA, Jackson, or web annotations. Swagger metadata belongs to web-adapter DTOs.
   - Rich domain models, state encapsulation.
 - **`application` package:**
   - Use cases that orchestrate logic.
@@ -56,6 +57,6 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 
 - Prefer Java `record` for immutable data objects (DTOs, some domain objects).
 - When resolving tasks, check the build (`./mvnw clean verify`), verify tests pass, and resolve linting/SonarQube issues before declaring a task done.
-- Always check the `/workflows` or `/skills` reference documentation if you're uncertain about a particular architectural approach.
+- Consult [ARCHITECTURE.md](ARCHITECTURE.md), [architecture decisions](docs/adr/), and the [skill routing index](docs/skills.md) when uncertain about an architectural approach. CI definitions live in `.github/workflows/`.
 - Preserve deterministic file edits made by verified git hooks; do not drop them as noise.
 - **DO NOT** execute code or file modifications autonomously without first proposing the options/actions to the user and asking which action to take.
