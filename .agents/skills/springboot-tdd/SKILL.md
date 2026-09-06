@@ -5,7 +5,9 @@ description: Test-driven development for Spring Boot using JUnit 5, Mockito, Moc
 
 # Spring Boot TDD Workflow
 
-TDD guidance for Spring Boot services with 80%+ coverage (unit + integration).
+Use the [project skill routing and compatibility guide](../../../docs/skills.md) before applying examples. This repository uses Java 25 without preview features and Spring Boot 4.1.1; its hexagonal boundaries and Maven wrapper take precedence over generic patterns.
+
+TDD guidance for Spring Boot services with 90% coverage target (unit + integration).
 
 ## When to Use
 
@@ -25,12 +27,12 @@ TDD guidance for Spring Boot services with 80%+ coverage (unit + integration).
 ```java
 @ExtendWith(MockitoExtension.class)
 class MarketServiceTest {
-  @Mock MarketRepository repo;
+  @Mock MarketRepositoryPort repo;
   @InjectMocks MarketService service;
 
   @Test
   void createsMarket() {
-    CreateMarketRequest req = new CreateMarketRequest("name", "desc", Instant.now(), List.of("cat"));
+    CreateMarketCommand req = new CreateMarketCommand("name", "desc", Instant.now(), List.of("cat"));
     when(repo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
     Market result = service.create(req);
@@ -49,10 +51,13 @@ Patterns:
 ## Web Layer Tests (MockMvc)
 
 ```java
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+
 @WebMvcTest(MarketController.class)
 class MarketControllerTest {
   @Autowired MockMvc mockMvc;
-  @MockBean MarketService marketService;
+  @MockitoBean MarketService marketService;
 
   @Test
   void returnsMarkets() throws Exception {
@@ -68,10 +73,8 @@ class MarketControllerTest {
 ## Integration Tests (SpringBootTest)
 
 ```java
-@SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-class MarketIntegrationTest {
+class MarketIntegrationIT extends PostgresTestContainerConfig {
   @Autowired MockMvc mockMvc;
 
   @Test
@@ -87,6 +90,8 @@ class MarketIntegrationTest {
 ```
 
 ## Persistence Tests (DataJpaTest)
+
+A JPA slice requires the matching Boot 4 test module. `TestContainersConfig` below must supply a real PostgreSQL container and datasource properties. Prefer the existing `PostgresTestContainerConfig` and adapter `IT` pattern unless a slice is needed.
 
 ```java
 @DataJpaTest
@@ -109,7 +114,7 @@ class MarketRepositoryTest {
 
 ## Testcontainers
 
-- Use reusable containers for Postgres/Redis to mirror production
+- Use the project PostgreSQL Testcontainers setup; do not introduce Redis or container reuse for these tests
 - Wire via `@DynamicPropertySource` to inject JDBC URLs into Spring context
 
 ## Coverage (JaCoCo)
@@ -119,7 +124,7 @@ Maven snippet:
 <plugin>
   <groupId>org.jacoco</groupId>
   <artifactId>jacoco-maven-plugin</artifactId>
-  <version>0.8.14</version>
+  <version>0.8.15</version>
   <executions>
     <execution>
       <goals><goal>prepare-agent</goal></goals>
@@ -151,7 +156,7 @@ class MarketBuilder {
 
 ## CI Commands
 
-- Maven: `mvn -T 4 test` or `mvn verify`
-- Gradle: `./gradlew test jacocoTestReport`
+- Maven: `./mvnw -T 4 test` or `./mvnw verify`
+- Full project validation: `./mvnw clean verify -Ppostgres-tests` (Docker required)
 
 **Remember**: Keep tests fast, isolated, and deterministic. Test behavior, not implementation details.

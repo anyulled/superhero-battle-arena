@@ -5,6 +5,8 @@ description: Universal coding standards, best practices, and patterns for TypeSc
 
 # Coding Standards & Best Practices
 
+Scope: JavaScript/TypeScript assets and Node tooling only. For this project’s Java backend, use [the Java skill routes](../../../docs/skills.md); do not introduce Express, Next.js, or their architecture into the Spring application.
+
 Universal coding standards applicable across all projects.
 
 ## Code Quality Principles

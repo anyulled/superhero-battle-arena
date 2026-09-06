@@ -5,6 +5,8 @@ description: Spring Security best practices for authn/authz, validation, CSRF, s
 
 # Spring Boot Security Review
 
+Use the [project skill routing and compatibility guide](../../../docs/skills.md) before applying examples. This repository uses Java 25 without preview features and Spring Boot 4.1.1; its hexagonal boundaries and Maven wrapper take precedence over generic patterns.
+
 Use when adding auth, handling input, creating endpoints, or dealing with secrets.
 
 ## Authentication

@@ -5,6 +5,8 @@ description: Spring Boot architecture patterns, REST API design, layered service
 
 # Spring Boot Development Patterns
 
+Use the [project skill routing and compatibility guide](../../../docs/skills.md) before applying examples. This repository uses Java 25 without preview features and Spring Boot 4.1.1; its hexagonal boundaries and Maven wrapper take precedence over generic patterns.
+
 Spring Boot architecture and API patterns for scalable, production-grade services.
 
 ## REST API Structure
@@ -30,7 +32,7 @@ class MarketController {
 
   @PostMapping
   ResponseEntity<MarketResponse> create(@Valid @RequestBody CreateMarketRequest request) {
-    Market market = marketService.create(request);
+    Market market = marketService.create(new CreateMarketCommand(request.name(), request.description()));
     return ResponseEntity.status(HttpStatus.CREATED).body(MarketResponse.from(market));
   }
 }
@@ -45,25 +47,25 @@ public interface MarketRepository extends JpaRepository<MarketEntity, Long> {
 }
 ```
 
-## Service Layer with Transactions
+## Application Use Case
 
 ```java
 @Service
-public class MarketService {
-  private final MarketRepository repo;
+public class CreateMarketUseCase {
+  private final MarketRepositoryPort marketRepository;
 
-  public MarketService(MarketRepository repo) {
-    this.repo = repo;
+  public CreateMarketUseCase(MarketRepositoryPort marketRepository) {
+    this.marketRepository = marketRepository;
   }
 
-  @Transactional
-  public Market create(CreateMarketRequest request) {
-    MarketEntity entity = MarketEntity.from(request);
-    MarketEntity saved = repo.save(entity);
-    return Market.from(saved);
+  public Market create(CreateMarketCommand command) {
+    Market market = Market.create(command.name(), command.description());
+    return marketRepository.save(market);
   }
 }
 ```
+
+`CreateMarketCommand` belongs to the application, `Market` to the domain, and `MarketRepositoryPort` to `application.port.out`. The persistence adapter implements the port and owns JPA mapping and database operations. The Spring Data repository above stays inside that adapter.
 
 ## DTOs and Validation
 
@@ -296,7 +298,7 @@ Use Spring’s `@Scheduled` or integrate with queues (e.g., Kafka, SQS, RabbitMQ
 ## Production Defaults
 
 - Prefer constructor injection, avoid field injection
-- Enable `spring.mvc.problemdetails.enabled=true` for RFC 7807 errors (Spring Boot 3+)
+- Enable `spring.mvc.problemdetails.enabled=true` for RFC 7807 errors (Spring Boot 4.1.1)
 - Configure HikariCP pool sizes for workload, set timeouts
 - Use `@Transactional(readOnly = true)` for queries
 - Enforce null-safety via `@NonNull` and `Optional` where appropriate
