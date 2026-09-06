@@ -13,6 +13,103 @@ permissions:
   checks: write
 
 jobs:
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/security-audit.yml
+
+  security-audit:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/security-audit.yml
+    secrets:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+  codeql:
+    if: github.event_name != 'schedule'
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+    uses: ./.github/workflows/codeql.yml
+
+  verify-docs:
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify-docs.yml
+
+  sonar:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    name: SonarCloud Main Commit Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      checks: read
+      contents: read
+    steps:
+      - name: Require the external SonarCloud check for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          REVISION: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          for attempt in $(seq 1 60); do
+            check=$(gh api --paginate --slurp \
+              "repos/$REPOSITORY/commits/$REVISION/check-runs?check_name=SonarCloud%20Code%20Analysis&filter=latest&per_page=100" \
+              | jq -c --arg revision "$REVISION" \
+                '[.[].check_runs[] | select(.head_sha == $revision and .name == "SonarCloud Code Analysis" and .app.id == 12526 and .app.slug == "sonarqubecloud")] | sort_by(.id) | last')
+
+            if [ "$check" != "null" ] && [ "$(jq -r '.status' <<< "$check")" = "completed" ]; then
+              conclusion=$(jq -r '.conclusion' <<< "$check")
+              if [ "$conclusion" = "success" ]; then
+                echo "SonarCloud passed for $REVISION."
+                exit 0
+              fi
+              echo "::error::SonarCloud concluded $conclusion for $REVISION."
+              exit 1
+            fi
+
+            echo "Waiting for SonarCloud on $REVISION (attempt $attempt/60)."
+            sleep 15
+          done
+
+          echo "::error::Timed out waiting for the SonarCloud app to pass this exact commit."
+          exit 1
+
+  validate-main:
+    name: Main Validation Gate
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, mutation, fuzz, commitlint, scorecard, quality, duplication, security-audit, codeql, verify-docs, sonar]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require every validation to succeed
+        env:
+          VALIDATION_RESULTS: ${{ toJSON(needs) }}
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$VALIDATION_RESULTS" | jq -e 'all(.[]; .result == "success")'
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: validate-main
+    permissions:
+      contents: read
+    uses: ./.github/workflows/deploy-to-clever-cloud.yml
+    with:
+      revision: ${{ github.sha }}
+    secrets:
+      CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
+      CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
+      ORGA_ID: ${{ secrets.ORGA_ID }}
+      APPLICATION_ID: ${{ secrets.APPLICATION_ID }}
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -225,4 +322,3 @@ jobs:
 
       - name: Run jscpd
         run: npx jscpd --pattern "**/*.java" --ignore "**/.agents/**,**/.claude/**,**/.codex/**" --threshold 10
-
