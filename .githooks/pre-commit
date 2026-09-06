@@ -1,19 +1,53 @@
 #!/bin/sh
-# pre-commit hook to ensure code is formatted with Spotless
+set -eu
 
-echo "Running OpenRewrite Recipes..."
-./mvnw rewrite:run
+snapshot_directory=$(mktemp -d "${TMPDIR:-/tmp}/arena-pre-commit.XXXXXX")
+trap 'rm -rf "$snapshot_directory"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-echo "Running Spotless Check..."
-./mvnw spotless:apply
-./mvnw spotless:check
+mkdir "$snapshot_directory/tree"
+git ls-files -z > "$snapshot_directory/staged-files"
+git checkout-index --all --prefix="$snapshot_directory/tree/"
 
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "❌ Spotless check failed!"
-  echo "Please run './mvnw spotless:apply' to fix formatting before committing."
+# Git exports repository variables to hooks; they must not target the original index.
+for repository_variable in $(git rev-parse --local-env-vars); do
+  unset "$repository_variable"
+done
+
+cd -P "$snapshot_directory/tree"
+git -c init.defaultBranch=hook-validation init --quiet
+git config core.autocrlf false
+git add --force --pathspec-from-file="$snapshot_directory/staged-files" --pathspec-file-nul
+baseline_tree=$(git write-tree)
+
+run_checks() {
+  echo "Running OpenRewrite recipes on the staged snapshot..."
+  ./mvnw rewrite:run || return $?
+
+  echo "Running Spotless on the staged snapshot..."
+  ./mvnw spotless:apply || return $?
+  ./mvnw spotless:check || return $?
+}
+
+check_status=0
+run_checks || check_status=$?
+
+git add --all
+patch_file=$(mktemp "${TMPDIR:-/tmp}/arena-pre-commit-changes.XXXXXX")
+git diff --cached --binary "$baseline_tree" -- > "$patch_file"
+
+if [ -s "$patch_file" ]; then
+  echo "The checks changed the staged snapshot. Commit stopped."
+  echo "Review the patch before applying changes and staging them: $patch_file"
+  echo "The original working tree and index were not changed."
   exit 1
 fi
+rm -f "$patch_file"
 
-echo "✅ Spotless check passed!"
-exit 0
+if [ "$check_status" -ne 0 ]; then
+  echo "Staged snapshot checks failed (exit $check_status). Commit stopped."
+  exit "$check_status"
+fi
+
+echo "Staged snapshot checks passed."
