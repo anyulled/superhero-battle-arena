@@ -6,6 +6,16 @@ echo "Running Pre-Push Checks (Linting, Unit Tests, Integration Tests)..."
 echo "=========================================================="
 
 # Run full project verification including integration tests with Postgres
+if ! npm run test:harness; then
+  echo "Harness regression tests failed. Push stopped."
+  exit 1
+fi
+
+if ! npm run lint:duplication; then
+  echo "Code duplication check failed. Push stopped."
+  exit 1
+fi
+
 ./mvnw clean verify -Ppostgres-tests
 
 if [ $? -ne 0 ]; then

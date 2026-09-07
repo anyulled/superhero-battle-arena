@@ -35,3 +35,9 @@ build/
 
 ### Environment Variables ###
 .env*
+
+### Harness ###
+node_modules/
+test-results/
+playwright-report/
+.harness/
