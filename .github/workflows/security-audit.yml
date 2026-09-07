@@ -42,6 +42,15 @@ jobs:
           distribution: "temurin"
           cache: "maven"
 
+      - name: Restore Dependency-Check data
+        id: dependency-check-cache-restore
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: dependency-check-${{ runner.os }}-v13-${{ github.run_id }}
+          restore-keys: |
+            dependency-check-${{ runner.os }}-v13-
+
       - name: Snyk Security Scan
         uses: snyk/actions/setup@12140f4059e244892ae643824a95459a102120dd
 
@@ -55,6 +64,13 @@ jobs:
           GUIDE_API_TOKEN: ${{ secrets.GUIDE_API_TOKEN }}
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: sh scripts/security-audit.sh
+
+      - name: Save Dependency-Check data
+        if: success()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check-data
+          key: dependency-check-${{ runner.os }}-v13-${{ github.run_id }}
 
       - name: Upload dependency audit reports
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
