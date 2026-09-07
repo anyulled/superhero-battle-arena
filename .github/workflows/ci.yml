@@ -368,7 +368,7 @@ jobs:
             target/surefire-reports/
 
   active-fuzz:
-    name: Active Fuzz Tests (${{ matrix.target }})
+    name: Active Fuzz Tests
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 20
