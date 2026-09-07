@@ -2,6 +2,8 @@
 
 Pull requests run dependency review without repository secrets. Trusted main pushes and scheduled runs execute Snyk plus OWASP Dependency-Check 13.0.0. The latter checks both NVD and Sonatype Guide, replacing the standalone OSS Index Maven plugin that could report success after an HTTP failure.
 
+The workflow restores Dependency-Check's NVD data independently of the Maven dependency cache and saves it only after a successful scan. Its key is specific to the operating system and Dependency-Check 13, rather than the project's `pom.xml`, so ordinary dependency updates do not force a full NVD download. Dependency-Check still performs its normal remote update check on every trusted run.
+
 The combined scan fails for vulnerabilities with a CVSS score of 7 or higher, missing credentials, and remote service errors. Guide caching is disabled so an old cached result cannot hide a current authentication failure. Reports are uploaded as the `dependency-audit-reports` artifact.
 
 Configure `GUIDE_API_TOKEN` and `NVD_API_KEY` as GitHub Actions repository secrets. Use a Sonatype Guide personal access token; do not paste it into an issue or commit it. The Maven settings template resolves the token from the environment. Its `guide` username is a placeholder supported by Guide token authentication. The NVD key is also read from the environment rather than passed as a command argument.

@@ -103,3 +103,21 @@ test('only trusted security scans receive Guide credentials', async () => {
   assert.equal(caller.jobs['dependency-review'].secrets, undefined);
   assert.ok(!JSON.stringify(workflow).includes('ossindex-maven-plugin'));
 });
+
+test('caches Dependency-Check data independently from Maven dependencies', async () => {
+  const workflow = parse(await readFile('.github/workflows/security-audit.yml', 'utf8'));
+  const steps = workflow.jobs['security-audit'].steps;
+  const restore = steps.find(step => step.id === 'dependency-check-cache-restore');
+  const save = steps.find(step => step.name === 'Save Dependency-Check data');
+  const expectedPath = '~/.m2/repository/org/owasp/dependency-check-data';
+  const expectedKey = 'dependency-check-${{ runner.os }}-v13-${{ github.run_id }}';
+
+  assert.equal(restore.uses, 'actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830');
+  assert.equal(restore.with.path, expectedPath);
+  assert.equal(restore.with.key, expectedKey);
+  assert.equal(restore.with['restore-keys'], 'dependency-check-${{ runner.os }}-v13-\n');
+  assert.equal(save.uses, 'actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830');
+  assert.equal(save.if, 'success()');
+  assert.equal(save.with.path, expectedPath);
+  assert.equal(save.with.key, expectedKey);
+});
