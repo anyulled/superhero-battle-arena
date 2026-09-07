@@ -1,11 +1,11 @@
 # AI Harness Scorecard: superhero-battle-arena
 
-**Grade: B** (82.7/100) | Good foundation. Some gaps in enforcement or feedback loops.
+**Grade: A** (85.7/100) | Strong harness. AI-generated code has robust mechanical safeguards.
 
 - **Repository**: `/home/runner/work/superhero-battle-arena/superhero-battle-arena`
-- **Languages**: java
-- **Assessed**: 2026-08-18 11:23 UTC
-- **Checks**: 27/31 passed
+- **Languages**: java, javascript
+- **Assessed**: 2026-09-07 08:50 UTC
+- **Checks**: 28/31 passed
 
 ## Summary
 
@@ -13,7 +13,7 @@
 |----------|--------|-------|--------|
 | Architectural Documentation | 20% | 100% [##########] | 5/5 |
 | Mechanical Constraints | 25% | 73% [#######---] | 6/7 |
-| Testing & Stability | 25% | 82% [########--] | 7/8 |
+| Testing & Stability | 25% | 94% [#########-] | 8/8 |
 | Review & Drift Prevention | 15% | 100% [##########] | 6/6 |
 | AI-Specific Safeguards | 15% | 60% [######----] | 3/5 |
 
@@ -56,7 +56,7 @@ _DORA 2025 - AI-accessible documentation_
 
 _DORA 2025 Report_
 
-**Evidence**: CI detected: github, github, github, github, github
+**Evidence**: CI detected: github, github, github, github, github, github, github
 
 ### [PASS] Linter Enforcement (2/4)
 
@@ -101,7 +101,7 @@ _Blog: 80% problem in AI-generated code_
 **Remediation**: Add unsafe_code = forbid (Rust), security linting (semgrep/bandit), or ESLint rules against dangerous patterns.
 
 
-## Testing & Stability (82%)
+## Testing & Stability (94%)
 
 ### [PASS] Test Suite (2/3)
 
@@ -115,7 +115,7 @@ _Kent Beck - tests define what correct means_
 
 _DORA 2025 - stability through comprehensive testing_
 
-**Evidence**: Multiple test jobs in CI: test, mutation, fuzz, security-audit
+**Evidence**: Multiple test jobs in CI: sonar, test, h2-compatibility, postgres-startup, browser
 
 ### [PASS] Code Coverage (4/4)
 
@@ -141,19 +141,17 @@ _Blog: 80% problem - catching what AI misses_
 
 **Evidence**: Jazzer fuzz testing library found in pom.xml
 
-### [FAIL] Contract / Compatibility Tests (0/3)
+### [PASS] Contract / Compatibility Tests (3/3)
 
 _OpenAI Harness Engineering - mechanical constraints_
 
-**Evidence**: No contract or compatibility tests found
-
-**Remediation**: Add contract tests that verify external interface stability (golden fixtures, snapshot tests, wire-format checks).
+**Evidence**: Contract/compatibility tests found: src/test/resources/contracts/openapi.json
 
 ### [PASS] Tests Block Merge (2/2)
 
 _DORA 2025 - stability metrics_
 
-**Evidence**: All test jobs are blocking: test, mutation, fuzz
+**Evidence**: All test jobs are blocking: sonar, test, h2-compatibility
 
 
 ## Review & Drift Prevention (100%)
