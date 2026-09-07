@@ -59,4 +59,6 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 - When resolving tasks, check the build (`./mvnw clean verify`), verify tests pass, and resolve linting/SonarQube issues before declaring a task done.
 - Consult [ARCHITECTURE.md](ARCHITECTURE.md), [architecture decisions](docs/adr/), and the [skill routing index](docs/skills.md) when uncertain about an architectural approach. CI definitions live in `.github/workflows/`.
 - Preserve deterministic file edits made by verified git hooks; do not drop them as noise.
-- **DO NOT** execute code or file modifications autonomously without first proposing the options/actions to the user and asking which action to take.
+- Start with read-only inspection. Before executing project code or modifying files, propose the concrete actions and ask which action to take. Once the user authorizes a scope, carry out its necessary edits and validation without repeatedly asking for the same permission.
+- Ask for instructions when a blocker requires a workaround, or when the proposed work changes architecture, security policy, public contracts, dependencies or execution costs beyond the approved scope. Do not assume an answer or weaken a check.
+- Use the [contributor validation matrix](CONTRIBUTING.md#validation-commands). Report exact commands, outcomes and remaining blockers. Existing reports are not evidence that the current changes pass.
