@@ -6,8 +6,8 @@ require 'yaml'
 class WorkflowGateTests
   ROOT = File.expand_path('../..', __dir__)
   REQUIRED_VALIDATIONS = %w[
-    test mutation fuzz commitlint scorecard quality duplication
-    security-audit codeql verify-docs sonar
+    test h2-compatibility postgres-startup browser mutation fuzz commitlint scorecard quality duplication
+    security-audit codeql verify-docs sonar harness
   ].freeze
 
   def initialize
@@ -33,6 +33,23 @@ class WorkflowGateTests
 
     expect((REQUIRED_VALIDATIONS - dependencies).empty?, 'A required validation is missing from the gate')
     expect(gate.fetch('if').include?('always()'), 'The gate must report failed or skipped dependencies')
+  end
+
+  def test_runtime_regressions_use_the_application_validated_in_this_run
+    regression_jobs = %w[postgres-startup browser].map { |name| @jobs.fetch(name) }
+
+    downloads = regression_jobs.map do |job|
+      job.fetch('steps').find { |step| step.fetch('uses', '').start_with?('actions/download-artifact@') }
+    end
+
+    regression_jobs.each do |job|
+      expect(job.fetch('needs') == 'test', 'Runtime regression must wait for application validation')
+    end
+    downloads.each do |step|
+      expect(!step.nil?, 'Runtime regression must download the validated artifact')
+      expect(step.fetch('with').fetch('name') == 'validated-application', 'Unexpected application artifact')
+      expect(!step.fetch('with').key?('run-id'), 'Application artifact must come from this workflow run')
+    end
   end
 
   def test_reused_workflows_do_not_duplicate_push_or_pull_request_runs

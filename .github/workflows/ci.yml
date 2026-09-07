@@ -85,7 +85,7 @@ jobs:
   validate-main:
     name: Main Validation Gate
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test, mutation, fuzz, commitlint, scorecard, quality, duplication, security-audit, codeql, verify-docs, sonar]
+    needs: [test, h2-compatibility, postgres-startup, browser, mutation, fuzz, commitlint, scorecard, quality, duplication, security-audit, codeql, verify-docs, sonar, harness]
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -126,10 +126,10 @@ jobs:
       statuses: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           java-version: "25"
           distribution: "temurin"
@@ -149,14 +149,14 @@ jobs:
 
       - name: Upload Javadoc
         if: matrix.test-type == 'docs'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: javadoc
           path: target/site/apidocs/
 
       - name: Publish Test Report
-        uses: dorny/test-reporter@v3
-        if: always() && matrix.test-type != 'docs'
+        uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2
+        if: always() && matrix.test-type != 'docs' && (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'))
         with:
           name: ${{ matrix.test-type == 'unit' && 'Unit Tests' || 'Integration Tests' }}
           path: ${{ matrix.test-type == 'unit' && 'target/surefire-reports/TEST-*.xml' || 'target/failsafe-reports/TEST-*.xml' }}
@@ -164,15 +164,39 @@ jobs:
           fail-on-error: false
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always() && (matrix.test-type == 'unit' || matrix.test-type == 'integration')
         with:
           name: jacoco-coverage-${{ matrix.test-type }}
           path: target/site/jacoco/
 
+      - name: Upload test results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always() && matrix.test-type != 'docs'
+        with:
+          name: test-results-${{ matrix.test-type }}
+          path: |
+            target/surefire-reports/
+            target/failsafe-reports/
+
+      - name: Upload adapter coverage
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always() && matrix.test-type == 'integration'
+        with:
+          name: jacoco-coverage-adapters
+          path: target/site/jacoco-adapters/
+
+      - name: Upload validated application
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: success() && matrix.test-type == 'integration'
+        with:
+          name: validated-application
+          path: target/superhero-battle-arena-0.0.1-SNAPSHOT.jar
+          if-no-files-found: error
+
       - name: Add Coverage PR Comment
-        uses: madrapps/jacoco-report@v1.8.0
-        if: github.event_name == 'pull_request' && (matrix.test-type == 'unit' || matrix.test-type == 'integration') && always()
+        uses: madrapps/jacoco-report@e51ce1f46f7f8b5331593f935e59cbaf44b84920
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]' && (matrix.test-type == 'unit' || matrix.test-type == 'integration') && always()
         with:
           paths: target/site/jacoco/jacoco.xml
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -181,7 +205,7 @@ jobs:
           title: "Code Coverage - ${{ matrix.test-type }}"
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f
         if: matrix.test-type == 'unit'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -190,16 +214,117 @@ jobs:
           flags: unit-tests
           fail_ci_if_error: false
 
+  h2-compatibility:
+    name: H2 Compatibility Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Set up JDK 25
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: "maven"
+      - name: Verify H2 compatibility
+        run: ./mvnw -B test-compile failsafe:integration-test failsafe:verify -Ph2-compatibility
+      - name: Upload H2 test results
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: test-results-h2-compatibility
+          path: target/failsafe-reports/
+
+  postgres-startup:
+    name: PostgreSQL Startup Regression
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Set up JDK 25
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: "maven"
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install pinned npm
+        run: npm install --global npm@11.19.1
+      - name: Install harness dependencies
+        run: npm ci
+      - name: Download validated application
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: validated-application
+          path: target
+      - name: Verify startup with constrained PostgreSQL connections
+        run: npm run test:postgres-startup
+      - name: Upload PostgreSQL startup evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: postgres-startup-evidence
+          path: test-results/postgres-startup/
+
+  browser:
+    name: Browser Regression Tests
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Set up JDK 25
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          java-version: "25"
+          distribution: "temurin"
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install pinned npm
+        run: npm install --global npm@11.19.1
+      - name: Install harness dependencies
+        run: npm ci
+      - name: Download validated application
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: validated-application
+          path: target
+      - name: Install Chromium and system dependencies
+        run: npm exec --no -- playwright install --with-deps chromium
+      - name: Run browser regression tests
+        run: npm run test:browser
+      - name: Upload browser failure evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: failure()
+        with:
+          name: browser-failure-evidence
+          path: |
+            test-results/
+            playwright-report/
+
   mutation:
     runs-on: ubuntu-latest
     name: Mutation Tests
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           java-version: "25"
           distribution: "temurin"
@@ -209,7 +334,7 @@ jobs:
         run: ./mvnw -B clean test-compile org.pitest:pitest-maven:mutationCoverage
 
       - name: Upload Pitest Report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: pit-report
           path: target/pit-reports/
@@ -217,13 +342,13 @@ jobs:
   fuzz:
     runs-on: ubuntu-latest
     name: Fuzz Tests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
         with:
           java-version: "25"
           distribution: "temurin"
@@ -234,20 +359,69 @@ jobs:
 
       - name: Upload Jazzer Corpus
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: jazzer-corpus
-          path: src/test/resources/corpus/
+          name: jazzer-replay-evidence
+          path: |
+            src/test/resources/org/barcelonajug/superherobattlearena/adapter/in/web/*FuzzTestInputs/**
+            target/surefire-reports/
+
+  active-fuzz:
+    name: Active Fuzz Tests (${{ matrix.target }})
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [TeamRegistrationFuzzTest, DraftSubmissionFuzzTest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Set up JDK 25
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: "maven"
+      - name: Fuzz one target for sixty seconds
+        env:
+          JAZZER_FUZZ: '1'
+          FUZZ_TARGET: ${{ matrix.target }}
+        run: ./mvnw -B test -Pfuzz-tests -Dfuzz.max.duration=60s -Dtest="$FUZZ_TARGET"
+      - name: Upload generated corpus and findings
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: jazzer-active-${{ matrix.target }}
+          include-hidden-files: true
+          path: |
+            .cifuzz-corpus/**
+            src/test/resources/org/barcelonajug/superherobattlearena/adapter/in/web/*FuzzTestInputs/**
+            target/surefire-reports/
 
   commitlint:
     runs-on: ubuntu-latest
     name: Commit Lint
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - name: commitlint
-        uses: wagoid/commitlint-github-action@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install pinned npm
+        run: npm install --global npm@11.19.1
+      - name: Install harness dependencies
+        run: npm ci
+      - name: Lint commit messages
+        env:
+          BASE_REVISION: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+          HEAD_REVISION: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: npm exec --no -- commitlint --from "$BASE_REVISION" --to "$HEAD_REVISION"
 
   scorecard:
     runs-on: ubuntu-latest
@@ -258,24 +432,31 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
 
-      - uses: markmishaev76/ai-harness-scorecard@v1
+      - uses: markmishaev76/ai-harness-scorecard@baf1c269e091415d6616a9502a6a045a1bcf78b0
         id: scorecard
+        with:
+          output-file: ${{ runner.temp }}/scorecard-report.md
+          badge-file: ${{ runner.temp }}/scorecard-badge.json
+
+      - name: Checkout scorecard publication branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: scorecard
+          path: scorecard-publication
 
       - name: Commit badge and report
+        working-directory: scorecard-publication
+        env:
+          REPORT_DIRECTORY: ${{ runner.temp }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cp scorecard-badge.json /tmp/scorecard-badge.json
-          cp scorecard-report.md /tmp/scorecard-report.md
-          rm -f scorecard-badge.json scorecard-report.md
-          git fetch origin scorecard
-          git checkout scorecard
-          cp /tmp/scorecard-badge.json scorecard-badge.json
-          cp /tmp/scorecard-report.md scorecard-report.md
+          cp "$REPORT_DIRECTORY/scorecard-badge.json" scorecard-badge.json
+          cp "$REPORT_DIRECTORY/scorecard-report.md" scorecard-report.md
           git add scorecard-badge.json scorecard-report.md
           git diff --cached --quiet || git commit -m "chore: update scorecard badge and report"
           git push origin scorecard
@@ -284,7 +465,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Documentation Quality Checks
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: TODO and FIXME scanner
         run: |
@@ -296,29 +477,63 @@ jobs:
           fi
 
       - name: Link Checker
-        uses: lycheeverse/lychee-action@v2
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8
         with:
           args: --base ${{ github.workspace }} --offline --include-fragments *.md docs/**/*.md
           fail: true
 
       - name: Vale Linter
-        uses: errata-ai/vale-action@reviewdog
+        uses: errata-ai/vale-action@518a9136acc6e6668ce7c00d367051e0941e87ff
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: README.md docs/ CONTRIBUTING.md
+          files: '["README.md", "docs/", "CONTRIBUTING.md"]'
+          reporter: github-pr-annotations
+          version: 3.20.0
+          filter_mode: nofilter
           fail_on_error: true
 
   duplication:
     runs-on: ubuntu-latest
     name: Code Duplication Check
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '20'
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install pinned npm
+        run: npm install --global npm@11.19.1
+      - name: Install harness dependencies
+        run: npm ci
 
       - name: Run jscpd
-        run: npx jscpd --pattern "**/*.java" --ignore "**/.agents/**,**/.claude/**,**/.codex/**" --threshold 10
+        run: npm run lint:duplication
+
+  harness:
+    name: Harness Regression Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install pinned npm
+        run: npm install --global npm@11.19.1
+      - name: Install harness dependencies
+        run: npm ci
+      - name: Verify harness test runtimes
+        run: |
+          ruby --version
+          jq --version
+      - name: Run harness regression tests
+        run: npm run test:harness
+      - name: Validate skill catalog
+        run: npm run lint:skills
