@@ -15,7 +15,8 @@
     "test:workflows": "ruby scripts/tests/workflow-gates-test.rb",
     "test:harness": "node --test scripts/tests/*.test.mjs && npm run test:hooks && npm run test:workflows",
     "test:postgres-startup": "node scripts/tests/postgres-startup-test.mjs",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "lint:skills": "node .agents/skills/skill-creator/scripts/quick_validate.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

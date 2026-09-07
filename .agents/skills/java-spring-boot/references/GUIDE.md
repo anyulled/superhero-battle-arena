@@ -71,7 +71,7 @@ def implement_java_spring_boot(input_data):
 For advanced scenarios, consider:
 
 - Configuration customization via `assets/config.yaml`
-- Validation using `scripts/validate.py`
+- Validation using `scripts/validate.mjs`
 - Integration with other skills
 
 ## Troubleshooting
@@ -88,7 +88,7 @@ For advanced scenarios, consider:
 
 - SKILL.md - Skill specification
 - config.yaml - Configuration options
-- validate.py - Validation script
+- validate.mjs - Node validation script
 
 ---
 
