@@ -72,6 +72,13 @@ public class TeamController {
           List<String> members,
       @Parameter(description = "Optional session ID") @RequestParam(required = false)
           UUID sessionId) {
+    validateRegistrationText(name, members);
     return ResponseEntity.ok(teamUseCase.registerTeam(name, members, sessionId));
+  }
+
+  private void validateRegistrationText(String name, List<String> members) {
+    if (name.indexOf(0) >= 0 || members.stream().anyMatch(member -> member.indexOf(0) >= 0)) {
+      throw new IllegalArgumentException("Team names and members must not contain null characters");
+    }
   }
 }
