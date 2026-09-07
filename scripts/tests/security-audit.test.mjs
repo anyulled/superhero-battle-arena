@@ -27,6 +27,7 @@ async function fixture(t) {
           PATH: process.env.PATH,
           GUIDE_API_TOKEN: 'test-guide-token',
           NVD_API_KEY: 'test-nvd-key',
+          DEPENDENCY_CHECK_DATA_DIRECTORY: join(directory, 'dependency-check-data'),
           AUDIT_ARGUMENTS: argumentsPath,
           ...overrides,
         },
@@ -65,6 +66,7 @@ test('runs the pinned scanner with strict remote failure handling and indirect c
     '-DossIndexServerId=sonatype-guide',
     '-DnvdApiKeyEnvironmentVariable=NVD_API_KEY',
   ]) assert.ok(arguments_.includes(required), `Missing scanner configuration: ${required}`);
+  assert.ok(arguments_.some(argument => argument.startsWith('-DdataDirectory=')));
   assert.ok(arguments_.includes('.mvn/security-settings.xml'));
   assert.ok(arguments_.every(argument => !argument.includes('test-guide-token') && !argument.includes('test-nvd-key')));
 });
@@ -106,18 +108,22 @@ test('only trusted security scans receive Guide credentials', async () => {
 
 test('caches Dependency-Check data independently from Maven dependencies', async () => {
   const workflow = parse(await readFile('.github/workflows/security-audit.yml', 'utf8'));
-  const steps = workflow.jobs['security-audit'].steps;
+  const audit = workflow.jobs['security-audit'];
+  const steps = audit.steps;
+  const cacheKey = steps.find(step => step.id === 'dependency-check-cache-key');
   const restore = steps.find(step => step.id === 'dependency-check-cache-restore');
   const save = steps.find(step => step.name === 'Save Dependency-Check data');
-  const expectedPath = '~/.m2/repository/org/owasp/dependency-check-data';
-  const expectedKey = 'dependency-check-${{ runner.os }}-v13-${{ github.run_id }}';
+  const expectedPath = '${{ env.DEPENDENCY_CHECK_DATA_DIRECTORY }}';
+  const expectedKey = '${{ steps.dependency-check-cache-key.outputs.key }}';
 
+  assert.equal(audit.env.DEPENDENCY_CHECK_DATA_DIRECTORY, '${{ runner.temp }}/dependency-check-data');
+  assert.equal(cacheKey.run, 'echo "key=dependency-check-${RUNNER_OS}-v13-$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"');
   assert.equal(restore.uses, 'actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830');
   assert.equal(restore.with.path, expectedPath);
   assert.equal(restore.with.key, expectedKey);
   assert.equal(restore.with['restore-keys'], 'dependency-check-${{ runner.os }}-v13-\n');
   assert.equal(save.uses, 'actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830');
-  assert.equal(save.if, 'success()');
+  assert.equal(save.if, "success() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true'");
   assert.equal(save.with.path, expectedPath);
   assert.equal(save.with.key, expectedKey);
 });
