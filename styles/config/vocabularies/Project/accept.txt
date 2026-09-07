@@ -9,6 +9,7 @@ Nygard
 Nygard's
 Podman
 Snyk
+Sonatype
 Supabase
 Testcontainers
 codecov
