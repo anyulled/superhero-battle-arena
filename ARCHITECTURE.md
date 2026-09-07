@@ -45,7 +45,7 @@ The outer boundary connecting to the outside world.
 graph TD
     adapter.in[Adapter In Web] -- Depends On --> application
     adapter.out[Adapter Out Persistence] -- Depends On --> application
-    application -- Implements --> adapter.out
+    adapter.out -- Implements outbound ports --> application
     
     adapter.in -- Depends On --> domain
     adapter.out -- Depends On --> domain

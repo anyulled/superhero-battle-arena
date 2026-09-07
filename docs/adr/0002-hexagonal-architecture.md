@@ -18,7 +18,7 @@ We have decided to implement a Hexagonal Architecture (Ports and Adapters).
 - **Application:** Orchestrates use cases. Defines outbound ports (interfaces).
 - **Adapters:** Connects the application to external concerns. Separated into `in.web` (Controllers) and `out.persistence` (Spring Data repositories, DB Entities).
 
-An explicit constraint is enforced: adapters can depend on the domain, but the domain can never depend on adapters. Aditionally, adapters cannot depend on other adapters (e.g., `in.web` cannot directly access `out.persistence`).
+An explicit constraint is enforced: adapters can depend on the domain, but the domain can never depend on adapters. Additionally, adapters cannot depend on other adapters (e.g., `in.web` cannot directly access `out.persistence`).
 
 ## Consequences
 

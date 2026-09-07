@@ -14,6 +14,8 @@
 
 - [ ] My code follows the code style (Spotless) and architectural rules (`ARCHITECTURE.md` / `AGENTS.md`) of this project
 - [ ] I have executed `./mvnw clean verify` locally and all tests and linting passed
-- [ ] I have kept coverage above 90%
+- [ ] I have kept all five core coverage metrics at or above 90% and reviewed adapter coverage separately
+- [ ] I have recorded exact validation commands and results, including the separate adapter coverage report
 - [ ] I have added/updated Javadoc or OpenAPI spec where appropriate
 - [ ] I have updated the documentation accordingly (README, ADRs, etc.)
+- [ ] Any OpenAPI fixture change is intentional and its contract diff has been reviewed
