@@ -30,3 +30,11 @@ Load the smallest relevant set. Java tasks should not inherit Express, Next.js, 
 - Use `@MockitoBean` for Spring bean replacement and Testcontainers 2's `org.testcontainers.postgresql.PostgreSQLContainer` without generic parameters. Boot 4 MVC test annotations live in `org.springframework.boot.webmvc.test.autoconfigure`.
 
 Read the [project setup reference](../.agents/skills/java-architect/references/spring-boot-setup.md) and [testing reference](../.agents/skills/java-architect/references/testing-patterns.md) for concrete repository paths. Domain or application code must not adopt a generic example that exposes a JPA entity or passes a web request directly into a use case.
+
+## Validation
+
+Run `npm ci` with the pinned Node and npm versions, then `npm run lint:skills`. This checks every canonical skill, its YAML frontmatter, local Markdown links, optional configuration, and the compatibility symlink to the same canonical directory. The Java testing and Spring Boot skills also require their assets, scripts, references, and configuration. Invalid configuration causes a nonzero exit even when directory structure is valid.
+
+Run `node --test scripts/tests/skill-validation.test.mjs` for validator regressions. Individual skills can be checked with `node .agents/skills/skill-creator/scripts/quick_validate.mjs .agents/skills/<name>`. The Java skills' `scripts/validate.mjs` entrypoints use this same validator.
+
+Python is only needed for the optional skill initializer or ZIP packager. Both use its standard library; the packager invokes Node validation before creating an archive. There is no PyYAML prerequisite.

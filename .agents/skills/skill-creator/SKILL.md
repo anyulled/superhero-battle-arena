@@ -311,13 +311,22 @@ Write the YAML frontmatter with `name` and `description`:
   - Include all "when to use" information here - Not in the body. The body is only loaded after triggering, so "When to Use This Skill" sections in the body are not helpful to Claude.
   - Example description for a `docx` skill: "Comprehensive document creation, editing, and analysis with support for tracked changes, comments, formatting preservation, and text extraction. Use when Claude needs to work with professional documents (.docx files) for: (1) Creating new documents, (2) Modifying or editing content, (3) Working with tracked changes, (4) Adding comments, or any other document tasks"
 
-Do not include any other fields in YAML frontmatter.
+Prefer `name` and `description` for new skills. The repository validator also accepts the existing imported skills' metadata fields, including `metadata`, `parameters`, `allowed-tools`, `triggers`, `role`, `scope`, `output-format`, `sasmp_version`, `version`, `bonded_agent`, `bond_type`, and `license`. These fields describe skill compatibility and do not create runnable subagents.
 
 ##### Body
 
 Write instructions for using the skill and its bundled resources.
 
 ### Step 5: Packaging a Skill
+
+Use the pinned Node runtime after `npm ci` for validation:
+
+```bash
+npm run lint:skills
+node .agents/skills/skill-creator/scripts/quick_validate.mjs <path/to/skill-folder>
+```
+
+The initializer and ZIP packager are optional Python 3 tools using only its standard library. Packaging invokes the same Node validator; PyYAML is not required. Python is not required by `npm run lint:skills` or its regression tests.
 
 Once development of the skill is complete, it must be packaged into a distributable .skill file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
 
@@ -337,8 +346,8 @@ The packaging script will:
 
    - YAML frontmatter format and required fields
    - Skill naming conventions and directory structure
-   - Description completeness and quality
-   - File organization and resource references
+   - Nonempty description, length and character constraints
+   - Local Markdown links, and assets/config.yaml when present
 
 2. **Package** the skill if validation passes, creating a .skill file named after the skill (e.g., `my-skill.skill`) that includes all files and maintains the proper directory structure for distribution. The .skill file is a zip file with a .skill extension.
 

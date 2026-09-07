@@ -11,9 +11,9 @@ Example:
 """
 
 import sys
+import subprocess
 import zipfile
 from pathlib import Path
-from quick_validate import validate_skill
 
 
 def package_skill(skill_path, output_dir=None):
@@ -46,12 +46,15 @@ def package_skill(skill_path, output_dir=None):
 
     # Run validation before packaging
     print("🔍 Validating skill...")
-    valid, message = validate_skill(skill_path)
-    if not valid:
-        print(f"❌ Validation failed: {message}")
+    validator = Path(__file__).with_name("quick_validate.mjs")
+    validation = subprocess.run(
+        ["node", str(validator), str(skill_path)], capture_output=True, text=True
+    )
+    if validation.returncode != 0:
+        print(f"❌ Validation failed: {validation.stderr.strip()}")
         print("   Please fix the validation errors before packaging.")
         return None
-    print(f"✅ {message}\n")
+    print(f"✅ {validation.stdout.strip()}\n")
 
     # Determine output location
     skill_name = skill_path.name
