@@ -3,6 +3,10 @@ set -eu
 
 repository_root=$(CDPATH='' cd -- "$(dirname -- "$0")/../.." && pwd)
 hook_path="$repository_root/.githooks/pre-commit"
+# Hook subprocesses inherit Git paths that must never target the caller's repository.
+for repository_variable in $(git rev-parse --local-env-vars); do
+  unset "$repository_variable"
+done
 test_directory=$(mktemp -d "${TMPDIR:-/tmp}/arena-hook-tests.XXXXXX")
 trap 'rm -rf "$test_directory"' EXIT
 trap 'exit 130' INT
