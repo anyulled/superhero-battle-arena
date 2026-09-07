@@ -19,6 +19,7 @@
     <flyway.version>12.0.3</flyway.version>
     <excluded.test.groups>fuzz</excluded.test.groups>
     <integration.test.profiles>postgres-test,test</integration.test.profiles>
+    <fuzz.max.duration>60s</fuzz.max.duration>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -679,9 +680,8 @@
             <configuration>
               <groups>fuzz</groups>
               <systemPropertyVariables>
-                <jazzer.fuzz>false</jazzer.fuzz>
-                <jazzer.corpus_dir>${project.basedir}/src/test/resources/corpus</jazzer.corpus_dir>
-                <jazzer.instrumentation_includes>org/barcelonajug/**</jazzer.instrumentation_includes>
+                <jazzer.max_duration>${fuzz.max.duration}</jazzer.max_duration>
+                <jazzer.instrumentation_includes>org.barcelonajug.**</jazzer.instrumentation_includes>
               </systemPropertyVariables>
             </configuration>
           </plugin>
