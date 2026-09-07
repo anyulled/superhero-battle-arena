@@ -119,7 +119,7 @@ test_formatter_changes_produce_patch() {
   set -- temporary/arena-pre-commit-changes.*
   [ "$#" -eq 1 ] && [ -f "$1" ] || fail 'review patch missing'
   git apply --check "$1" || fail 'review patch cannot be applied'
-  rg -q '^\+formatted$' "$1" || fail 'review patch lacks formatted content'
+  grep -q '^+formatted$' "$1" || fail 'review patch lacks formatted content'
 }
 
 test_alternate_index_is_respected() {
