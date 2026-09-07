@@ -1,2 +1,4 @@
 /mvnw text eol=lf
 *.cmd text eol=crlf
+# Fuzz inputs must preserve the exact bytes that reproduce a finding.
+src/test/resources/**/*FuzzTestInputs/** binary

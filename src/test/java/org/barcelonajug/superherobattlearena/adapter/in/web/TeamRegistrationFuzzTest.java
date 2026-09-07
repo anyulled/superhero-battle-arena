@@ -6,8 +6,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import java.util.UUID;
 import java.util.stream.IntStream;
+import org.barcelonajug.superherobattlearena.application.usecase.SessionUseCase;
 import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -18,6 +21,12 @@ import org.springframework.test.web.servlet.MockMvc;
 class TeamRegistrationFuzzTest extends PostgresTestContainerConfig {
 
   @Autowired private MockMvc mockMvc;
+  @Autowired private SessionUseCase sessionUseCase;
+
+  @BeforeEach
+  void arrangeActiveSession() {
+    sessionUseCase.startSession(UUID.fromString("00000000-0000-0000-0000-000000000003"));
+  }
 
   @FuzzTest
   void fuzzTeamRegistrationEndpoint(FuzzedDataProvider data) throws Exception {
