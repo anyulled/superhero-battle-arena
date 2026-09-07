@@ -51,7 +51,7 @@ API schema metadata belongs to web DTOs. `OpenApiContractIT` compares the full A
 
 Deployment runs after the main validation gate for the exact commit. It also rejects a commit that is no longer the current `main`. SonarCloud is provided by the external `sonarqubecloud` GitHub App; the gate checks the successful `SonarCloud Code Analysis` result from that app for the same commit. There is no additional Maven Sonar scan to run locally.
 
-PR dependency review runs without repository secrets. Snyk, OSS Index and OWASP Dependency-Check run on trusted main/scheduled builds. Missing credentials or failed scans must be resolved, not treated as successful validation. Remote branch protection is managed separately; verify exact check names and app identities before changing its required checks.
+PR dependency review runs without repository secrets. Snyk and OWASP Dependency-Check, including its authenticated Sonatype Guide analyzer and NVD feed, run on trusted main/scheduled builds. Missing credentials or failed scans must be resolved, not treated as successful validation. The combined Dependency-Check scan blocks vulnerabilities with CVSS scores of 7 or higher. See [the security audit guide](docs/security-audit.md) for local execution and secret setup. Remote branch protection is managed separately; verify exact check names and app identities before changing its required checks.
 
 ## Document Size Guidelines
 
