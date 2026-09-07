@@ -7,6 +7,8 @@ on:
         required: false
       NVD_API_KEY:
         required: false
+      GUIDE_API_TOKEN:
+        required: false
   schedule:
     - cron: "0 6 * * 1"
 
@@ -48,8 +50,17 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         run: snyk test --severity-threshold=high
 
-      - name: Sonatype OSS Index Scan
-        run: ./mvnw org.sonatype.ossindex.maven:ossindex-maven-plugin:audit
+      - name: Scan NVD and Sonatype Guide with OWASP Dependency-Check
+        env:
+          GUIDE_API_TOKEN: ${{ secrets.GUIDE_API_TOKEN }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: sh scripts/security-audit.sh
 
-      - name: OWASP Dependency-Check
-        run: ./mvnw org.owasp:dependency-check-maven:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}
+      - name: Upload dependency audit reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: always()
+        with:
+          name: dependency-audit-reports
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.json
