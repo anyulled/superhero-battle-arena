@@ -18,6 +18,7 @@
     <jackson.version>${jackson-bom.version}</jackson.version>
     <flyway.version>12.0.3</flyway.version>
     <excluded.test.groups>fuzz</excluded.test.groups>
+    <integration.test.profiles>postgres-test,test</integration.test.profiles>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -474,8 +475,10 @@
             <param>org.barcelonajug.superherobattlearena.*</param>
           </targetClasses>
           <targetTests>
-            <param>org.barcelonajug.superherobattlearena.*</param>
+            <param>org.barcelonajug.superherobattlearena.domain.*Test*</param>
+            <param>org.barcelonajug.superherobattlearena.application.*Test*</param>
           </targetTests>
+          <mutationThreshold>76</mutationThreshold>
           <excludedClasses>
             <param>org.barcelonajug.superherobattlearena.adapter.*</param>
             <param>org.barcelonajug.superherobattlearena.config.*</param>
@@ -495,8 +498,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
+          <excludes>
+            <exclude>**/*H2CompatibilityIT.java</exclude>
+          </excludes>
           <systemPropertyVariables>
-            <spring.profiles.active>h2,test</spring.profiles.active>
+            <spring.profiles.active>${integration.test.profiles}</spring.profiles.active>
           </systemPropertyVariables>
         </configuration>
         <executions>
@@ -528,6 +534,9 @@
             <goals>
               <goal>prepare-agent</goal>
             </goals>
+            <configuration>
+              <excludes combine.self="override"/>
+            </configuration>
           </execution>
           <execution>
             <id>report</id>
@@ -535,6 +544,27 @@
               <goal>report</goal>
             </goals>
             <phase>test</phase>
+          </execution>
+          <execution>
+            <id>final-core-report</id>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <phase>verify</phase>
+          </execution>
+          <execution>
+            <id>adapter-report</id>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <excludes combine.self="override"/>
+              <includes>
+                <include>org/barcelonajug/superherobattlearena/adapter/**</include>
+              </includes>
+              <outputDirectory>${project.reporting.outputDirectory}/jacoco-adapters</outputDirectory>
+            </configuration>
           </execution>
           <execution>
             <id>jacoco-check</id>
@@ -693,6 +723,26 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>h2-compatibility</id>
+      <properties>
+        <integration.test.profiles>h2,test</integration.test.profiles>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <excludes combine.self="override"/>
+              <includes>
+                <include>**/*H2CompatibilityIT.java</include>
+              </includes>
+            </configuration>
           </plugin>
         </plugins>
       </build>
