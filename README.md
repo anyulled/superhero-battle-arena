@@ -12,9 +12,9 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=anyulled_superhero-battle-arena&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=anyulled_superhero-battle-arena)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-| | |
-| :---: | :---: |
-| [![Barcelona JUG](src/main/resources/static/images/barcelonajug.png)](https://barcelonajug.org) | [![Talent Arena](src/main/resources/static/images/talentArena.png)](https://talentarena.tech) |
+| Host | Organizers | Sponsor |
+| :---: | :---: | :---: |
+| [![AI Campus Barcelona](src/main/resources/static/images/aicampus.png)](https://aicampus.barcelona) | [![Barcelona JUG](src/main/resources/static/images/barcelonajug.png)](https://barcelonajug.org) <br> [![Software Crafters Barcelona](src/main/resources/static/images/softwarecrafters.png)](https://softwarecrafters.barcelona) | [![Vonage](src/main/resources/static/images/vonage.png)](https://vonage.com) |
 
 A Spring Boot application built with Hexagonal Architecture that simulates battles between teams of superheroes.
 
