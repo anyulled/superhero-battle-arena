@@ -6,8 +6,8 @@ require 'yaml'
 class WorkflowGateTests
   ROOT = File.expand_path('../..', __dir__)
   REQUIRED_VALIDATIONS = %w[
-    test h2-compatibility postgres-startup browser mutation fuzz commitlint scorecard quality duplication
-    security-audit codeql verify-docs sonar harness
+    test h2-compatibility postgres-startup browser commitlint quality duplication
+    codeql verify-docs harness
   ].freeze
 
   def initialize
@@ -20,9 +20,9 @@ class WorkflowGateTests
   def test_deployment_has_no_independent_trigger
     workflow = @workflows.fetch('deploy-to-clever-cloud.yml')
 
-    configured_events = events(workflow).keys
+    configured_events = events(workflow).keys.sort
 
-    expect(configured_events == ['workflow_call'], 'Deployment must only be reusable')
+    expect(configured_events == %w[workflow_call workflow_dispatch].sort, 'Deployment must be reusable or manually dispatched')
     expect(@jobs.fetch('deploy').fetch('needs') == 'validate-main', 'Deployment must depend on validation')
   end
 

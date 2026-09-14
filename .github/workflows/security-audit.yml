@@ -30,8 +30,6 @@ jobs:
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     name: Security Audit
-    env:
-      DEPENDENCY_CHECK_DATA_DIRECTORY: ${{ runner.temp }}/dependency-check-data
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -46,7 +44,9 @@ jobs:
 
       - name: Derive Dependency-Check cache key
         id: dependency-check-cache-key
-        run: echo "key=dependency-check-${RUNNER_OS}-v13-$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "key=dependency-check-${RUNNER_OS}-v13-$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"
+          echo "DEPENDENCY_CHECK_DATA_DIRECTORY=${RUNNER_TEMP}/dependency-check-data" >> "$GITHUB_ENV"
 
       - name: Restore Dependency-Check data
         id: dependency-check-cache-restore
@@ -72,7 +72,7 @@ jobs:
         run: sh scripts/security-audit.sh
 
       - name: Save Dependency-Check data
-        if: success() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true'
+        if: success() && steps['dependency-check-cache-restore'].outputs['cache-hit'] != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ${{ env.DEPENDENCY_CHECK_DATA_DIRECTORY }}

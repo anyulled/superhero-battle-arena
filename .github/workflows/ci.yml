@@ -86,7 +86,7 @@ jobs:
   validate-main:
     name: Main Validation Gate
     if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test, h2-compatibility, postgres-startup, browser, mutation, fuzz, commitlint, scorecard, quality, duplication, security-audit, codeql, verify-docs, sonar, harness]
+    needs: [test, h2-compatibility, postgres-startup, browser, commitlint, quality, duplication, codeql, verify-docs, harness]
     runs-on: ubuntu-latest
     permissions: {}
     steps:

@@ -116,14 +116,17 @@ test('caches Dependency-Check data independently from Maven dependencies', async
   const expectedPath = '${{ env.DEPENDENCY_CHECK_DATA_DIRECTORY }}';
   const expectedKey = '${{ steps.dependency-check-cache-key.outputs.key }}';
 
-  assert.equal(audit.env.DEPENDENCY_CHECK_DATA_DIRECTORY, '${{ runner.temp }}/dependency-check-data');
-  assert.equal(cacheKey.run, 'echo "key=dependency-check-${RUNNER_OS}-v13-$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"');
-  assert.equal(restore.uses, 'actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830');
+  assert.equal(audit.env, undefined);
+  assert.equal(
+    cacheKey.run,
+    'echo "key=dependency-check-${RUNNER_OS}-v13-$(date -u +%G-W%V)" >> "$GITHUB_OUTPUT"\necho "DEPENDENCY_CHECK_DATA_DIRECTORY=${RUNNER_TEMP}/dependency-check-data" >> "$GITHUB_ENV"\n'
+  );
+  assert.equal(restore.uses, 'actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9');
   assert.equal(restore.with.path, expectedPath);
   assert.equal(restore.with.key, expectedKey);
   assert.equal(restore.with['restore-keys'], 'dependency-check-${{ runner.os }}-v13-\n');
-  assert.equal(save.uses, 'actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830');
-  assert.equal(save.if, "success() && steps.dependency-check-cache-restore.outputs.cache-hit != 'true'");
+  assert.equal(save.uses, 'actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9');
+  assert.equal(save.if, "success() && steps['dependency-check-cache-restore'].outputs['cache-hit'] != 'true'");
   assert.equal(save.with.path, expectedPath);
   assert.equal(save.with.key, expectedKey);
 });

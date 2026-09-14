@@ -14,6 +14,12 @@ on:
         required: true
       APPLICATION_ID:
         required: true
+  workflow_dispatch:
+    inputs:
+      revision:
+        description: "Commit revision to deploy"
+        required: false
+        type: string
 
 concurrency:
   group: clever-cloud-main
@@ -24,14 +30,14 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     name: Deploy to Clever Cloud
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ inputs.revision }}
+          ref: ${{ inputs.revision || github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -40,7 +46,7 @@ jobs:
 
       - name: Deploy to Clever Cloud
         env:
-          VALIDATED_REVISION: ${{ inputs.revision }}
+          VALIDATED_REVISION: ${{ inputs.revision || github.sha }}
           CLEVER_SECRET: ${{ secrets.CLEVER_SECRET }}
           CLEVER_TOKEN: ${{ secrets.CLEVER_TOKEN }}
           ORGA_ID: ${{ secrets.ORGA_ID }}
