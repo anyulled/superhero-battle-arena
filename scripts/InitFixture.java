@@ -115,6 +115,11 @@ class InitFixture implements Callable<Integer> {
   private boolean reset;
 
   @Option(
+      names = {"--world-cup"},
+      description = "Run a full 4-round World Cup tournament (Initial Round -> QF -> SF -> Finals & 3rd Place)")
+  private boolean worldCup;
+
+  @Option(
       names = {"--skip-session"},
       description = "Skip session creation and verify the active session")
   private boolean skipSession;
@@ -243,6 +248,11 @@ class InitFixture implements Callable<Integer> {
   }
 
   private void runFixture() throws Exception {
+    if (worldCup) {
+      runWorldCupTournament();
+      return;
+    }
+
     printHeader("Initializing Fixture Data");
 
     if (reset) {
@@ -1056,6 +1066,222 @@ class InitFixture implements Callable<Integer> {
     logger.info("=========================================");
   }
 
+  private void runWorldCupTournament() throws Exception {
+    printHeader("Starting World Cup Championship Tournament (October 27th Hackathon)");
+
+    if (reset) {
+      resetDatabase();
+    }
+
+    initializeOrVerifySession();
+
+    int targetTeamCount = 16;
+    teamCount = targetTeamCount;
+    List<TeamState> allTeams = resolveTeams();
+    if (allTeams.size() < targetTeamCount) {
+      throw new IllegalStateException("World Cup format requires at least " + targetTeamCount + " registered teams.");
+    }
+    List<TeamState> currentTeams = new ArrayList<>(allTeams.subList(0, targetTeamCount));
+
+    Map<String, Object> r1Spec = new LinkedHashMap<>();
+    r1Spec.put("description", "Stage 1: Initial Round (Classified Teams)");
+    r1Spec.put("teamSize", 5);
+    r1Spec.put("budgetCap", 1200);
+    r1Spec.put("mapType", "ARENA_1");
+    r1Spec.put("allowedRoles", List.of());
+    r1Spec.put("allowedAlignments", List.of());
+
+    executeTournamentRound(1, r1Spec, currentTeams);
+    List<MatchState> r1Matches = fetchMatchesForRound(1);
+    currentTeams = extractWinners(r1Matches, currentTeams);
+    logger.info("Stage 1 complete. {} winners advance to Quarter Finals.", currentTeams.size());
+
+    Map<String, Object> r2Spec = new LinkedHashMap<>();
+    r2Spec.put("description", "Stage 2: Quarter Finals (8 Teams)");
+    r2Spec.put("teamSize", 4);
+    r2Spec.put("budgetCap", 1000);
+    r2Spec.put("mapType", "ARENA_2");
+    r2Spec.put("allowedRoles", List.of());
+    r2Spec.put("allowedAlignments", List.of());
+
+    executeTournamentRound(2, r2Spec, currentTeams);
+    List<MatchState> r2Matches = fetchMatchesForRound(2);
+    currentTeams = extractWinners(r2Matches, currentTeams);
+    logger.info("Stage 2 complete. {} winners advance to Semifinals (Prize Winners locked!).", currentTeams.size());
+
+    Map<String, Object> r3Spec = new LinkedHashMap<>();
+    r3Spec.put("description", "Stage 3: Semifinals (Top 4 Prize Winners)");
+    r3Spec.put("teamSize", 3);
+    r3Spec.put("budgetCap", 800);
+    r3Spec.put("mapType", "CITY");
+    r3Spec.put("allowedRoles", List.of());
+    r3Spec.put("allowedAlignments", List.of());
+
+    executeTournamentRound(3, r3Spec, currentTeams);
+    List<MatchState> r3Matches = fetchMatchesForRound(3);
+
+    List<TeamState> sfWinners = new ArrayList<>();
+    List<TeamState> sfLosers = new ArrayList<>();
+    Map<UUID, TeamState> teamMap = allTeams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
+
+    for (MatchState m : r3Matches) {
+      if (m.winnerTeam() != null) {
+        sfWinners.add(teamMap.get(m.winnerTeam()));
+        UUID loserId = m.winnerTeam().equals(m.teamA()) ? m.teamB() : m.teamA();
+        sfLosers.add(teamMap.get(loserId));
+      }
+    }
+
+    logger.info("Semifinals complete: 2 Finalists and 2 Bronze contenders identified.");
+
+    Map<String, Object> r4Spec = new LinkedHashMap<>();
+    r4Spec.put("description", "Stage 4: Grand Final & 3rd Place Match");
+    r4Spec.put("teamSize", 3);
+    r4Spec.put("budgetCap", 700);
+    r4Spec.put("mapType", "COLOSSEUM");
+    r4Spec.put("allowedRoles", List.of());
+    r4Spec.put("allowedAlignments", List.of());
+
+    createCustomRound(4, r4Spec);
+    List<TeamState> r4Teams = new ArrayList<>();
+    r4Teams.addAll(sfWinners);
+    r4Teams.addAll(sfLosers);
+    submitSquads(r4Teams);
+
+    if (sfWinners.size() >= 2) {
+      UUID grandFinalMatchId = createDirectMatch(sfWinners.get(0).teamId(), sfWinners.get(1).teamId(), 4);
+      logger.info("Created Grand Final match: {} vs {}", sfWinners.get(0).name(), sfWinners.get(1).name());
+      runSingleMatch(grandFinalMatchId);
+    }
+
+    if (sfLosers.size() >= 2) {
+      UUID thirdPlaceMatchId = createDirectMatch(sfLosers.get(0).teamId(), sfLosers.get(1).teamId(), 4);
+      logger.info("Created 3rd Place match: {} vs {}", sfLosers.get(0).name(), sfLosers.get(1).name());
+      runSingleMatch(thirdPlaceMatchId);
+    }
+
+    printWorldCupSummary(4);
+  }
+
+  private void executeTournamentRound(int roundNo, Map<String, Object> spec, List<TeamState> teams) throws Exception {
+    createCustomRound(roundNo, spec);
+    submitSquads(teams);
+    autoMatch(teams);
+    runAllBattles();
+  }
+
+  private void createCustomRound(int roundNo, Map<String, Object> spec) throws Exception {
+    printHeader("Configuring Round " + roundNo);
+
+    Map<String, Object> specPayload = new LinkedHashMap<>();
+    specPayload.put("description", spec.getOrDefault("description", "Round " + roundNo));
+    specPayload.put("teamSize", spec.getOrDefault("teamSize", 5));
+    specPayload.put("budgetCap", spec.getOrDefault("budgetCap", 1000));
+    specPayload.put("requiredRoles", Map.of());
+    specPayload.put("maxSameRole", Map.of());
+    specPayload.put("bannedTags", List.of());
+    specPayload.put("tagModifiers", Map.of());
+    specPayload.put("mapType", spec.getOrDefault("mapType", "ARENA_1"));
+    specPayload.put("allowedRoles", spec.getOrDefault("allowedRoles", List.of()));
+    specPayload.put("allowedGenders", List.of());
+    specPayload.put("allowedRaces", List.of());
+    specPayload.put("allowedPublishers", List.of());
+    specPayload.put("allowedAlignments", spec.getOrDefault("allowedAlignments", List.of()));
+
+    Map<String, Object> requestBody = new LinkedHashMap<>();
+    requestBody.put("sessionId", sessionId);
+    requestBody.put("spec", specPayload);
+
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/api/admin/rounds/create"))
+            .header("Authorization", authHeader)
+            .header("Content-Type", "application/json")
+            .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
+            .build();
+
+    HttpResponse<String> response = sendExpecting(request, 200, "Failed to create round " + roundNo);
+    activeRoundNo = Integer.parseInt(response.body().trim());
+    refreshRoundState();
+    logger.info("Created round {} with constraints: budgetCap={}, teamSize={}, map={}",
+        activeRoundNo, specPayload.get("budgetCap"), specPayload.get("teamSize"), specPayload.get("mapType"));
+  }
+
+  private UUID createDirectMatch(UUID teamA, UUID teamB, int roundNo) throws Exception {
+    String url = String.format("%s/api/admin/matches/create?teamA=%s&teamB=%s&roundNo=%d&sessionId=%s",
+        baseUrl, teamA, teamB, roundNo, sessionId);
+
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .header("Authorization", authHeader)
+            .POST(HttpRequest.BodyPublishers.noBody())
+            .build();
+
+    HttpResponse<String> response = sendExpecting(request, 200, "Failed to create direct match");
+    return objectMapper.readValue(response.body(), UUID.class);
+  }
+
+  private void runSingleMatch(UUID matchId) throws Exception {
+    HttpRequest request =
+        HttpRequest.newBuilder()
+            .uri(URI.create(baseUrl + "/api/admin/matches/" + matchId + "/run"))
+            .header("Authorization", authHeader)
+            .POST(HttpRequest.BodyPublishers.noBody())
+            .build();
+
+    sendExpecting(request, 200, "Failed to run match " + matchId);
+    logger.info("Match {} finished simulation.", matchId);
+  }
+
+  private List<MatchState> fetchMatchesForRound(int roundNo) throws Exception {
+    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(baseUrl + "/api/matches")).GET().build();
+    HttpResponse<String> response = sendExpecting(request, 200, "Failed to retrieve matches");
+    JsonNode body = objectMapper.readTree(response.body());
+    List<MatchState> matches = new ArrayList<>();
+    for (JsonNode node : body) {
+      int matchRound = node.path("roundNo").asInt(-1);
+      String matchSession = node.path("sessionId").asText(null);
+      if (matchRound == roundNo && (sessionId == null || sessionId.toString().equalsIgnoreCase(matchSession))) {
+        matches.add(new MatchState(
+            UUID.fromString(node.path("matchId").asText()),
+            UUID.fromString(node.path("teamA").asText()),
+            UUID.fromString(node.path("teamB").asText()),
+            node.hasNonNull("winnerTeam") ? UUID.fromString(node.path("winnerTeam").asText()) : null,
+            node.path("status").asText()
+        ));
+      }
+    }
+    return matches;
+  }
+
+  private List<TeamState> extractWinners(List<MatchState> matches, List<TeamState> teams) {
+    Map<UUID, TeamState> map = teams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
+    List<TeamState> winners = new ArrayList<>();
+    for (MatchState m : matches) {
+      if (m.winnerTeam() != null && map.containsKey(m.winnerTeam())) {
+        winners.add(map.get(m.winnerTeam()));
+      }
+    }
+    return winners;
+  }
+
+  private void printWorldCupSummary(int finalRoundNo) throws Exception {
+    printHeader("World Cup Championship Complete!");
+    List<MatchState> finalMatches = fetchMatchesForRound(finalRoundNo);
+    List<TeamState> allTeams = fetchTeams();
+    Map<UUID, TeamState> map = allTeams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
+
+    for (MatchState m : finalMatches) {
+      TeamState winner = map.get(m.winnerTeam());
+      UUID loserId = m.winnerTeam().equals(m.teamA()) ? m.teamB() : m.teamA();
+      TeamState runnerUp = map.get(loserId);
+      logger.info("Match Outcome: Winner '{}', Runner-up '{}'",
+          winner != null ? winner.name() : "TBD",
+          runnerUp != null ? runnerUp.name() : "TBD");
+    }
+  }
+
   private void printSuccess(List<TeamState> teams) {
     printHeader("Fixture Data Initialized Successfully");
     logger.info("Session ID: {}", sessionId);
@@ -1096,4 +1322,11 @@ class InitFixture implements Callable<Integer> {
       String publisher,
       String alignment,
       List<String> tags) {}
+
+  private record MatchState(
+      UUID matchId,
+      UUID teamA,
+      UUID teamB,
+      UUID winnerTeam,
+      String status) {}
 }
