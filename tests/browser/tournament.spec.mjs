@@ -69,8 +69,8 @@ test('registered teams progress through admin battle execution to a public repla
   });
   await test.step('view the completed match and its streamed replay', async () => {
     await page.goto('/bracket.html');
-    await expect(page.locator('#matchesContainer')).toContainText('Browser Avengers');
-    await expect(page.locator('#matchesContainer')).toContainText('Browser Defenders');
+    await expect(page.locator('#colInitialMatches')).toContainText('Browser Avengers');
+    await expect(page.locator('#colInitialMatches')).toContainText('Browser Defenders');
     await page.getByRole('link', { name: 'Watch Replay', exact: true }).click();
     await expect(page.locator('#teamAName')).toHaveText(/Browser (Avengers|Defenders)/);
     await expect(page.locator('#teamBName')).toHaveText(/Browser (Avengers|Defenders)/);

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+  <suppress>
+    <notes><![CDATA[
+    file name: spring-boot-devtools
+    CVE-2022-31691 applies to Spring Tools IDE extensions for Eclipse and VS Code, not the spring-boot-devtools runtime library.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-devtools@.*$</packageUrl>
+    <cve>CVE-2022-31691</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    file name: spring-security-web
+    CVE-2026-47838 affects Spring Security 5.7.0 to 6.5.10; Spring Security 7.x is not affected.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-web@.*$</packageUrl>
+    <cve>CVE-2026-47838</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    file name: spring-security-crypto
+    CVE-2026-47842 affects Spring Security <= 7.1.0; version 7.1.1 is the patch release resolving this vulnerability.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-crypto@.*$</packageUrl>
+    <cve>CVE-2026-47842</cve>
+  </suppress>
+</suppressions>
