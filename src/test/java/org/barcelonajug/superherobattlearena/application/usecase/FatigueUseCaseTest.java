@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -114,13 +115,22 @@ class FatigueUseCaseTest {
     List<HeroUsage> saved = captor.getValue().stream().map(HeroUsage.class::cast).toList();
     assertThat(saved).hasSize(2);
 
-    HeroUsage usageA = saved.stream().filter(u -> u.teamId().equals(teamA)).findFirst().orElseThrow();
+    HeroUsage usageA =
+        saved.stream().filter(u -> u.teamId().equals(teamA)).findFirst().orElseThrow();
     assertThat(usageA.streak()).isEqualTo(2);
     assertThat(usageA.multiplier()).isEqualByComparingTo("0.90");
 
-    HeroUsage usageB = saved.stream().filter(u -> u.teamId().equals(teamB)).findFirst().orElseThrow();
-    assertThat(usageB.streak()).isEqualTo(1);
+    HeroUsage usageB =
+        saved.stream().filter(u -> u.teamId().equals(teamB)).findFirst().orElseThrow();
+    assertThat(usageB.streak()).isOne();
     assertThat(usageB.multiplier()).isEqualByComparingTo("0.95");
+  }
+
+  @Test
+  void shouldNotRecordBatchUsageWhenMapIsEmpty() {
+    fatigueUseCase.recordUsage(Map.of(), 1);
+
+    verify(heroUsageRepository, never()).saveAll(any());
   }
 
   @Test
@@ -137,7 +147,7 @@ class FatigueUseCaseTest {
 
     assertThat(results).hasSize(2);
     assertThat(results.getFirst().powerstats().durability()).isEqualTo(95);
-    assertThat(results.get(1).powerstats().durability()).isEqualTo(200); // No streak for h2
+    assertThat(results.get(1).powerstats().durability()).isEqualTo(200);
   }
 
   private Hero createHero(int id, int durability) {

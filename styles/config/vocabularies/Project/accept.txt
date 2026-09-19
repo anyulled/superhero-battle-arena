@@ -1,5 +1,6 @@
 ADRs
 APIs
+Crafters
 DTOs
 JBang
 JUnit
@@ -12,6 +13,7 @@ Snyk
 Sonatype
 Supabase
 Testcontainers
+Vonage
 codecov
 frontmatter
 initializer
