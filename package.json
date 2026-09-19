@@ -16,7 +16,8 @@
     "test:harness": "node --test scripts/tests/*.test.mjs && npm run test:hooks && npm run test:workflows",
     "test:postgres-startup": "node scripts/tests/postgres-startup-test.mjs",
     "test:browser": "playwright test",
-    "lint:skills": "node .agents/skills/skill-creator/scripts/quick_validate.mjs"
+    "lint:skills": "node .agents/skills/skill-creator/scripts/quick_validate.mjs",
+    "lint:agents": "sh scripts/check-agents-size.sh"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",
