@@ -271,11 +271,9 @@ public class AdminUseCase {
           matchEventRepository.saveAll(matchEvents);
 
           teamHeroUsageMap.put(
-              match.getTeamA(),
-              requireNonNull(subA.get().getSubmissionJson()).heroIds());
+              match.getTeamA(), requireNonNull(subA.get().getSubmissionJson()).heroIds());
           teamHeroUsageMap.put(
-              match.getTeamB(),
-              requireNonNull(subB.get().getSubmissionJson()).heroIds());
+              match.getTeamB(), requireNonNull(subB.get().getSubmissionJson()).heroIds());
 
           matchIds.add(match.getMatchId());
           winners.put(match.getMatchId(), result.winnerTeamId());

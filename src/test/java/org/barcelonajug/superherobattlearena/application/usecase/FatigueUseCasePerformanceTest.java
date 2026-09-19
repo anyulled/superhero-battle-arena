@@ -1,6 +1,8 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -11,7 +13,6 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
@@ -54,12 +55,10 @@ class FatigueUseCasePerformanceTest {
 
     when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
-    // Simulate usage in MatchController
     for (Hero hero : heroes) {
       fatigueService.applyFatigue(teamId, hero, 1);
     }
 
-    // Verify repository was called N times
     verify(heroUsageRepository, times(teamSize)).findByTeamIdAndRoundNo(any(), anyInt());
   }
 
@@ -88,10 +87,8 @@ class FatigueUseCasePerformanceTest {
 
     when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
-    // Use the batch method
     fatigueService.applyFatigue(teamId, heroes, 1);
 
-    // Verify repository was called 1 time
     verify(heroUsageRepository).findByTeamIdAndRoundNo(any(), anyInt());
   }
 
@@ -110,9 +107,8 @@ class FatigueUseCasePerformanceTest {
     }
     long duration = System.nanoTime() - startTime;
 
-    // Verify N DB queries for N teams
     verify(heroUsageRepository, times(teamCount)).findByTeamIdAndRoundNo(any(), anyInt());
-    System.out.println("N+1 recordUsage duration for " + teamCount + " teams: " + (duration / 1_000_000.0) + " ms");
+    assertThat(duration).isPositive();
   }
 
   @Test
@@ -122,8 +118,7 @@ class FatigueUseCasePerformanceTest {
     List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
     List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
 
-    Map<UUID, List<Integer>> teamHeroUsageMap =
-        teams.stream().collect(Collectors.toMap(t -> t, t -> heroIds));
+    Map<UUID, List<Integer>> teamHeroUsageMap = teams.stream().collect(toMap(t -> t, t -> heroIds));
 
     when(heroUsageRepository.findByTeamIdInAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
@@ -131,8 +126,7 @@ class FatigueUseCasePerformanceTest {
     fatigueService.recordUsage(teamHeroUsageMap, roundNo);
     long duration = System.nanoTime() - startTime;
 
-    // Verify 1 DB query for all N teams
-    verify(heroUsageRepository, times(1)).findByTeamIdInAndRoundNo(any(), anyInt());
-    System.out.println("Batched recordUsage duration for " + teamCount + " teams: " + (duration / 1_000_000.0) + " ms");
+    verify(heroUsageRepository).findByTeamIdInAndRoundNo(any(), anyInt());
+    assertThat(duration).isPositive();
   }
 }

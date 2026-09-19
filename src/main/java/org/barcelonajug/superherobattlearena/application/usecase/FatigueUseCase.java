@@ -151,19 +151,14 @@ public class FatigueUseCase {
 
     try {
       log.debug(
-          "Recording batch hero usage - teams={}, roundNo={}",
-          teamHeroUsageMap.size(),
-          roundNo);
+          "Recording batch hero usage - teams={}, roundNo={}", teamHeroUsageMap.size(), roundNo);
 
       List<HeroUsage> previousRoundHistory =
           heroUsageRepository.findByTeamIdInAndRoundNo(teamHeroUsageMap.keySet(), roundNo - 1);
 
       Map<UUID, Map<Integer, Integer>> teamToHeroStreakMap =
           previousRoundHistory.stream()
-              .collect(
-                  groupingBy(
-                      HeroUsage::teamId,
-                      toMap(HeroUsage::heroId, HeroUsage::streak)));
+              .collect(groupingBy(HeroUsage::teamId, toMap(HeroUsage::heroId, HeroUsage::streak)));
 
       List<HeroUsage> usages =
           teamHeroUsageMap.entrySet().stream()
