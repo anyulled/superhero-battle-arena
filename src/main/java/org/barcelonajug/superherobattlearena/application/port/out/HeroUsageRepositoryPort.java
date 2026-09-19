@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.port.out;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
@@ -15,6 +16,8 @@ public interface HeroUsageRepositoryPort {
   void saveAll(List<HeroUsage> heroUsages);
 
   List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
+
+  List<HeroUsage> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo);
 
   List<HeroUsage> findByTeamId(UUID teamId);
 

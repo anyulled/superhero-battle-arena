@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -40,6 +41,15 @@ public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
   @Override
   public List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
     return repository.findByTeamIdAndRoundNo(teamId, roundNo).stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
+  }
+
+  @Override
+  public List<HeroUsage> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo) {
+    return repository.findByTeamIdInAndRoundNo(teamIds, roundNo).stream()
         .map(mapper::toDomain)
         .filter(Objects::nonNull)
         .map(Objects::requireNonNull)
