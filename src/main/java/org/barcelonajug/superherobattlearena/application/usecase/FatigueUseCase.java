@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
 import java.math.BigDecimal;
@@ -137,6 +138,62 @@ public class FatigueUseCase {
           "Recorded usage for {} heroes - teamId={}, roundNo={}", usages.size(), teamId, roundNo);
     } finally {
       MDC.remove("teamId");
+      MDC.remove("roundNo");
+    }
+  }
+
+  public void recordUsage(Map<UUID, List<Integer>> teamHeroUsageMap, int roundNo) {
+    if (teamHeroUsageMap.isEmpty()) {
+      return;
+    }
+
+    MDC.put("roundNo", String.valueOf(roundNo));
+
+    try {
+      log.debug(
+          "Recording batch hero usage - teams={}, roundNo={}", teamHeroUsageMap.size(), roundNo);
+
+      List<HeroUsage> previousRoundHistory =
+          heroUsageRepository.findByTeamIdInAndRoundNo(teamHeroUsageMap.keySet(), roundNo - 1);
+
+      Map<UUID, Map<Integer, Integer>> teamToHeroStreakMap =
+          previousRoundHistory.stream()
+              .collect(groupingBy(HeroUsage::teamId, toMap(HeroUsage::heroId, HeroUsage::streak)));
+
+      List<HeroUsage> usages =
+          teamHeroUsageMap.entrySet().stream()
+              .flatMap(
+                  entry -> {
+                    UUID teamId = entry.getKey();
+                    List<Integer> heroIds = entry.getValue();
+                    Map<Integer, Integer> heroIdToStreakMap =
+                        teamToHeroStreakMap.getOrDefault(teamId, Map.of());
+
+                    return heroIds.stream()
+                        .map(
+                            heroId -> {
+                              int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
+                              int newStreak = previousStreak + 1;
+                              BigDecimal multiplier = calculateMultiplier(newStreak);
+                              log.debug(
+                                  "Hero {} usage - teamId={}, previousStreak={}, newStreak={}, multiplier={}",
+                                  heroId,
+                                  teamId,
+                                  previousStreak,
+                                  newStreak,
+                                  multiplier);
+                              return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+                            });
+                  })
+              .toList();
+
+      heroUsageRepository.saveAll(usages);
+      log.info(
+          "Recorded batch usage for {} heroes across {} teams - roundNo={}",
+          usages.size(),
+          teamHeroUsageMap.size(),
+          roundNo);
+    } finally {
       MDC.remove("roundNo");
     }
   }

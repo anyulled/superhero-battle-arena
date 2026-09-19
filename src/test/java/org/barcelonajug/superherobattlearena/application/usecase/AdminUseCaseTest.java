@@ -252,8 +252,7 @@ class AdminUseCaseTest {
     List<UUID> matchIds = (List<UUID>) result.get("matchIds");
     assertThat(matchIds).hasSize(1).contains(matchId);
 
-    verify(fatigueUseCase).recordUsage(teamA, 1, List.of(1));
-    verify(fatigueUseCase).recordUsage(teamB, 1, List.of(2));
+    verify(fatigueUseCase).recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 1);
   }
 
   @Test

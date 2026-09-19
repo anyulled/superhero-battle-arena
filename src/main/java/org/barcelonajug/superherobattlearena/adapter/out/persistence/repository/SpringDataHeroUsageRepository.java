@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.adapter.out.persistence.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.HeroUsageEntity;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface SpringDataHeroUsageRepository
     extends JpaRepository<HeroUsageEntity, HeroUsageEntity.HeroUsageId> {
   List<HeroUsageEntity> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
+
+  List<HeroUsageEntity> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo);
 
   List<HeroUsageEntity> findByTeamId(UUID teamId);
 }

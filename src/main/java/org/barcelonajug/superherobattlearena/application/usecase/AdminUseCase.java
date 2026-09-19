@@ -215,6 +215,8 @@ public class AdminUseCase {
               .findBySessionIdAndRoundNo(sessionId, roundNo)
               .orElseThrow(() -> new IllegalArgumentException("Round not found: " + roundNo));
 
+      final Map<UUID, List<Integer>> teamHeroUsageMap = new HashMap<>();
+
       for (final Match match : pendingMatches) {
         try {
           final Optional<Submission> subA =
@@ -268,14 +270,10 @@ public class AdminUseCase {
                   .toList();
           matchEventRepository.saveAll(matchEvents);
 
-          fatigueUseCase.recordUsage(
-              match.getTeamA(),
-              match.getRoundNo(),
-              requireNonNull(subA.get().getSubmissionJson()).heroIds());
-          fatigueUseCase.recordUsage(
-              match.getTeamB(),
-              match.getRoundNo(),
-              requireNonNull(subB.get().getSubmissionJson()).heroIds());
+          teamHeroUsageMap.put(
+              match.getTeamA(), requireNonNull(subA.get().getSubmissionJson()).heroIds());
+          teamHeroUsageMap.put(
+              match.getTeamB(), requireNonNull(subB.get().getSubmissionJson()).heroIds());
 
           matchIds.add(match.getMatchId());
           winners.put(match.getMatchId(), result.winnerTeamId());
@@ -284,6 +282,10 @@ public class AdminUseCase {
         } catch (final RuntimeException e) {
           log.error("Error simulating match {}: {}", match.getMatchId(), e.getMessage(), e);
         }
+      }
+
+      if (!teamHeroUsageMap.isEmpty()) {
+        fatigueUseCase.recordUsage(teamHeroUsageMap, roundNo);
       }
 
       final long duration = System.currentTimeMillis() - startTime;

@@ -9,7 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
@@ -91,5 +93,56 @@ class FatigueUseCasePerformanceTest {
 
     // Verify repository was called 1 time
     verify(heroUsageRepository).findByTeamIdAndRoundNo(any(), anyInt());
+  }
+
+  @Test
+  void recordUsageIndividualCallsNPlusOne() {
+    int teamCount = 20;
+    int roundNo = 1;
+    List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
+    List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
+
+    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
+
+    long startTime = System.nanoTime();
+    for (UUID teamId : teams) {
+      fatigueService.recordUsage(teamId, roundNo, heroIds);
+    }
+    long duration = System.nanoTime() - startTime;
+
+    // Verify N DB queries for N teams
+    verify(heroUsageRepository, times(teamCount)).findByTeamIdAndRoundNo(any(), anyInt());
+    System.out.println(
+        "N+1 recordUsage duration for "
+            + teamCount
+            + " teams: "
+            + (duration / 1_000_000.0)
+            + " ms");
+  }
+
+  @Test
+  void recordUsageBatchCalls() {
+    int teamCount = 20;
+    int roundNo = 1;
+    List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
+    List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
+
+    Map<UUID, List<Integer>> teamHeroUsageMap =
+        teams.stream().collect(Collectors.toMap(t -> t, t -> heroIds));
+
+    when(heroUsageRepository.findByTeamIdInAndRoundNo(any(), anyInt())).thenReturn(emptyList());
+
+    long startTime = System.nanoTime();
+    fatigueService.recordUsage(teamHeroUsageMap, roundNo);
+    long duration = System.nanoTime() - startTime;
+
+    // Verify 1 DB query for all N teams
+    verify(heroUsageRepository, times(1)).findByTeamIdInAndRoundNo(any(), anyInt());
+    System.out.println(
+        "Batched recordUsage duration for "
+            + teamCount
+            + " teams: "
+            + (duration / 1_000_000.0)
+            + " ms");
   }
 }

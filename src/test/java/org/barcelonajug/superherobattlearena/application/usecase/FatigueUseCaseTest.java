@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Hero;
@@ -94,6 +95,34 @@ class FatigueUseCaseTest {
     assertThat(saved).hasSize(1);
     assertThat(saved.getFirst().streak()).isEqualTo(2);
     assertThat(saved.getFirst().multiplier()).isEqualByComparingTo("0.90");
+  }
+
+  @Test
+  void shouldRecordBatchUsageCorrectly() {
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    HeroUsage previousUsage = new HeroUsage(teamA, 1, 1, 1, BigDecimal.valueOf(0.95));
+
+    when(heroUsageRepository.findByTeamIdInAndRoundNo(any(), anyInt()))
+        .thenReturn(List.of(previousUsage));
+
+    fatigueUseCase.recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 2);
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(heroUsageRepository).saveAll(captor.capture());
+
+    List<HeroUsage> saved = captor.getValue().stream().map(HeroUsage.class::cast).toList();
+    assertThat(saved).hasSize(2);
+
+    HeroUsage usageA =
+        saved.stream().filter(u -> u.teamId().equals(teamA)).findFirst().orElseThrow();
+    assertThat(usageA.streak()).isEqualTo(2);
+    assertThat(usageA.multiplier()).isEqualByComparingTo("0.90");
+
+    HeroUsage usageB =
+        saved.stream().filter(u -> u.teamId().equals(teamB)).findFirst().orElseThrow();
+    assertThat(usageB.streak()).isEqualTo(1);
+    assertThat(usageB.multiplier()).isEqualByComparingTo("0.95");
   }
 
   @Test
