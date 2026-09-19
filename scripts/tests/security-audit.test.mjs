@@ -13,6 +13,7 @@ async function fixture(t) {
   await mkdir(join(directory, '.mvn'));
   await copyFile('scripts/security-audit.sh', join(directory, 'scripts/security-audit.sh'));
   await copyFile('.mvn/security-settings.xml', join(directory, '.mvn/security-settings.xml'));
+  await copyFile('.mvn/dependency-check-suppressions.xml', join(directory, '.mvn/dependency-check-suppressions.xml'));
   const wrapper = join(directory, 'mvnw');
   writeFileSync(wrapper, '#!/bin/sh\nprintf "%s\\n" "$@" > "$AUDIT_ARGUMENTS"\nexit "${MOCK_AUDIT_STATUS:-0}"\n');
   await chmod(wrapper, 0o755);
@@ -65,6 +66,7 @@ test('runs the pinned scanner with strict remote failure handling and indirect c
     '-DossIndexAnalyzerUseCache=false',
     '-DossIndexServerId=sonatype-guide',
     '-DnvdApiKeyEnvironmentVariable=NVD_API_KEY',
+    '-DsuppressionFile=.mvn/dependency-check-suppressions.xml',
   ]) assert.ok(arguments_.includes(required), `Missing scanner configuration: ${required}`);
   assert.ok(arguments_.some(argument => argument.startsWith('-DdataDirectory=')));
   assert.ok(arguments_.includes('.mvn/security-settings.xml'));

@@ -19,4 +19,5 @@ exec ./mvnw -B --settings .mvn/security-settings.xml \
   -DossIndexServerId=sonatype-guide \
   -DnvdApiKeyEnvironmentVariable=NVD_API_KEY \
   -DdataDirectory="$DEPENDENCY_CHECK_DATA_DIRECTORY" \
+  -DsuppressionFile=.mvn/dependency-check-suppressions.xml \
   -Dformats=HTML,JSON
