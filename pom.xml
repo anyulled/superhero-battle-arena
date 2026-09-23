@@ -16,6 +16,9 @@
   <properties>
     <java.version>25</java.version>
     <jackson.version>${jackson-bom.version}</jackson.version>
+    <jackson-bom.version>3.1.6</jackson-bom.version>
+    <tomcat.version>11.0.26</tomcat.version>
+    <hibernate.version>7.4.9.Final</hibernate.version>
     <flyway.version>12.0.3</flyway.version>
     <excluded.test.groups>fuzz</excluded.test.groups>
     <integration.test.profiles>postgres-test,test</integration.test.profiles>
