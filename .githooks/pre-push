@@ -25,6 +25,11 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
+if ! npm run lint:crap; then
+  echo "CRAP metric check failed. Push stopped."
+  exit 1
+fi
+
 echo ""
 echo "✅ All checks passed! Pushing to remote..."
 exit 0
