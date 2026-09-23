@@ -24,6 +24,7 @@ npm run doctor
 | Harness regressions | `npm run test:harness` | Locked dependencies, Git, Ruby, jq |
 | Skill metadata and aliases | `npm run lint:skills` | Locked dependencies |
 | Duplication limit | `npm run lint:duplication` | Locked dependencies |
+| CRAP risk gate | `npm run lint:crap` | Java 25 and a JaCoCo XML report |
 | Focused Java tests | `./mvnw -Dtest=ArchitectureTest test` | Java 25 |
 | Complete Java verification | `./mvnw clean verify -Ppostgres-tests` | Java 25, Docker |
 | H2 compatibility | `./mvnw test-compile failsafe:integration-test failsafe:verify -Ph2-compatibility` | Java 25 |
@@ -34,6 +35,8 @@ npm run doctor
 | Browser journey | `npm exec -- playwright install chromium` then `npm run test:browser` | Packaged JAR, Java 25, Docker |
 
 The PostgreSQL verification is the acceptance suite. H2 has a separate compatibility suite and is not a replacement for PostgreSQL tests. The core JaCoCo report is `target/site/jacoco/index.html`; the adapter report is `target/site/jacoco-adapters/index.html`. Both final reports are generated after integration tests. All five existing 90% core gates remain enforced; the adapter report makes its separate coverage visible without claiming the entire application meets 90%.
+
+The CRAP gate runs after the PostgreSQL pre-push verification and reads `target/site/jacoco/jacoco.xml`. It combines each included method's JaCoCo cyclomatic complexity and instruction coverage as `CC² × (1 − coverage)³ + CC`, and stops the push when the maximum score is greater than 8.0. Constructors, static initializers and compiler-generated lambda methods are excluded.
 
 PostgreSQL integration tests use fresh containers with Flyway cleaning disabled. Mutation testing targets core unit tests and enforces a 76% minimum score.
 

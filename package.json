@@ -10,6 +10,7 @@
   "scripts": {
     "doctor": "node scripts/check-environment.mjs",
     "lint:commits": "commitlint",
+    "lint:crap": "node scripts/check-crap.mjs",
     "lint:duplication": "jscpd --pattern '**/*.java' --ignore '**/.agents/**,**/.agent/**,**/.claude/**,**/.codex/**,**/target/**,**/node_modules/**' --threshold 10",
     "test:hooks": "sh scripts/tests/pre-commit-test.sh",
     "test:workflows": "ruby scripts/tests/workflow-gates-test.rb",

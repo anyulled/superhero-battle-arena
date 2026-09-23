@@ -77,18 +77,36 @@ public record HeroSearchCriteria(
   }
 
   public boolean hasPowerStatsFilter() {
-    return minPower != null
-        || maxPower != null
-        || minStrength != null
-        || maxStrength != null
-        || minSpeed != null
-        || maxSpeed != null
-        || minIntelligence != null
-        || maxIntelligence != null
-        || minDurability != null
-        || maxDurability != null
-        || minCombat != null
-        || maxCombat != null;
+    return hasPowerFilter()
+        || hasStrengthFilter()
+        || hasSpeedFilter()
+        || hasIntelligenceFilter()
+        || hasDurabilityFilter()
+        || hasCombatFilter();
+  }
+
+  private boolean hasPowerFilter() {
+    return minPower != null || maxPower != null;
+  }
+
+  private boolean hasStrengthFilter() {
+    return minStrength != null || maxStrength != null;
+  }
+
+  private boolean hasSpeedFilter() {
+    return minSpeed != null || maxSpeed != null;
+  }
+
+  private boolean hasIntelligenceFilter() {
+    return minIntelligence != null || maxIntelligence != null;
+  }
+
+  private boolean hasDurabilityFilter() {
+    return minDurability != null || maxDurability != null;
+  }
+
+  private boolean hasCombatFilter() {
+    return minCombat != null || maxCombat != null;
   }
 
   public static Builder builder() {
