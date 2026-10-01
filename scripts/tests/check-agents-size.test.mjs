@@ -28,6 +28,20 @@ test('fails with instruction when target file exceeds 500 lines', t => {
   assert.match(result.stderr, /Por favor, separa el fichero en varios más pequeños enlazados por categoría/);
 });
 
+test('counts a final line without a newline when enforcing the 500-line limit', t => {
+  const directory = mkdtempSync(join(tmpdir(), 'arena-agents-check-'));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+
+  const oversizedPath = join(directory, 'AGENTS.md');
+  writeFileSync(oversizedPath, 'line\n'.repeat(500) + 'line');
+
+  const result = spawnSync('sh', [scriptPath, oversizedPath], { encoding: 'utf8' });
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /exceeds 500 lines \(current: 501\)/);
+  assert.match(result.stderr, /Por favor, separa el fichero en varios más pequeños enlazados por categoría/);
+});
+
 test('fails if target file does not exist', () => {
   const result = spawnSync('sh', [scriptPath, '/non/existent/AGENTS.md'], { encoding: 'utf8' });
   assert.equal(result.status, 1);

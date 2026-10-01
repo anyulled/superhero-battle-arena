@@ -9,7 +9,7 @@ if [ ! -f "$target_file" ]; then
   exit 1
 fi
 
-line_count=$(wc -l < "$target_file" | tr -d ' ')
+line_count=$(awk 'END { print NR }' < "$target_file")
 max_lines=500
 
 if [ "$line_count" -gt "$max_lines" ]; then
