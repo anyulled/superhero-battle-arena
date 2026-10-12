@@ -150,7 +150,7 @@ jobs:
 
       - name: Upload Javadoc
         if: matrix.test-type == 'docs'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: javadoc
           path: target/site/apidocs/
@@ -165,14 +165,14 @@ jobs:
           fail-on-error: false
 
       - name: Upload Coverage Report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always() && (matrix.test-type == 'unit' || matrix.test-type == 'integration')
         with:
           name: jacoco-coverage-${{ matrix.test-type }}
           path: target/site/jacoco/
 
       - name: Upload test results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always() && matrix.test-type != 'docs'
         with:
           name: test-results-${{ matrix.test-type }}
@@ -181,14 +181,14 @@ jobs:
             target/failsafe-reports/
 
       - name: Upload adapter coverage
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always() && matrix.test-type == 'integration'
         with:
           name: jacoco-coverage-adapters
           path: target/site/jacoco-adapters/
 
       - name: Upload validated application
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: success() && matrix.test-type == 'integration'
         with:
           name: validated-application
@@ -231,7 +231,7 @@ jobs:
       - name: Verify H2 compatibility
         run: ./mvnw -B test-compile failsafe:integration-test failsafe:verify -Ph2-compatibility
       - name: Upload H2 test results
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: test-results-h2-compatibility
@@ -269,7 +269,7 @@ jobs:
       - name: Verify startup with constrained PostgreSQL connections
         run: npm run test:postgres-startup
       - name: Upload PostgreSQL startup evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: postgres-startup-evidence
@@ -308,7 +308,7 @@ jobs:
       - name: Run browser regression tests
         run: npm run test:browser
       - name: Upload browser failure evidence
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: failure()
         with:
           name: browser-failure-evidence
@@ -335,7 +335,7 @@ jobs:
         run: ./mvnw -B clean test-compile org.pitest:pitest-maven:mutationCoverage
 
       - name: Upload Pitest Report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: pit-report
           path: target/pit-reports/
@@ -360,7 +360,7 @@ jobs:
 
       - name: Upload Jazzer Corpus
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: jazzer-replay-evidence
           path: |
@@ -392,7 +392,7 @@ jobs:
           FUZZ_TARGET: ${{ matrix.target }}
         run: ./mvnw -B test -Pfuzz-tests -Dfuzz.max.duration=60s -Dtest="$FUZZ_TARGET"
       - name: Upload generated corpus and findings
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         if: always()
         with:
           name: jazzer-active-${{ matrix.target }}
