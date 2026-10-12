@@ -58,7 +58,7 @@ jobs:
             dependency-check-${{ runner.os }}-v13-
 
       - name: Snyk Security Scan
-        uses: snyk/actions/setup@12140f4059e244892ae643824a95459a102120dd
+        uses: snyk/actions/setup@11b673cfb4b0dc0d860a1323caa199d54950dcce
 
       - name: Snyk Test
         env:
