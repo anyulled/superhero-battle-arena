@@ -12,22 +12,29 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.barcelonajug.superherobattlearena.application.port.out.EliminationRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
+import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
+import org.barcelonajug.superherobattlearena.domain.Elimination;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.barcelonajug.superherobattlearena.domain.MatchType;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
+import org.barcelonajug.superherobattlearena.domain.Team;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.MatchEventSnapshot;
 import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
@@ -45,6 +52,8 @@ class MatchUseCaseTest {
   private BattleEngineUseCase battleEngineUseCase;
   private RosterUseCase rosterUseCase;
   private FatigueUseCase fatigueUseCase;
+  private TeamRepositoryPort teamRepository;
+  private EliminationRepositoryPort eliminationRepository;
   private MatchUseCase matchUseCase;
 
   @BeforeEach
@@ -56,6 +65,13 @@ class MatchUseCaseTest {
     battleEngineUseCase = mock(BattleEngineUseCase.class);
     rosterUseCase = mock(RosterUseCase.class);
     fatigueUseCase = mock(FatigueUseCase.class);
+    teamRepository = mock(TeamRepositoryPort.class);
+    eliminationRepository = mock(EliminationRepositoryPort.class);
+
+    Round round = new Round();
+    round.setRoundNo(1);
+    round.setSeed(42L);
+    when(roundRepository.findBySessionIdAndRoundNo(any(), any())).thenReturn(Optional.of(round));
 
     matchUseCase =
         new MatchUseCase(
@@ -65,12 +81,13 @@ class MatchUseCaseTest {
             roundRepository,
             battleEngineUseCase,
             rosterUseCase,
-            fatigueUseCase);
+            fatigueUseCase,
+            teamRepository,
+            eliminationRepository);
   }
 
   @Test
   void autoMatch_shouldCreateMatchesForAllUnmatchedTeams() {
-    // Given: 4 teams with submissions, no existing matches
     UUID sessionId = UUID.randomUUID();
     Integer roundNo = 1;
 
@@ -80,99 +97,41 @@ class MatchUseCaseTest {
         .thenReturn(new ArrayList<>());
     when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
 
-    // When: autoMatch is called
     List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
-    // Then: 2 matches should be created (4 teams / 2)
     assertThat(matchIds).hasSize(2);
     verify(matchRepository).saveAll(anyList());
   }
 
   @Test
   void autoMatch_shouldBeIdempotent_whenCalledMultipleTimes() {
-    // Given: 4 teams with submissions
     UUID sessionId = UUID.randomUUID();
     Integer roundNo = 1;
 
     List<Submission> submissions = createSubmissions(4, roundNo);
     when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
 
-    // First call: no existing matches
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(new ArrayList<>());
     when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
 
-    // When: autoMatch is called first time
     List<UUID> firstCallMatchIds = matchUseCase.autoMatch(sessionId, roundNo);
-
-    // Then: 2 matches created
     assertThat(firstCallMatchIds).hasSize(2);
 
-    // Capture the matches that were created
-    ArgumentCaptor<List> matchCaptor = ArgumentCaptor.forClass(List.class);
+    ArgumentCaptor<List<Match>> matchCaptor = ArgumentCaptor.forClass(List.class);
     verify(matchRepository).saveAll(matchCaptor.capture());
-    List<?> rawMatches = matchCaptor.getValue();
-    List<Match> createdMatches = rawMatches.stream().map(Match.class::cast).toList();
+    List<Match> createdMatches = matchCaptor.getValue();
 
-    // Second call: existing matches present
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(createdMatches);
 
-    // When: autoMatch is called second time
     List<UUID> secondCallMatchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
-    // Then: 0 new matches created (all teams already matched)
-    assertThat(secondCallMatchIds).isEmpty();
-    // Verify save was only called 2 times total (from first call)
-    verify(matchRepository).saveAll(anyList());
+    assertThat(secondCallMatchIds).hasSize(2);
+    verify(matchRepository, times(1)).saveAll(anyList());
   }
 
   @Test
-  void autoMatch_shouldOnlyMatchUnmatchedTeams_whenSomeTeamsAlreadyMatched() {
-    // Given: 6 teams with submissions, 2 already matched
-    UUID sessionId = UUID.randomUUID();
-    Integer roundNo = 1;
-
-    List<Submission> submissions = createSubmissions(6, roundNo);
-    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
-
-    // Teams 0 and 1 are already matched
-    Match existingMatch =
-        MatchMother.aMatch(
-            UUID.randomUUID(),
-            sessionId,
-            submissions.getFirst().getTeamId(),
-            submissions.get(1).getTeamId(),
-            roundNo,
-            MatchStatus.PENDING);
-
-    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
-        .thenReturn(List.of(existingMatch));
-    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
-
-    // When: autoMatch is called
-    List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
-
-    // Then: 2 new matches created for the 4 unmatched teams
-    assertThat(matchIds).hasSize(2);
-    verify(matchRepository).saveAll(anyList());
-
-    // Verify the new matches don't include already-matched teams
-    ArgumentCaptor<List> matchCaptor = ArgumentCaptor.forClass(List.class);
-    verify(matchRepository).saveAll(matchCaptor.capture());
-    List<?> rawMatches = matchCaptor.getValue();
-    List<Match> newMatches = rawMatches.stream().map(Match.class::cast).toList();
-
-    for (Match match : newMatches) {
-      assertThat(match.getTeamA()).isNotEqualTo(submissions.getFirst().getTeamId());
-      assertThat(match.getTeamA()).isNotEqualTo(submissions.get(1).getTeamId());
-      assertThat(match.getTeamB()).isNotEqualTo(submissions.getFirst().getTeamId());
-      assertThat(match.getTeamB()).isNotEqualTo(submissions.get(1).getTeamId());
-    }
-  }
-
-  @Test
-  void autoMatch_shouldHandleOddNumberOfTeams() {
-    // Given: 5 teams with submissions
+  void autoMatch_shouldThrow_whenTeamCountIsNotPowerOfTwo() {
     UUID sessionId = UUID.randomUUID();
     Integer roundNo = 1;
 
@@ -180,14 +139,340 @@ class MatchUseCaseTest {
     when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
         .thenReturn(new ArrayList<>());
-    when(matchRepository.save(any(Match.class))).thenAnswer(i -> i.getArgument(0));
 
-    // When: autoMatch is called
+    assertThatThrownBy(() -> matchUseCase.autoMatch(sessionId, roundNo))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("power of two");
+  }
+
+  @Test
+  void autoMatch_shouldCreateFinalAndThirdPlaceMatches_whenFourTeamsInFinalStage() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    UUID team1 = UUID.randomUUID();
+    UUID team2 = UUID.randomUUID();
+    UUID team3 = UUID.randomUUID();
+    UUID team4 = UUID.randomUUID();
+
+    Match sf1 =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(1)
+            .teamA(team1)
+            .teamB(team2)
+            .status(MatchStatus.COMPLETED)
+            .winnerTeam(team1)
+            .bracketPosition(0)
+            .build();
+
+    Match sf2 =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(1)
+            .teamA(team3)
+            .teamB(team4)
+            .status(MatchStatus.COMPLETED)
+            .winnerTeam(team3)
+            .bracketPosition(1)
+            .build();
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of(sf1, sf2));
+
+    List<Submission> submissions =
+        List.of(
+            Submission.builder().teamId(team1).roundNo(2).build(),
+            Submission.builder().teamId(team2).roundNo(2).build(),
+            Submission.builder().teamId(team3).roundNo(2).build(),
+            Submission.builder().teamId(team4).roundNo(2).build());
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
+
     List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
-    // Then: 2 matches created (5 teams / 2 = 2, with 1 team left unmatched)
     assertThat(matchIds).hasSize(2);
-    verify(matchRepository).saveAll(anyList());
+    ArgumentCaptor<List<Match>> captor = ArgumentCaptor.forClass(List.class);
+    verify(matchRepository).saveAll(captor.capture());
+    List<Match> created = captor.getValue();
+
+    Match grandFinal =
+        created.stream().filter(m -> m.getMatchType() == MatchType.FINAL).findFirst().orElseThrow();
+    assertThat(grandFinal.getTeamA()).isEqualTo(team1);
+    assertThat(grandFinal.getTeamB()).isEqualTo(team3);
+    assertThat(grandFinal.getBracketPosition()).isEqualTo(0);
+
+    Match thirdPlace =
+        created.stream()
+            .filter(m -> m.getMatchType() == MatchType.THIRD_PLACE)
+            .findFirst()
+            .orElseThrow();
+    assertThat(thirdPlace.getTeamA()).isEqualTo(team2);
+    assertThat(thirdPlace.getTeamB()).isEqualTo(team4);
+    assertThat(thirdPlace.getBracketPosition()).isEqualTo(1);
+  }
+
+  private List<Match> createFourCompletedMatches(UUID sessionId, int roundNo, List<UUID> winners) {
+    List<Match> matches = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      matches.add(
+          Match.builder()
+              .matchId(UUID.randomUUID())
+              .sessionId(sessionId)
+              .roundNo(roundNo)
+              .teamA(winners.get(i))
+              .teamB(UUID.randomUUID())
+              .status(MatchStatus.COMPLETED)
+              .winnerTeam(winners.get(i))
+              .bracketPosition(i)
+              .build());
+    }
+    return matches;
+  }
+
+  @Test
+  void autoMatch_round2_knockout_with8Teams_shouldPairWinners() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    UUID w0 = UUID.randomUUID();
+    UUID w1 = UUID.randomUUID();
+    UUID w2 = UUID.randomUUID();
+    UUID w3 = UUID.randomUUID();
+    List<UUID> winners = List.of(w0, w1, w2, w3);
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
+        .thenReturn(createFourCompletedMatches(sessionId, 1, winners));
+
+    List<Submission> submissions =
+        List.of(
+            Submission.builder().teamId(w0).roundNo(2).build(),
+            Submission.builder().teamId(w1).roundNo(2).build(),
+            Submission.builder().teamId(w2).roundNo(2).build(),
+            Submission.builder().teamId(w3).roundNo(2).build());
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
+
+    List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
+
+    assertThat(matchIds).hasSize(2);
+    ArgumentCaptor<List<Match>> captor = ArgumentCaptor.forClass(List.class);
+    verify(matchRepository).saveAll(captor.capture());
+    List<Match> created = captor.getValue();
+
+    Match k0 = created.get(0);
+    assertThat(k0.getTeamA()).isEqualTo(w0);
+    assertThat(k0.getTeamB()).isEqualTo(w1);
+    assertThat(k0.getMatchType()).isEqualTo(MatchType.KNOCKOUT);
+    assertThat(k0.getBracketPosition()).isEqualTo(0);
+    assertThat(k0.getStatus()).isEqualTo(MatchStatus.PENDING);
+
+    Match k1 = created.get(1);
+    assertThat(k1.getTeamA()).isEqualTo(w2);
+    assertThat(k1.getTeamB()).isEqualTo(w3);
+    assertThat(k1.getMatchType()).isEqualTo(MatchType.KNOCKOUT);
+    assertThat(k1.getBracketPosition()).isEqualTo(1);
+    assertThat(k1.getStatus()).isEqualTo(MatchStatus.PENDING);
+  }
+
+  @Test
+  void autoMatch_round2_walkovers_shouldHandleMissingSubmissions() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    UUID w0 = UUID.randomUUID();
+    UUID w1 = UUID.randomUUID();
+    UUID w2 = UUID.randomUUID();
+    UUID w3 = UUID.randomUUID();
+    List<UUID> winners = List.of(w0, w1, w2, w3);
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
+        .thenReturn(createFourCompletedMatches(sessionId, 1, winners));
+
+    List<Submission> submissions =
+        List.of(
+            Submission.builder().teamId(w0).roundNo(2).build(),
+            Submission.builder().teamId(w3).roundNo(2).build());
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(submissions);
+
+    List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
+
+    assertThat(matchIds).hasSize(2);
+    ArgumentCaptor<List<Match>> captor = ArgumentCaptor.forClass(List.class);
+    verify(matchRepository).saveAll(captor.capture());
+    List<Match> created = captor.getValue();
+
+    Match k0 = created.get(0);
+    assertThat(k0.getTeamA()).isEqualTo(w0);
+    assertThat(k0.getTeamB()).isEqualTo(w1);
+    assertThat(k0.getStatus()).isEqualTo(MatchStatus.COMPLETED);
+    assertThat(k0.getWinnerTeam()).isEqualTo(w0);
+
+    Match k1 = created.get(1);
+    assertThat(k1.getTeamA()).isEqualTo(w2);
+    assertThat(k1.getTeamB()).isEqualTo(w3);
+    assertThat(k1.getStatus()).isEqualTo(MatchStatus.COMPLETED);
+    assertThat(k1.getWinnerTeam()).isEqualTo(w3);
+
+    verify(eliminationRepository, times(2)).save(any(Elimination.class));
+  }
+
+  @Test
+  void autoMatch_round2_walkover_bothMissingSubmissions_shouldCancelMatch() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    UUID w0 = UUID.randomUUID();
+    UUID w1 = UUID.randomUUID();
+    UUID w2 = UUID.randomUUID();
+    UUID w3 = UUID.randomUUID();
+    List<UUID> winners = List.of(w0, w1, w2, w3);
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
+        .thenReturn(createFourCompletedMatches(sessionId, 1, winners));
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(List.of());
+
+    List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
+
+    assertThat(matchIds).hasSize(2);
+    ArgumentCaptor<List<Match>> captor = ArgumentCaptor.forClass(List.class);
+    verify(matchRepository).saveAll(captor.capture());
+    List<Match> created = captor.getValue();
+
+    assertThat(created.get(0).getStatus()).isEqualTo(MatchStatus.CANCELLED);
+    assertThat(created.get(1).getStatus()).isEqualTo(MatchStatus.CANCELLED);
+  }
+
+  @Test
+  void autoMatch_round2_shouldThrow_whenPreviousMatchesEmpty() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of());
+
+    assertThatThrownBy(() -> matchUseCase.autoMatch(sessionId, roundNo))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Previous round matches not found for round 1");
+  }
+
+  @Test
+  void autoMatch_round2_shouldThrow_whenPreviousMatchesNotAllCompleted() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+
+    Match m0 =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(1)
+            .teamA(UUID.randomUUID())
+            .teamB(UUID.randomUUID())
+            .status(MatchStatus.PENDING)
+            .build();
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of(m0));
+
+    assertThatThrownBy(() -> matchUseCase.autoMatch(sessionId, roundNo))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Previous round matches must be completed");
+  }
+
+  @Test
+  void autoMatch_round3_shouldThrow_whenTournamentAlreadyCompleted() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 3;
+
+    Match m0 =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(2)
+            .teamA(UUID.randomUUID())
+            .teamB(UUID.randomUUID())
+            .status(MatchStatus.COMPLETED)
+            .winnerTeam(UUID.randomUUID())
+            .build();
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(2, sessionId)).thenReturn(List.of(m0));
+
+    assertThatThrownBy(() -> matchUseCase.autoMatch(sessionId, roundNo))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Tournament already completed");
+  }
+
+  @Test
+  void autoMatch_round1_withOddOrZeroTeams_shouldThrow() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 1;
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    Team t1 =
+        new Team(
+            UUID.randomUUID(),
+            sessionId,
+            "T1",
+            OffsetDateTime.now(ZoneOffset.UTC),
+            List.of("1", "2"));
+    Team t2 =
+        new Team(
+            UUID.randomUUID(),
+            sessionId,
+            "T2",
+            OffsetDateTime.now(ZoneOffset.UTC),
+            List.of("3", "4"));
+    Team t3 =
+        new Team(
+            UUID.randomUUID(),
+            sessionId,
+            "T3",
+            OffsetDateTime.now(ZoneOffset.UTC),
+            List.of("5", "6"));
+    when(teamRepository.findBySessionId(sessionId)).thenReturn(List.of(t1, t2, t3));
+
+    assertThatThrownBy(() -> matchUseCase.autoMatch(sessionId, roundNo))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("power of two");
+  }
+
+  @Test
+  void autoMatch_round1_withTwoTeams_andNullSeed_shouldCreateFinalMatch() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 1;
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    UUID t1Id = UUID.randomUUID();
+    UUID t2Id = UUID.randomUUID();
+    Team t1 =
+        new Team(t1Id, sessionId, "T1", OffsetDateTime.now(ZoneOffset.UTC), List.of("1", "2"));
+    Team t2 =
+        new Team(t2Id, sessionId, "T2", OffsetDateTime.now(ZoneOffset.UTC), List.of("3", "4"));
+    when(teamRepository.findBySessionId(sessionId)).thenReturn(List.of(t1, t2));
+
+    Round round = new Round();
+    round.setSeed(null);
+    when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
+        .thenReturn(Optional.of(round));
+
+    Submission sub1 = createSubmission(t1Id, roundNo);
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(List.of(sub1));
+
+    List<UUID> matchIds = matchUseCase.autoMatch(sessionId, roundNo);
+
+    assertThat(matchIds).hasSize(1);
+    ArgumentCaptor<List<Match>> captor = ArgumentCaptor.forClass(List.class);
+    verify(matchRepository).saveAll(captor.capture());
+    List<Match> created = captor.getValue();
+    assertThat(created.get(0).getMatchType()).isEqualTo(MatchType.FINAL);
+    assertThat(created.get(0).getBracketPosition()).isEqualTo(0);
+    assertThat(created.get(0).getStatus()).isEqualTo(MatchStatus.COMPLETED);
+    assertThat(created.get(0).getWinnerTeam()).isEqualTo(t1Id);
+    verify(eliminationRepository).save(any(Elimination.class));
   }
 
   @Test
@@ -224,6 +509,7 @@ class MatchUseCaseTest {
     round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
         .thenReturn(Optional.of(round));
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of(match));
 
     SimulationResult simResult =
         new SimulationResult(teamA, 10, List.of(mock(MatchEventSnapshot.class)));
@@ -292,6 +578,61 @@ class MatchUseCaseTest {
 
     // Then
     assertThat(result).isEqualTo("DRAW");
+  }
+
+  @Test
+  void runMatch_shouldNotEliminateLoser_whenSemifinalMatch() {
+    UUID matchId = UUID.randomUUID();
+    UUID sessionId = UUID.randomUUID();
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    Integer roundNo = 1;
+
+    Match match =
+        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
+    match.setMatchType(MatchType.KNOCKOUT);
+
+    Match match2 =
+        MatchMother.aMatch(
+            UUID.randomUUID(),
+            sessionId,
+            UUID.randomUUID(),
+            UUID.randomUUID(),
+            roundNo,
+            MatchStatus.PENDING);
+    match2.setMatchType(MatchType.KNOCKOUT);
+
+    when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
+
+    Submission subA = createSubmission(teamA, roundNo);
+    Submission subB = createSubmission(teamB, roundNo);
+    when(submissionRepository.findByTeamIdAndRoundNo(teamA, roundNo)).thenReturn(Optional.of(subA));
+    when(submissionRepository.findByTeamIdAndRoundNo(teamB, roundNo)).thenReturn(Optional.of(subB));
+
+    Round round = new Round();
+    round.setSeed(12345L);
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+    when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
+        .thenReturn(Optional.of(round));
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId))
+        .thenReturn(List.of(match, match2));
+
+    SimulationResult simResult =
+        new SimulationResult(teamA, 10, List.of(mock(MatchEventSnapshot.class)));
+    when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
+        .thenReturn(simResult);
+
+    Hero mockHero = mock(Hero.class);
+    when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
+    when(mockHero.id()).thenReturn(1);
+    when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
+        .thenReturn(List.of(mockHero));
+    when(matchRepository.findPendingMatches(roundNo, sessionId)).thenReturn(List.of(match2));
+
+    String result = matchUseCase.runMatch(matchId);
+
+    assertThat(result).isEqualTo(teamA.toString());
+    verify(eliminationRepository, times(0)).save(any(Elimination.class));
   }
 
   @Test

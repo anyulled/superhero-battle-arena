@@ -1,5 +1,6 @@
 package org.barcelonajug.superherobattlearena.domain;
 
+import java.util.Optional;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.jspecify.annotations.Nullable;
@@ -30,6 +31,10 @@ public class Match {
     private MatchStatus status;
 
     private @Nullable MatchResult resultJson;
+
+    private MatchType matchType = MatchType.KNOCKOUT;
+
+    private @Nullable Integer bracketPosition;
 
     public Builder matchId(UUID matchId) {
       this.matchId = matchId;
@@ -71,6 +76,16 @@ public class Match {
       return this;
     }
 
+    public Builder matchType(MatchType matchType) {
+      this.matchType = matchType;
+      return this;
+    }
+
+    public Builder bracketPosition(@Nullable Integer bracketPosition) {
+      this.bracketPosition = bracketPosition;
+      return this;
+    }
+
     public Match build() {
       Match match = new Match();
       match.matchId = this.matchId;
@@ -81,6 +96,8 @@ public class Match {
       match.winnerTeam = this.winnerTeam;
       match.status = this.status;
       match.resultJson = this.resultJson;
+      match.matchType = this.matchType;
+      match.bracketPosition = this.bracketPosition;
       return match;
     }
   }
@@ -109,6 +126,10 @@ public class Match {
   private MatchStatus status;
 
   private @Nullable MatchResult resultJson;
+
+  private MatchType matchType = MatchType.KNOCKOUT;
+
+  private @Nullable Integer bracketPosition;
 
   public UUID getMatchId() {
     return matchId;
@@ -172,5 +193,28 @@ public class Match {
 
   public void setResultJson(@Nullable MatchResult resultJson) {
     this.resultJson = resultJson;
+  }
+
+  public MatchType getMatchType() {
+    return matchType;
+  }
+
+  public void setMatchType(MatchType matchType) {
+    this.matchType = matchType;
+  }
+
+  public @Nullable Integer getBracketPosition() {
+    return bracketPosition;
+  }
+
+  public void setBracketPosition(@Nullable Integer bracketPosition) {
+    this.bracketPosition = bracketPosition;
+  }
+
+  public Optional<UUID> loserTeam() {
+    if (status == MatchStatus.COMPLETED && winnerTeam != null) {
+      return Optional.of(winnerTeam.equals(teamA) ? teamB : teamA);
+    }
+    return Optional.empty();
   }
 }

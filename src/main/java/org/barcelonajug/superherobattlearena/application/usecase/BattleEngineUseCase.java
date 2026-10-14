@@ -77,13 +77,12 @@ public class BattleEngineUseCase {
         }
       }
 
-      if (winnerId != null) {
-        events.add(MatchEventSnapshot.matchEnd(winnerId, logicalTime.getAndIncrement()));
-        log.info("Battle completed - winner={}, turns={}", winnerId, turn);
-      } else {
-        events.add(MatchEventSnapshot.draw(logicalTime.getAndIncrement()));
-        log.info("Battle completed - result=DRAW, turns={}", turn);
+      if (winnerId == null) {
+        winnerId = resolveTieBreak(allHeroes, teamAId, teamBId, random);
       }
+
+      events.add(MatchEventSnapshot.matchEnd(winnerId, logicalTime.getAndIncrement()));
+      log.info("Battle completed - winner={}, turns={}", winnerId, turn);
 
       long duration = System.currentTimeMillis() - startTime;
       log.info(
@@ -278,6 +277,52 @@ public class BattleEngineUseCase {
     return allHeroes.stream()
         .filter(h -> h.teamId.equals(teamId))
         .noneMatch(BattleHeroUseCase::isAlive);
+  }
+
+  UUID resolveTieBreak(
+      List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId, Random random) {
+    long teamAAlive =
+        allHeroes.stream().filter(h -> h.teamId.equals(teamAId) && h.isAlive()).count();
+    long teamBAlive =
+        allHeroes.stream().filter(h -> h.teamId.equals(teamBId) && h.isAlive()).count();
+
+    if (teamAAlive > teamBAlive) {
+      log.info("Tiebreak resolved by alive heroes: teamA {} vs teamB {}", teamAAlive, teamBAlive);
+      return teamAId;
+    }
+    if (teamBAlive > teamAAlive) {
+      log.info("Tiebreak resolved by alive heroes: teamB {} vs teamA {}", teamBAlive, teamAAlive);
+      return teamBId;
+    }
+
+    int teamAHp =
+        allHeroes.stream()
+            .filter(h -> h.teamId.equals(teamAId) && h.isAlive())
+            .mapToInt(h -> h.currentHp)
+            .sum();
+    int teamBHp =
+        allHeroes.stream()
+            .filter(h -> h.teamId.equals(teamBId) && h.isAlive())
+            .mapToInt(h -> h.currentHp)
+            .sum();
+
+    if (teamAHp > teamBHp) {
+      log.info("Tiebreak resolved by remaining HP: teamA {} vs teamB {}", teamAHp, teamBHp);
+      return teamAId;
+    }
+    if (teamBHp > teamAHp) {
+      log.info("Tiebreak resolved by remaining HP: teamB {} vs teamA {}", teamBHp, teamAHp);
+      return teamBId;
+    }
+    UUID decided;
+
+    if (random.nextBoolean()) {
+      decided = teamAId;
+    } else {
+      decided = teamBId;
+    }
+    log.info("Tiebreak resolved by deterministic seed: {}", decided);
+    return decided;
   }
 
   static class BattleHeroUseCase {

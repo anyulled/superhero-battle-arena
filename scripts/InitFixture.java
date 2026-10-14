@@ -1147,18 +1147,8 @@ class InitFixture implements Callable<Integer> {
     r4Teams.addAll(sfWinners);
     r4Teams.addAll(sfLosers);
     submitSquads(r4Teams);
-
-    if (sfWinners.size() >= 2) {
-      UUID grandFinalMatchId = createDirectMatch(sfWinners.get(0).teamId(), sfWinners.get(1).teamId(), 4);
-      logger.info("Created Grand Final match: {} vs {}", sfWinners.get(0).name(), sfWinners.get(1).name());
-      runSingleMatch(grandFinalMatchId);
-    }
-
-    if (sfLosers.size() >= 2) {
-      UUID thirdPlaceMatchId = createDirectMatch(sfLosers.get(0).teamId(), sfLosers.get(1).teamId(), 4);
-      logger.info("Created 3rd Place match: {} vs {}", sfLosers.get(0).name(), sfLosers.get(1).name());
-      runSingleMatch(thirdPlaceMatchId);
-    }
+    autoMatch(r4Teams);
+    runAllBattles();
 
     printWorldCupSummary(4);
   }
