@@ -83,6 +83,10 @@ $(document).ready(function () {
         `);
     }
 
+    /**
+     * Resolves final and third-place matches by type, falling back to semifinal participants and
+     * list order for older match data.
+     */
     function resolveFinalMatches() {
         const round3Matches = allMatches.filter(m => m.roundNo === 3);
         const round4Matches = allMatches.filter(m => m.roundNo === 4);
@@ -130,7 +134,11 @@ $(document).ready(function () {
         return { sfCompleted, finalMatch, thirdPlaceMatch };
     }
 
+    /**
+     * Renders each bracket stage in bracket-position order and refreshes the podium and icons.
+     */
     function renderBracket() {
+        /** Orders matches by bracket position, treating an unassigned position as zero. */
         const sortByBracket = (a, b) => (a.bracketPosition ?? 0) - (b.bracketPosition ?? 0);
         const round1Matches = allMatches.filter(m => m.roundNo === 1).sort(sortByBracket);
         const round2Matches = allMatches.filter(m => m.roundNo === 2).sort(sortByBracket);

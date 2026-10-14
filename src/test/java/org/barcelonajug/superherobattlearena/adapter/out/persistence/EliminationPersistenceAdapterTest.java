@@ -23,6 +23,7 @@ class EliminationPersistenceAdapterTest {
   private EliminationMapper mapper;
   private EliminationPersistenceAdapter adapter;
 
+  /** Creates an elimination adapter with isolated repository and mapper mocks. */
   @BeforeEach
   void setUp() {
     repository = mock(SpringDataEliminationRepository.class);
@@ -30,6 +31,7 @@ class EliminationPersistenceAdapterTest {
     adapter = new EliminationPersistenceAdapter(repository, mapper);
   }
 
+  /** Verifies that saving an elimination persists its mapped entity. */
   @Test
   void shouldSaveElimination() {
     UUID teamId = UUID.randomUUID();
@@ -52,6 +54,7 @@ class EliminationPersistenceAdapterTest {
     verify(repository).save(entity);
   }
 
+  /** Verifies that bulk saving persists the mapped elimination entities. */
   @Test
   void shouldSaveAllEliminations() {
     UUID teamId = UUID.randomUUID();
@@ -72,6 +75,7 @@ class EliminationPersistenceAdapterTest {
     verify(repository).saveAll(List.of(entity));
   }
 
+  /** Verifies that elimination lookup uses both the session and team identifiers. */
   @Test
   void shouldCheckIfEliminated() {
     UUID teamId = UUID.randomUUID();
@@ -85,6 +89,7 @@ class EliminationPersistenceAdapterTest {
     verify(repository).existsBySessionIdAndTeamId(sessionId, teamId);
   }
 
+  /** Verifies that session lookup returns mapped domain eliminations. */
   @Test
   void shouldFindBySessionId() {
     UUID sessionId = UUID.randomUUID();
@@ -105,6 +110,7 @@ class EliminationPersistenceAdapterTest {
     assertThat(results).containsExactly(domain);
   }
 
+  /** Verifies that deleting eliminations delegates to the persistence repository. */
   @Test
   void shouldDeleteAll() {
     adapter.deleteAll();

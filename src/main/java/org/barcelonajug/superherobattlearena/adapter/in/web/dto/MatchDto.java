@@ -33,6 +33,7 @@ public record MatchDto(
     @Schema(description = "Stage type of the match", example = "KNOCKOUT") MatchType matchType,
     @Schema(description = "Position in the round bracket tree", example = "0")
         @Nullable Integer bracketPosition) {
+  /** Maps a domain match to its web representation, including its type and bracket position. */
   public static MatchDto from(Match value) {
     return new MatchDto(
         value.getMatchId(),

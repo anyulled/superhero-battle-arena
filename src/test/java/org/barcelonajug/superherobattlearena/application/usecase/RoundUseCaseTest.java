@@ -45,6 +45,7 @@ class RoundUseCaseTest {
   private static final UUID TEAM_ID = UUID.randomUUID();
   private static final int ROUND_NO = 1;
 
+  /** Creates the round use case with isolated persistence mocks. */
   @BeforeEach
   void setUp() {
     roundUseCase =
@@ -94,6 +95,7 @@ class RoundUseCaseTest {
           .hasMessageContaining("does not exist in session");
     }
 
+    /** Verifies that an eliminated team cannot submit a squad for a later round. */
     @Test
     void shouldThrow_whenTeamIsEliminated() {
       Round round = roundWithSpec(3);

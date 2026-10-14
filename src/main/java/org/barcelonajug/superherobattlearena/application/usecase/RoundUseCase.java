@@ -35,6 +35,7 @@ public class RoundUseCase {
   private final TeamRepositoryPort teamRepository;
   private final EliminationRepositoryPort eliminationRepository;
 
+  /** Creates the round use case with round, submission, team, and elimination repositories. */
   public RoundUseCase(
       RoundRepositoryPort roundRepository,
       SubmissionRepositoryPort submissionRepository,
@@ -54,6 +55,10 @@ public class RoundUseCase {
     return roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo).map(Round::getSpecJson);
   }
 
+  /**
+   * Accepts a squad after checking the team, session round, elimination status, prior submission,
+   * and required squad size. Eliminated teams are rejected with TeamEliminatedException.
+   */
   public void submitTeam(Integer roundNo, UUID teamId, DraftSubmission draft) {
     MDC.put("roundNo", roundNo.toString());
     MDC.put("teamId", teamId.toString());

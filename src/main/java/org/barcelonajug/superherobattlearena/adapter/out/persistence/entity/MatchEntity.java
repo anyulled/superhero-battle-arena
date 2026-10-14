@@ -121,18 +121,22 @@ public class MatchEntity {
     this.resultJson = resultJson;
   }
 
+  /** Returns the tournament stage represented by this match. */
   public MatchType getMatchType() {
     return matchType;
   }
 
+  /** Sets the tournament stage represented by this match. */
   public void setMatchType(MatchType matchType) {
     this.matchType = matchType;
   }
 
+  /** Returns the bracket position, or null when no position has been assigned. */
   public @Nullable Integer getBracketPosition() {
     return bracketPosition;
   }
 
+  /** Sets the bracket position, allowing null for matches without an assigned position. */
   public void setBracketPosition(@Nullable Integer bracketPosition) {
     this.bracketPosition = bracketPosition;
   }

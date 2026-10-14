@@ -211,6 +211,7 @@ class BattleEngineUseCaseTest {
     assertThat(damage).isEqualTo(10); // Base damage, no multiplier
   }
 
+  /** Verifies that a battle reaching fifty turns ends with a tiebreak winner. */
   @Test
   void simulate_shouldResolveWinnerViaTiebreakIfExceedsMaxTurns() {
     Hero heroA =
@@ -240,6 +241,7 @@ class BattleEngineUseCaseTest {
     assertThat(result.totalTurns()).isEqualTo(50);
   }
 
+  /** Verifies that the tiebreak favors the team with more living heroes. */
   @Test
   void resolveTieBreak_shouldPickTeamWithMoreAliveMembers() {
     Hero hero1 = HeroMother.aStandardHero();
@@ -257,6 +259,7 @@ class BattleEngineUseCaseTest {
     assertThat(winner).isEqualTo(teamAId);
   }
 
+  /** Verifies that dead heroes contribute neither survivor counts nor remaining HP. */
   @Test
   void resolveTieBreak_withDeadHeroes_shouldIgnoreDeadHeroes() {
     Hero hero1 = HeroMother.aStandardHero();
@@ -281,6 +284,7 @@ class BattleEngineUseCaseTest {
     assertThat(winner).isEqualTo(teamAId);
   }
 
+  /** Verifies that remaining HP breaks a tie in living-hero counts. */
   @Test
   void resolveTieBreak_shouldPickTeamWithMoreRemainingHp_whenAliveCountIsEqual() {
     Hero hero1 = HeroMother.aStandardHero();
@@ -297,6 +301,7 @@ class BattleEngineUseCaseTest {
     assertThat(winner).isEqualTo(teamAId);
   }
 
+  /** Verifies that team B wins when it has more living heroes. */
   @Test
   void resolveTieBreak_shouldPickTeamB_whenTeamBHasMoreAliveMembers() {
     Hero hero1 = HeroMother.aStandardHero();
@@ -314,6 +319,7 @@ class BattleEngineUseCaseTest {
     assertThat(winner).isEqualTo(teamBId);
   }
 
+  /** Verifies that team B wins an equal-survivor tie with more remaining HP. */
   @Test
   void resolveTieBreak_shouldPickTeamB_whenAliveCountIsEqualAndTeamBHasMoreHp() {
     Hero hero1 = HeroMother.aStandardHero();
@@ -330,6 +336,7 @@ class BattleEngineUseCaseTest {
     assertThat(winner).isEqualTo(teamBId);
   }
 
+  /** Verifies that equal survivor counts and HP resolve reproducibly with the same random seed. */
   @Test
   void resolveTieBreak_shouldPickDeterministically_whenAliveCountAndHpAreEqual() {
     Hero hero1 = HeroMother.aStandardHero();

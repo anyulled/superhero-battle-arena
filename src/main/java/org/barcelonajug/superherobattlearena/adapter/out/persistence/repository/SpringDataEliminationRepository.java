@@ -10,7 +10,9 @@ import org.springframework.stereotype.Repository;
 public interface SpringDataEliminationRepository
     extends JpaRepository<EliminationEntity, EliminationEntity.EliminationId> {
 
+  /** Returns whether an elimination exists for the session and team identifier pair. */
   boolean existsBySessionIdAndTeamId(UUID sessionId, UUID teamId);
 
+  /** Returns all elimination entities belonging to the specified session. */
   List<EliminationEntity> findBySessionId(UUID sessionId);
 }

@@ -76,16 +76,19 @@ public class Match {
       return this;
     }
 
+    /** Sets the tournament stage on this builder and returns the builder. */
     public Builder matchType(MatchType matchType) {
       this.matchType = matchType;
       return this;
     }
 
+    /** Sets the optional bracket position on this builder and returns the builder. */
     public Builder bracketPosition(@Nullable Integer bracketPosition) {
       this.bracketPosition = bracketPosition;
       return this;
     }
 
+    /** Creates a match from the configured values, including its type and bracket position. */
     public Match build() {
       Match match = new Match();
       match.matchId = this.matchId;
@@ -195,22 +198,30 @@ public class Match {
     this.resultJson = resultJson;
   }
 
+  /** Returns the tournament stage represented by this match. */
   public MatchType getMatchType() {
     return matchType;
   }
 
+  /** Sets the tournament stage represented by this match. */
   public void setMatchType(MatchType matchType) {
     this.matchType = matchType;
   }
 
+  /** Returns the bracket position, or null when no position has been assigned. */
   public @Nullable Integer getBracketPosition() {
     return bracketPosition;
   }
 
+  /** Sets the bracket position, allowing null for matches without an assigned position. */
   public void setBracketPosition(@Nullable Integer bracketPosition) {
     this.bracketPosition = bracketPosition;
   }
 
+  /**
+   * Returns the opposing team when the match is completed and has a winner; otherwise returns an
+   * empty optional.
+   */
   public Optional<UUID> loserTeam() {
     if (status == MatchStatus.COMPLETED && winnerTeam != null) {
       return Optional.of(winnerTeam.equals(teamA) ? teamB : teamA);
