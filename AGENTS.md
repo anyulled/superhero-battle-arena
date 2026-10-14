@@ -57,7 +57,7 @@ This project adheres to strict architectural and coding guidelines. As an AI ass
 
 - Prefer Java `record` for immutable data objects (DTOs, some domain objects).
 - When resolving tasks, check the build (`./mvnw clean verify`), verify tests pass, and resolve linting/SonarQube issues before declaring a task done.
-- Consult [ARCHITECTURE.md](ARCHITECTURE.md), [architecture decisions](docs/adr/), and the [skill routing index](docs/skills.md) when uncertain about an architectural approach. CI definitions live in `.github/workflows/`.
+- Consult [ARCHITECTURE.md](ARCHITECTURE.md), [architecture decisions](docs/adr/), [the skill routing index](docs/skills.md), and [DRY refactoring guide](docs/dry-refactoring.md) when uncertain about an architectural approach or resolving duplication. CI definitions live in `.github/workflows/`.
 - Preserve deterministic file edits made by verified git hooks; do not drop them as noise.
 - Start with read-only inspection. Before executing project code or modifying files, propose the concrete actions and ask which action to take. Once the user authorizes a scope, carry out its necessary edits and validation without repeatedly asking for the same permission.
 - Ask for instructions when a blocker requires a workaround, or when the proposed work changes architecture, security policy, public contracts, dependencies or execution costs beyond the approved scope. Do not assume an answer or weaken a check.
