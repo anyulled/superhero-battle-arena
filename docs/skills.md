@@ -13,6 +13,7 @@
 | Persistence queries and transactions | `jpa-patterns` | `postgres-patterns` for SQL |
 | Requested Spring security work | `springboot-security` | `java-spring-boot` |
 | JavaScript/TypeScript or Node tooling | `coding-standards` | `backend-patterns` only for applicable Node work |
+| Code duplication / DRY cleanup | `dry-refactoring` | `dont-repeat-yourself` (see [DRY guide](dry-refactoring.md)) |
 | Skill authoring | `skill-creator` | Existing skill references as needed |
 
 Load the smallest relevant set. Java tasks should not inherit Express, Next.js, Supabase or React implementation patterns simply because a generic backend skill is installed.
