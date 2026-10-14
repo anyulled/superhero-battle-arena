@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.barcelonajug.superherobattlearena.domain.MatchType;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.jspecify.annotations.Nullable;
 
@@ -28,7 +29,10 @@ public record MatchDto(
         @Nullable UUID winnerTeam,
     @Schema(description = "Current status of the match", example = "COMPLETED") MatchStatus status,
     @Schema(description = "Detailed JSON result of the match simulation")
-        @Nullable MatchResultDto resultJson) {
+        @Nullable MatchResultDto resultJson,
+    @Schema(description = "Stage type of the match", example = "KNOCKOUT") MatchType matchType,
+    @Schema(description = "Position in the round bracket tree", example = "0")
+        @Nullable Integer bracketPosition) {
   public static MatchDto from(Match value) {
     return new MatchDto(
         value.getMatchId(),
@@ -38,7 +42,9 @@ public record MatchDto(
         value.getTeamB(),
         value.getWinnerTeam(),
         value.getStatus(),
-        matchResultFrom(value.getResultJson()));
+        matchResultFrom(value.getResultJson()),
+        value.getMatchType(),
+        value.getBracketPosition());
   }
 
   private static @Nullable MatchResultDto matchResultFrom(@Nullable MatchResult value) {

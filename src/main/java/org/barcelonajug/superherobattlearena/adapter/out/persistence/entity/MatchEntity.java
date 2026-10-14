@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.barcelonajug.superherobattlearena.domain.MatchType;
 import org.barcelonajug.superherobattlearena.domain.json.MatchResult;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -48,6 +49,13 @@ public class MatchEntity {
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "result_json")
   private @Nullable MatchResult resultJson;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "match_type", nullable = false)
+  private MatchType matchType = MatchType.KNOCKOUT;
+
+  @Column(name = "bracket_position")
+  private @Nullable Integer bracketPosition;
 
   public UUID getMatchId() {
     return matchId;
@@ -111,5 +119,21 @@ public class MatchEntity {
 
   public void setResultJson(@Nullable MatchResult resultJson) {
     this.resultJson = resultJson;
+  }
+
+  public MatchType getMatchType() {
+    return matchType;
+  }
+
+  public void setMatchType(MatchType matchType) {
+    this.matchType = matchType;
+  }
+
+  public @Nullable Integer getBracketPosition() {
+    return bracketPosition;
+  }
+
+  public void setBracketPosition(@Nullable Integer bracketPosition) {
+    this.bracketPosition = bracketPosition;
   }
 }

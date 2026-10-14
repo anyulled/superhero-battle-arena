@@ -100,27 +100,29 @@ $(document).ready(function () {
             });
         }
 
-        let finalMatch = null;
-        let thirdPlaceMatch = null;
+        let finalMatch = round4Matches.find(m => m.matchType === 'FINAL');
+        let thirdPlaceMatch = round4Matches.find(m => m.matchType === 'THIRD_PLACE');
 
-        if (round4Matches.length > 0) {
+        if (!finalMatch && round4Matches.length > 0) {
             if (sfWinners.length >= 2) {
                 finalMatch = round4Matches.find(m =>
                     (m.teamA === sfWinners[0] && m.teamB === sfWinners[1]) ||
                     (m.teamA === sfWinners[1] && m.teamB === sfWinners[0])
                 );
             }
+            if (!finalMatch) {
+                finalMatch = round4Matches[0];
+            }
+        }
+
+        if (!thirdPlaceMatch && round4Matches.length > 1) {
             if (sfLosers.length >= 2) {
                 thirdPlaceMatch = round4Matches.find(m =>
                     (m.teamA === sfLosers[0] && m.teamB === sfLosers[1]) ||
                     (m.teamA === sfLosers[1] && m.teamB === sfLosers[0])
                 );
             }
-
-            if (!finalMatch && round4Matches.length > 0) {
-                finalMatch = round4Matches[0];
-            }
-            if (!thirdPlaceMatch && round4Matches.length > 1) {
+            if (!thirdPlaceMatch) {
                 thirdPlaceMatch = round4Matches[1];
             }
         }
@@ -129,10 +131,11 @@ $(document).ready(function () {
     }
 
     function renderBracket() {
-        const round1Matches = allMatches.filter(m => m.roundNo === 1);
-        const round2Matches = allMatches.filter(m => m.roundNo === 2);
-        const round3Matches = allMatches.filter(m => m.roundNo === 3);
-        const round4Matches = allMatches.filter(m => m.roundNo === 4);
+        const sortByBracket = (a, b) => (a.bracketPosition ?? 0) - (b.bracketPosition ?? 0);
+        const round1Matches = allMatches.filter(m => m.roundNo === 1).sort(sortByBracket);
+        const round2Matches = allMatches.filter(m => m.roundNo === 2).sort(sortByBracket);
+        const round3Matches = allMatches.filter(m => m.roundNo === 3).sort(sortByBracket);
+        const round4Matches = allMatches.filter(m => m.roundNo === 4).sort(sortByBracket);
 
         updateStepper(round1Matches, round2Matches, round3Matches, round4Matches);
 

@@ -9,12 +9,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import org.barcelonajug.superherobattlearena.application.port.out.EliminationRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.Team;
+import org.barcelonajug.superherobattlearena.domain.exception.TeamEliminatedException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.jspecify.annotations.Nullable;
@@ -31,14 +33,17 @@ public class RoundUseCase {
   private final RoundRepositoryPort roundRepository;
   private final SubmissionRepositoryPort submissionRepository;
   private final TeamRepositoryPort teamRepository;
+  private final EliminationRepositoryPort eliminationRepository;
 
   public RoundUseCase(
       RoundRepositoryPort roundRepository,
       SubmissionRepositoryPort submissionRepository,
-      TeamRepositoryPort teamRepository) {
+      TeamRepositoryPort teamRepository,
+      EliminationRepositoryPort eliminationRepository) {
     this.roundRepository = roundRepository;
     this.submissionRepository = submissionRepository;
     this.teamRepository = teamRepository;
+    this.eliminationRepository = eliminationRepository;
   }
 
   public Optional<RoundSpec> getRoundSpec(Integer roundNo, @Nullable UUID sessionId) {
@@ -72,6 +77,12 @@ public class RoundUseCase {
       if (round.isEmpty()) {
         throw new IllegalArgumentException(
             "Round " + roundNo + " does not exist in session " + team.sessionId());
+      }
+
+      if (team.sessionId() != null
+          && eliminationRepository.isEliminated(team.sessionId(), teamId)) {
+        log.warn("Eliminated team attempted submission - teamId={}, roundNo={}", teamId, roundNo);
+        throw new TeamEliminatedException(teamId, roundNo);
       }
 
       if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {

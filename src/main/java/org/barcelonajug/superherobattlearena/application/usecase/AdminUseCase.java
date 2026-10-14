@@ -3,6 +3,8 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.barcelonajug.superherobattlearena.application.port.out.EliminationRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -17,10 +20,13 @@ import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositor
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
+import org.barcelonajug.superherobattlearena.domain.Elimination;
+import org.barcelonajug.superherobattlearena.domain.EliminationReason;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.barcelonajug.superherobattlearena.domain.MatchType;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.Session;
@@ -53,6 +59,7 @@ public class AdminUseCase {
   private final FatigueUseCase fatigueUseCase;
   private final TeamRepositoryPort teamRepository;
   private final HeroUsageRepositoryPort heroUsageRepository;
+  private final EliminationRepositoryPort eliminationRepository;
 
   public AdminUseCase(
       final SessionRepositoryPort sessionRepository,
@@ -65,7 +72,8 @@ public class AdminUseCase {
       final BattleEngineUseCase battleEngineUseCase,
       final FatigueUseCase fatigueUseCase,
       final TeamRepositoryPort teamRepository,
-      final HeroUsageRepositoryPort heroUsageRepository) {
+      final HeroUsageRepositoryPort heroUsageRepository,
+      final EliminationRepositoryPort eliminationRepository) {
     this.sessionRepository = sessionRepository;
     this.sessionUseCase = sessionUseCase;
     this.roundRepository = roundRepository;
@@ -77,11 +85,13 @@ public class AdminUseCase {
     this.fatigueUseCase = fatigueUseCase;
     this.teamRepository = teamRepository;
     this.heroUsageRepository = heroUsageRepository;
+    this.eliminationRepository = eliminationRepository;
   }
 
   @Transactional
   public void resetDatabase() {
     log.info("Resetting database to initial state...");
+    eliminationRepository.deleteAll();
     matchEventRepository.deleteAll();
     matchRepository.deleteAll();
     heroUsageRepository.deleteAll();
@@ -304,6 +314,7 @@ public class AdminUseCase {
                 result.totalTurns(),
                 0));
         matchRepository.save(match);
+        recordEliminationOnMatchEnd(match);
 
         final AtomicInteger seq = new AtomicInteger(1);
         final List<MatchEvent> matchEvents =
@@ -325,5 +336,28 @@ public class AdminUseCase {
       }
     }
     return successCount;
+  }
+
+  private void recordEliminationOnMatchEnd(final Match match) {
+    if (match.getSessionId() == null || match.getWinnerTeam() == null) {
+      return;
+    }
+    final UUID loserTeamId = match.loserTeam().orElse(null);
+    if (loserTeamId == null) {
+      return;
+    }
+    final List<Match> roundMatches =
+        matchRepository.findByRoundNoAndSessionId(match.getRoundNo(), match.getSessionId());
+    final boolean isSemifinal =
+        match.getMatchType() == MatchType.KNOCKOUT && roundMatches.size() == 2;
+    if (!isSemifinal) {
+      eliminationRepository.save(
+          new Elimination(
+              loserTeamId,
+              match.getSessionId(),
+              match.getRoundNo(),
+              EliminationReason.LOST_MATCH,
+              OffsetDateTime.now(ZoneOffset.UTC)));
+    }
   }
 }

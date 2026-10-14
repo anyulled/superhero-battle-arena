@@ -135,6 +135,21 @@ class DomainCoverageTest {
     assertThat(match.getTeamB()).isEqualTo(teamA);
     assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
     assertThat(match.getWinnerTeam()).isEqualTo(teamB);
+
+    match.setMatchType(MatchType.FINAL);
+    match.setBracketPosition(0);
+    assertThat(match.getMatchType()).isEqualTo(MatchType.FINAL);
+    assertThat(match.getBracketPosition()).isZero();
+    assertThat(match.loserTeam()).contains(teamA);
+
+    match.setWinnerTeam(teamB.equals(match.getTeamA()) ? match.getTeamB() : match.getTeamA());
+    assertThat(match.loserTeam()).contains(teamB);
+
+    match.setWinnerTeam(null);
+    assertThat(match.loserTeam()).isEmpty();
+
+    match.setStatus(MatchStatus.PENDING);
+    assertThat(match.loserTeam()).isEmpty();
   }
 
   @Test

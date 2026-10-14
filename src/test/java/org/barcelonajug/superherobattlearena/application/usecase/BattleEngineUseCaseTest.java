@@ -2,9 +2,12 @@ package org.barcelonajug.superherobattlearena.application.usecase;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 import org.barcelonajug.superherobattlearena.application.usecase.BattleEngineUseCase.BattleHeroUseCase;
 import org.barcelonajug.superherobattlearena.domain.Hero;
@@ -209,8 +212,7 @@ class BattleEngineUseCaseTest {
   }
 
   @Test
-  void simulate_shouldDrawIfExceedsMaxTurns() {
-    // Two heroes that deal 1 damage to each other but have 1000 health.
+  void simulate_shouldResolveWinnerViaTiebreakIfExceedsMaxTurns() {
     Hero heroA =
         Hero.builder()
             .id(1)
@@ -234,8 +236,121 @@ class BattleEngineUseCaseTest {
         battleEngineUseCase.simulate(
             UUID.randomUUID(), List.of(heroA), List.of(heroB), 1L, teamAId, teamBId, spec);
 
-    assertThat(result.winnerTeamId()).isNull(); // Draw
-    assertThat(result.totalTurns()).isEqualTo(50); // Reached MAX_TURNS
+    assertThat(result.winnerTeamId()).isNotNull();
+    assertThat(result.totalTurns()).isEqualTo(50);
+  }
+
+  @Test
+  void resolveTieBreak_shouldPickTeamWithMoreAliveMembers() {
+    Hero hero1 = HeroMother.aStandardHero();
+    Hero hero2 = HeroMother.aStandardHero();
+    Hero hero3 = HeroMother.aStandardHero();
+
+    BattleHeroUseCase bh1 = new BattleHeroUseCase(hero1, teamAId);
+    BattleHeroUseCase bh2 = new BattleHeroUseCase(hero2, teamAId);
+    BattleHeroUseCase bh3 = new BattleHeroUseCase(hero3, teamBId);
+
+    UUID winner =
+        battleEngineUseCase.resolveTieBreak(
+            List.of(bh1, bh2, bh3), teamAId, teamBId, new Random(1L));
+
+    assertThat(winner).isEqualTo(teamAId);
+  }
+
+  @Test
+  void resolveTieBreak_withDeadHeroes_shouldIgnoreDeadHeroes() {
+    Hero hero1 = HeroMother.aStandardHero();
+    Hero hero2 = HeroMother.aStandardHero();
+    Hero hero3 = HeroMother.aStandardHero();
+    Hero hero4 = HeroMother.aStandardHero();
+
+    BattleHeroUseCase bhAliveA = new BattleHeroUseCase(hero1, teamAId);
+    bhAliveA.currentHp = 100;
+    BattleHeroUseCase bhDeadA = new BattleHeroUseCase(hero2, teamAId);
+    bhDeadA.currentHp = 0;
+
+    BattleHeroUseCase bhAliveB = new BattleHeroUseCase(hero3, teamBId);
+    bhAliveB.currentHp = 50;
+    BattleHeroUseCase bhDeadB = new BattleHeroUseCase(hero4, teamBId);
+    bhDeadB.currentHp = 0;
+
+    UUID winner =
+        battleEngineUseCase.resolveTieBreak(
+            List.of(bhAliveA, bhDeadA, bhAliveB, bhDeadB), teamAId, teamBId, new Random(1L));
+
+    assertThat(winner).isEqualTo(teamAId);
+  }
+
+  @Test
+  void resolveTieBreak_shouldPickTeamWithMoreRemainingHp_whenAliveCountIsEqual() {
+    Hero hero1 = HeroMother.aStandardHero();
+    Hero hero2 = HeroMother.aStandardHero();
+
+    BattleHeroUseCase bh1 = new BattleHeroUseCase(hero1, teamAId);
+    bh1.currentHp = 100;
+    BattleHeroUseCase bh2 = new BattleHeroUseCase(hero2, teamBId);
+    bh2.currentHp = 50;
+
+    UUID winner =
+        battleEngineUseCase.resolveTieBreak(List.of(bh1, bh2), teamAId, teamBId, new Random(1L));
+
+    assertThat(winner).isEqualTo(teamAId);
+  }
+
+  @Test
+  void resolveTieBreak_shouldPickTeamB_whenTeamBHasMoreAliveMembers() {
+    Hero hero1 = HeroMother.aStandardHero();
+    Hero hero2 = HeroMother.aStandardHero();
+    Hero hero3 = HeroMother.aStandardHero();
+
+    BattleHeroUseCase bh1 = new BattleHeroUseCase(hero1, teamAId);
+    BattleHeroUseCase bh2 = new BattleHeroUseCase(hero2, teamBId);
+    BattleHeroUseCase bh3 = new BattleHeroUseCase(hero3, teamBId);
+
+    UUID winner =
+        battleEngineUseCase.resolveTieBreak(
+            List.of(bh1, bh2, bh3), teamAId, teamBId, new Random(1L));
+
+    assertThat(winner).isEqualTo(teamBId);
+  }
+
+  @Test
+  void resolveTieBreak_shouldPickTeamB_whenAliveCountIsEqualAndTeamBHasMoreHp() {
+    Hero hero1 = HeroMother.aStandardHero();
+    Hero hero2 = HeroMother.aStandardHero();
+
+    BattleHeroUseCase bh1 = new BattleHeroUseCase(hero1, teamAId);
+    bh1.currentHp = 40;
+    BattleHeroUseCase bh2 = new BattleHeroUseCase(hero2, teamBId);
+    bh2.currentHp = 90;
+
+    UUID winner =
+        battleEngineUseCase.resolveTieBreak(List.of(bh1, bh2), teamAId, teamBId, new Random(1L));
+
+    assertThat(winner).isEqualTo(teamBId);
+  }
+
+  @Test
+  void resolveTieBreak_shouldPickDeterministically_whenAliveCountAndHpAreEqual() {
+    Hero hero1 = HeroMother.aStandardHero();
+    Hero hero2 = HeroMother.aStandardHero();
+
+    BattleHeroUseCase bh1 = new BattleHeroUseCase(hero1, teamAId);
+    bh1.currentHp = 100;
+    BattleHeroUseCase bh2 = new BattleHeroUseCase(hero2, teamBId);
+    bh2.currentHp = 100;
+
+    Random randomTrue = mock(Random.class);
+    when(randomTrue.nextBoolean()).thenReturn(true);
+    UUID winnerA =
+        battleEngineUseCase.resolveTieBreak(List.of(bh1, bh2), teamAId, teamBId, randomTrue);
+    assertThat(winnerA).isEqualTo(teamAId);
+
+    Random randomFalse = mock(Random.class);
+    when(randomFalse.nextBoolean()).thenReturn(false);
+    UUID winnerB =
+        battleEngineUseCase.resolveTieBreak(List.of(bh1, bh2), teamAId, teamBId, randomFalse);
+    assertThat(winnerB).isEqualTo(teamBId);
   }
 
   @Test

@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import org.barcelonajug.superherobattlearena.application.port.out.EliminationRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.HeroUsageRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchRepositoryPort;
@@ -23,9 +25,11 @@ import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositor
 import org.barcelonajug.superherobattlearena.application.port.out.SessionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
+import org.barcelonajug.superherobattlearena.domain.Elimination;
 import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
+import org.barcelonajug.superherobattlearena.domain.MatchType;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
@@ -36,6 +40,7 @@ import org.barcelonajug.superherobattlearena.domain.mother.MatchMother;
 import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
 import org.barcelonajug.superherobattlearena.domain.mother.SessionMother;
 import org.barcelonajug.superherobattlearena.domain.mother.SubmissionMother;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -54,6 +59,7 @@ class AdminUseCaseTest {
   private TeamRepositoryPort teamRepository;
   private HeroUsageRepositoryPort heroUsageRepository;
   private SessionUseCase sessionUseCase;
+  private EliminationRepositoryPort eliminationRepository;
   private AdminUseCase adminUseCase;
 
   @BeforeEach
@@ -69,6 +75,7 @@ class AdminUseCaseTest {
     teamRepository = mock(TeamRepositoryPort.class);
     heroUsageRepository = mock(HeroUsageRepositoryPort.class);
     sessionUseCase = mock(SessionUseCase.class);
+    eliminationRepository = mock(EliminationRepositoryPort.class);
 
     adminUseCase =
         new AdminUseCase(
@@ -82,7 +89,8 @@ class AdminUseCaseTest {
             battleEngineUseCase,
             fatigueUseCase,
             teamRepository,
-            heroUsageRepository);
+            heroUsageRepository,
+            eliminationRepository);
   }
 
   @Test
@@ -93,6 +101,7 @@ class AdminUseCaseTest {
     // Then
     InOrder inOrder =
         inOrder(
+            eliminationRepository,
             matchEventRepository,
             matchRepository,
             heroUsageRepository,
@@ -101,6 +110,7 @@ class AdminUseCaseTest {
             teamRepository,
             sessionRepository);
 
+    inOrder.verify(eliminationRepository).deleteAll();
     inOrder.verify(matchEventRepository).deleteAll();
     inOrder.verify(matchRepository).deleteAll();
     inOrder.verify(heroUsageRepository).deleteAll();
@@ -203,7 +213,30 @@ class AdminUseCaseTest {
     Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
     match.setMatchId(matchId);
 
+    setupBattleSimulation(sessionId, teamA, teamB, teamA);
     when(matchRepository.findAll()).thenReturn(List.of(match));
+
+    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+
+    verify(matchRepository).save(match);
+    assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
+    assertThat(result)
+        .containsEntry("total", 1)
+        .containsEntry("successCount", 1)
+        .containsKey("durationMs");
+
+    Long duration = (Long) result.get("durationMs");
+    assertThat(duration).isNotNull().isNotNegative();
+
+    @SuppressWarnings("unchecked")
+    List<UUID> matchIds = (List<UUID>) result.get("matchIds");
+    assertThat(matchIds).hasSize(1).contains(matchId);
+
+    verify(fatigueUseCase).recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 1);
+  }
+
+  private void setupBattleSimulation(
+      UUID sessionId, UUID teamA, UUID teamB, @Nullable UUID winnerTeam) {
     Round round = new Round();
     round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
@@ -232,27 +265,46 @@ class AdminUseCaseTest {
     when(matchUseCase.getBattleTeam(eq(teamA), any(), anyInt())).thenReturn(List.of(heroA));
     when(matchUseCase.getBattleTeam(eq(teamB), any(), anyInt())).thenReturn(List.of(heroB));
 
-    SimulationResult simResult = new SimulationResult(teamA, 10, List.of());
+    SimulationResult simResult = new SimulationResult(winnerTeam, 10, List.of());
     when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
         .thenReturn(simResult);
+  }
 
-    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+  @Test
+  void runAllBattles_shouldNotEliminateLoser_whenSemifinalMatch() {
+    UUID sessionId = UUID.randomUUID();
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    UUID matchId = UUID.randomUUID();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+    match.setMatchId(matchId);
+    match.setMatchType(MatchType.KNOCKOUT);
 
-    verify(matchRepository).save(match);
-    assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
-    assertThat(result)
-        .containsEntry("total", 1)
-        .containsEntry("successCount", 1)
-        .containsKey("durationMs");
+    when(matchRepository.findAll()).thenReturn(List.of(match));
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
+        .thenReturn(List.of(match, mock(Match.class)));
+    setupBattleSimulation(sessionId, teamA, teamB, teamA);
 
-    Long duration = (Long) result.get("durationMs");
-    assertThat(duration).isNotNull().isNotNegative();
+    adminUseCase.runAllBattles(1, sessionId);
 
-    @SuppressWarnings("unchecked")
-    List<UUID> matchIds = (List<UUID>) result.get("matchIds");
-    assertThat(matchIds).hasSize(1).contains(matchId);
+    verify(eliminationRepository, times(0)).save(any(Elimination.class));
+  }
 
-    verify(fatigueUseCase).recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 1);
+  @Test
+  void runAllBattles_shouldNotEliminate_whenMatchIsDraw() {
+    UUID sessionId = UUID.randomUUID();
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    UUID matchId = UUID.randomUUID();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+    match.setMatchId(matchId);
+
+    when(matchRepository.findAll()).thenReturn(List.of(match));
+    setupBattleSimulation(sessionId, teamA, teamB, null);
+
+    adminUseCase.runAllBattles(1, sessionId);
+
+    verify(eliminationRepository, times(0)).save(any(Elimination.class));
   }
 
   @Test

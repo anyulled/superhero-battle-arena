@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.barcelonajug.superherobattlearena.application.port.out.EliminationRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.RoundRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.SubmissionRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.TeamRepositoryPort;
@@ -19,6 +20,7 @@ import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.Submission;
 import org.barcelonajug.superherobattlearena.domain.Team;
+import org.barcelonajug.superherobattlearena.domain.exception.TeamEliminatedException;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 import org.barcelonajug.superherobattlearena.domain.mother.RoundSpecMother;
@@ -35,6 +37,7 @@ class RoundUseCaseTest {
   @Mock private RoundRepositoryPort roundRepository;
   @Mock private SubmissionRepositoryPort submissionRepository;
   @Mock private TeamRepositoryPort teamRepository;
+  @Mock private EliminationRepositoryPort eliminationRepository;
 
   private RoundUseCase roundUseCase;
 
@@ -44,7 +47,9 @@ class RoundUseCaseTest {
 
   @BeforeEach
   void setUp() {
-    roundUseCase = new RoundUseCase(roundRepository, submissionRepository, teamRepository);
+    roundUseCase =
+        new RoundUseCase(
+            roundRepository, submissionRepository, teamRepository, eliminationRepository);
   }
 
   @Nested
@@ -87,6 +92,21 @@ class RoundUseCaseTest {
                       ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("does not exist in session");
+    }
+
+    @Test
+    void shouldThrow_whenTeamIsEliminated() {
+      Round round = roundWithSpec(3);
+      given(roundRepository.findBySessionIdAndRoundNo(SESSION_ID, ROUND_NO))
+          .willReturn(Optional.of(round));
+      given(eliminationRepository.isEliminated(SESSION_ID, TEAM_ID)).willReturn(true);
+
+      assertThatThrownBy(
+              () ->
+                  roundUseCase.submitTeam(
+                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+          .isInstanceOf(TeamEliminatedException.class)
+          .hasMessageContaining("has been eliminated");
     }
 
     @Test
