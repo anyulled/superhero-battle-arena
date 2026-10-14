@@ -6,9 +6,9 @@ This document describes how code duplication is monitored, managed, and resolved
 
 ## 1. Overview & Constraints
 
-This repository enforces strict code quality standards, including a zero-tolerance pre-commit hook on duplication:
+This repository enforces strict code quality standards, including a zero-tolerance duplication gate:
 - **Maximum Duplication Threshold:** $\le 10\%$.
-- **Pre-commit Hook:** Runs `npx jscpd --pattern "**/*.java" --ignore "**/.agents/**,**/.claude/**,**/.codex/**" --threshold 10`.
+- **Pre-Push Hook & CI:** Verified before push and in CI via `npm run lint:duplication` (defined in `.githooks/pre-push` and `.github/workflows/ci.yml`).
 - **Zero-Tolerance Rule:** Git hooks and linter configurations must **never** be bypassed or commented out.
 - **Rule on Comments:** No explanatory inline or doc comments (WHAT the code does); refactorings must remain self-documenting.
 
@@ -39,7 +39,7 @@ When resolving duplication, choose the pattern matching the clone type:
 | **Compose / Invert Dependency** | Type-3 (near-miss) | Shared skeleton with diverging steps handled via callbacks or strategies. |
 
 > [!IMPORTANT]
-> **Triage Before Refactoring:** Do not unify intentional boilerplate (such as independent DTOs, route declarations, or standard model constructors). Refactorings must produce clear, meaningful abstractions.
+> **Triage Before Refactoring:** Do not unify intentional boilerplate (such as independent DTOs, route declarations, or standard model constructors). Any refactoring must produce clear, meaningful abstractions.
 
 ---
 
@@ -47,7 +47,7 @@ When resolving duplication, choose the pattern matching the clone type:
 
 When invoked or tasked with resolving duplication, the agent follows this sequence:
 
-1. **Locate Hotspots:**
+1. **Locate hotspots:**
    Run `jscpd` with AI reporter and summary to find the files with the highest duplication percentage (`dup%`):
    ```bash
    npx jscpd --reporters ai --summary src/
@@ -57,9 +57,9 @@ When invoked or tasked with resolving duplication, the agent follows this sequen
 3. **Apply Clean Refactoring:**
    Extract shared logic to a common helper, base test class, or utility according to hexagonal architecture boundaries.
 4. **Verify Duplication Metric:**
-   Re-run the exact command used in the pre-commit hook to verify the duplication percentage dropped:
+   Run the project duplication check:
    ```bash
-   npx jscpd --pattern "**/*.java" --ignore "**/.agents/**,**/.claude/**,**/.codex/**" --threshold 10
+   npm run lint:duplication
    ```
 5. **Verify Build and Formatting:**
    Ensure no regressions in code style or tests:
@@ -73,8 +73,8 @@ When invoked or tasked with resolving duplication, the agent follows this sequen
 ## 5. Quick Commands Reference
 
 ```bash
-# Check duplication against pre-commit rule
-npx jscpd --pattern "**/*.java" --ignore "**/.agents/**,**/.claude/**,**/.codex/**" --threshold 10
+# Check duplication via project script
+npm run lint:duplication
 
 # AI-optimized summary report (ranked hotspots)
 npx jscpd --reporters ai --summary src/

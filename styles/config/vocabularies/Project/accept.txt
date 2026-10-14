@@ -15,11 +15,16 @@ Supabase
 Testcontainers
 Vonage
 codecov
+cyclomatic
 frontmatter
+(?i)hotspots?
 initializer
+initializers
 jQuery
 jq
+jscpd
 lockfile
 npm
+(?i)refactoring(s)?
 subagents
 validator
