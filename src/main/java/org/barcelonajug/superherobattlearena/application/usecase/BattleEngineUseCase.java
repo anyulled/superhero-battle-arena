@@ -23,6 +23,10 @@ public class BattleEngineUseCase {
   private static final int MAX_TURNS = 50;
   private static final double DAMAGE_DEF_FACTOR = 0.6;
 
+  /**
+   * Simulates a battle using randomness seeded by the round and match. Battles still undecided
+   * after fifty turns use the tiebreaker to select a winner.
+   */
   public SimulationResult simulate(
       UUID matchId,
       List<Hero> teamAHeroes,
@@ -279,6 +283,10 @@ public class BattleEngineUseCase {
         .noneMatch(BattleHeroUseCase::isAlive);
   }
 
+  /**
+   * Selects the team with more living heroes, then more remaining HP among living heroes. Equal
+   * counts and HP are resolved using the supplied random generator.
+   */
   UUID resolveTieBreak(
       List<BattleHeroUseCase> allHeroes, UUID teamAId, UUID teamBId, Random random) {
     long teamAAlive =

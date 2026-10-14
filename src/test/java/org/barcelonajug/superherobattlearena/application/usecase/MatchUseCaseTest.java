@@ -56,6 +56,7 @@ class MatchUseCaseTest {
   private EliminationRepositoryPort eliminationRepository;
   private MatchUseCase matchUseCase;
 
+  /** Creates the match use case with isolated dependencies and a default seeded round. */
   @BeforeEach
   void setUp() {
     submissionRepository = mock(SubmissionRepositoryPort.class);
@@ -103,6 +104,7 @@ class MatchUseCaseTest {
     verify(matchRepository).saveAll(anyList());
   }
 
+  /** Verifies that repeated auto-matching returns existing matches without saving duplicates. */
   @Test
   void autoMatch_shouldBeIdempotent_whenCalledMultipleTimes() {
     UUID sessionId = UUID.randomUUID();
@@ -130,6 +132,7 @@ class MatchUseCaseTest {
     verify(matchRepository, times(1)).saveAll(anyList());
   }
 
+  /** Verifies that a first-round field whose size is not a power of two is rejected. */
   @Test
   void autoMatch_shouldThrow_whenTeamCountIsNotPowerOfTwo() {
     UUID sessionId = UUID.randomUUID();
@@ -145,6 +148,7 @@ class MatchUseCaseTest {
         .hasMessageContaining("power of two");
   }
 
+  /** Verifies final and third-place pairings and positions from two completed semifinals. */
   @Test
   void autoMatch_shouldCreateFinalAndThirdPlaceMatches_whenFourTeamsInFinalStage() {
     UUID sessionId = UUID.randomUUID();
@@ -213,6 +217,7 @@ class MatchUseCaseTest {
     assertThat(thirdPlace.getBracketPosition()).isEqualTo(1);
   }
 
+  /** Creates four completed matches with ordered bracket positions and the supplied winners. */
   private List<Match> createFourCompletedMatches(UUID sessionId, int roundNo, List<UUID> winners) {
     List<Match> matches = new ArrayList<>();
     for (int i = 0; i < 4; i++) {
@@ -231,6 +236,7 @@ class MatchUseCaseTest {
     return matches;
   }
 
+  /** Verifies that adjacent winners advance to pending knockout matches in bracket order. */
   @Test
   void autoMatch_round2_knockout_with8Teams_shouldPairWinners() {
     UUID sessionId = UUID.randomUUID();
@@ -276,6 +282,7 @@ class MatchUseCaseTest {
     assertThat(k1.getStatus()).isEqualTo(MatchStatus.PENDING);
   }
 
+  /** Verifies that missing submissions yield walkover winners and elimination records. */
   @Test
   void autoMatch_round2_walkovers_shouldHandleMissingSubmissions() {
     UUID sessionId = UUID.randomUUID();
@@ -319,6 +326,7 @@ class MatchUseCaseTest {
     verify(eliminationRepository, times(2)).save(any(Elimination.class));
   }
 
+  /** Verifies that matches are cancelled when neither advancing team submitted a squad. */
   @Test
   void autoMatch_round2_walkover_bothMissingSubmissions_shouldCancelMatch() {
     UUID sessionId = UUID.randomUUID();
@@ -346,6 +354,7 @@ class MatchUseCaseTest {
     assertThat(created.get(1).getStatus()).isEqualTo(MatchStatus.CANCELLED);
   }
 
+  /** Verifies that auto-matching rejects a missing previous round. */
   @Test
   void autoMatch_round2_shouldThrow_whenPreviousMatchesEmpty() {
     UUID sessionId = UUID.randomUUID();
@@ -359,6 +368,7 @@ class MatchUseCaseTest {
         .hasMessageContaining("Previous round matches not found for round 1");
   }
 
+  /** Verifies that auto-matching rejects unfinished previous matches. */
   @Test
   void autoMatch_round2_shouldThrow_whenPreviousMatchesNotAllCompleted() {
     UUID sessionId = UUID.randomUUID();
@@ -382,6 +392,7 @@ class MatchUseCaseTest {
         .hasMessageContaining("Previous round matches must be completed");
   }
 
+  /** Verifies that auto-matching rejects progression after a single completed final. */
   @Test
   void autoMatch_round3_shouldThrow_whenTournamentAlreadyCompleted() {
     UUID sessionId = UUID.randomUUID();
@@ -406,6 +417,7 @@ class MatchUseCaseTest {
         .hasMessageContaining("Tournament already completed");
   }
 
+  /** Verifies that an odd first-round team count is rejected. */
   @Test
   void autoMatch_round1_withOddOrZeroTeams_shouldThrow() {
     UUID sessionId = UUID.randomUUID();
@@ -440,6 +452,7 @@ class MatchUseCaseTest {
         .hasMessageContaining("power of two");
   }
 
+  /** Verifies that two teams with no round seed produce a final resolved by walkover. */
   @Test
   void autoMatch_round1_withTwoTeams_andNullSeed_shouldCreateFinalMatch() {
     UUID sessionId = UUID.randomUUID();
@@ -485,6 +498,7 @@ class MatchUseCaseTest {
     verify(matchRepository).save(any(Match.class));
   }
 
+  /** Verifies that running a match persists its simulation result and events. */
   @Test
   void runMatch_shouldExecuteSimulationAndSaveResult() {
     // Given
@@ -580,6 +594,7 @@ class MatchUseCaseTest {
     assertThat(result).isEqualTo("DRAW");
   }
 
+  /** Verifies that running a semifinal preserves the losing team for third place. */
   @Test
   void runMatch_shouldNotEliminateLoser_whenSemifinalMatch() {
     UUID matchId = UUID.randomUUID();

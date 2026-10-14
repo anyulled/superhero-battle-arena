@@ -1066,6 +1066,7 @@ class InitFixture implements Callable<Integer> {
     logger.info("=========================================");
   }
 
+  /** Runs the sixteen-team tournament through the championship and third-place matches. */
   private void runWorldCupTournament() throws Exception {
     printHeader("Starting World Cup Championship Tournament (October 27th Hackathon)");
 

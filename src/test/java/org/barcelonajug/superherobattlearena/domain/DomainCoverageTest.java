@@ -100,6 +100,7 @@ class DomainCoverageTest {
     assertThat(sub.getRejectedReason()).isEqualTo("Too many");
   }
 
+  /** Verifies match construction, mutable properties, and losing-team selection. */
   @Test
   void match() {
     UUID matchId = UUID.randomUUID();

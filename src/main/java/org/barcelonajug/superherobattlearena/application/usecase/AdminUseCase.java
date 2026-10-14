@@ -61,6 +61,7 @@ public class AdminUseCase {
   private final HeroUsageRepositoryPort heroUsageRepository;
   private final EliminationRepositoryPort eliminationRepository;
 
+  /** Creates the administrative use case with its tournament services and persistence ports. */
   public AdminUseCase(
       final SessionRepositoryPort sessionRepository,
       final SessionUseCase sessionUseCase,
@@ -88,6 +89,7 @@ public class AdminUseCase {
     this.eliminationRepository = eliminationRepository;
   }
 
+  /** Deletes tournament data in dependency order, including elimination records. */
   @Transactional
   public void resetDatabase() {
     log.info("Resetting database to initial state...");
@@ -262,6 +264,10 @@ public class AdminUseCase {
     }
   }
 
+  /**
+   * Simulates submitted pending matches and collects results, events, and hero usage. Matches with
+   * missing submissions or simulation failures are skipped.
+   */
   private int processPendingMatches(
       final List<Match> pendingMatches,
       final Round round,
@@ -338,6 +344,10 @@ public class AdminUseCase {
     return successCount;
   }
 
+  /**
+   * Records a completed match loser as eliminated when a session and winner are present. Semifinal
+   * losers remain eligible for the third-place match.
+   */
   private void recordEliminationOnMatchEnd(final Match match) {
     if (match.getSessionId() == null || match.getWinnerTeam() == null) {
       return;

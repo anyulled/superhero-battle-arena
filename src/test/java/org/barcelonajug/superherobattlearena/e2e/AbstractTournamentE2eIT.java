@@ -33,6 +33,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
 
   protected final ObjectMapper objectMapper = new ObjectMapper();
 
+  /** Starts a session through the admin API and returns its identifier. */
   protected UUID createSession() throws Exception {
     MvcResult result =
         mockMvc
@@ -47,6 +48,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return UUID.fromString(body.replace("\"", ""));
   }
 
+  /** Registers a named team and its members in a session and returns its identifier. */
   protected UUID registerTeam(String name, List<String> members, UUID sessionId) throws Exception {
     String membersParam = String.join(",", members);
     MvcResult result =
@@ -64,6 +66,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return UUID.fromString(body.replace("\"", ""));
   }
 
+  /** Creates a standard test round through the admin API and returns its round number. */
   protected int createRound(UUID sessionId) throws Exception {
     RoundSpec spec =
         new RoundSpec(
@@ -96,6 +99,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return Integer.parseInt(result.getResponse().getContentAsString().trim());
   }
 
+  /** Submits the specified squad and strategy, asserting that the API accepts them. */
   protected void submitSquad(UUID teamId, int roundNo, List<Integer> heroIds, String strategy)
       throws Exception {
     DraftSubmission submission = new DraftSubmission(heroIds, strategy);
@@ -109,6 +113,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
         .andExpect(status().isOk());
   }
 
+  /** Asserts that the API can retrieve the team submission for the specified round. */
   protected void verifySubmissionExists(UUID teamId, int roundNo) throws Exception {
     mockMvc
         .perform(
@@ -116,6 +121,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
         .andExpect(status().isOk());
   }
 
+  /** Generates round matches through the admin API and returns their identifiers. */
   protected List<UUID> autoMatchTeams(UUID sessionId, int roundNo) throws Exception {
     MvcResult result =
         mockMvc
@@ -132,6 +138,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return extractUuidsFromArray(matchIds);
   }
 
+  /** Runs pending round battles through the admin API and returns the JSON result. */
   protected JsonNode runAllBattles(UUID sessionId, int roundNo) throws Exception {
     MvcResult result =
         mockMvc
@@ -147,6 +154,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return objectMapper.readTree(result.getResponse().getContentAsString());
   }
 
+  /** Fetches a match through the public API, asserting a successful response. */
   protected JsonNode getMatch(UUID matchId) throws Exception {
     MvcResult result =
         mockMvc
@@ -157,11 +165,13 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return objectMapper.readTree(result.getResponse().getContentAsString());
   }
 
+  /** Extracts the match identifier list from a batch battle response. */
   protected List<UUID> extractMatchIds(JsonNode battleResult) {
     JsonNode matchIdsNode = battleResult.get("matchIds");
     return extractUuidsFromArray(matchIdsNode);
   }
 
+  /** Parses a JSON array of UUID strings, returning an empty list for absent or non-array input. */
   protected List<UUID> extractUuidsFromArray(JsonNode arrayNode) {
     if (arrayNode == null || !arrayNode.isArray()) {
       return emptyList();
@@ -172,6 +182,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
         .toList();
   }
 
+  /** Fetches the session rounds through the public API, asserting a successful response. */
   protected JsonNode getRounds(UUID sessionId) throws Exception {
     MvcResult result =
         mockMvc
@@ -182,6 +193,7 @@ abstract class AbstractTournamentE2eIT extends PostgresTestContainerConfig {
     return objectMapper.readTree(result.getResponse().getContentAsString());
   }
 
+  /** Fetches the session round specification, asserting a successful response. */
   protected JsonNode getRoundSpec(UUID sessionId, int roundNo) throws Exception {
     MvcResult result =
         mockMvc

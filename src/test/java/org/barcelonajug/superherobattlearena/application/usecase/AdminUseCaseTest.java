@@ -62,6 +62,7 @@ class AdminUseCaseTest {
   private EliminationRepositoryPort eliminationRepository;
   private AdminUseCase adminUseCase;
 
+  /** Creates the administrative use case with isolated service and repository mocks. */
   @BeforeEach
   void setUp() {
     sessionRepository = mock(SessionRepositoryPort.class);
@@ -93,6 +94,7 @@ class AdminUseCaseTest {
             eliminationRepository);
   }
 
+  /** Verifies that database reset deletes all tournament data in dependency order. */
   @Test
   void resetDatabase_shouldDeleteAllDataInCorrectOrder() {
     // When
@@ -204,6 +206,7 @@ class AdminUseCaseTest {
     assertThat(result).containsEntry("total", 0);
   }
 
+  /** Verifies that batch execution completes pending matches and records their hero usage. */
   @Test
   void runAllBattles_shouldExecutePendingMatches() {
     UUID sessionId = UUID.randomUUID();
@@ -235,6 +238,7 @@ class AdminUseCaseTest {
     verify(fatigueUseCase).recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 1);
   }
 
+  /** Stubs a round, both squads, and a simulation with the requested winner or draw. */
   private void setupBattleSimulation(
       UUID sessionId, UUID teamA, UUID teamB, @Nullable UUID winnerTeam) {
     Round round = new Round();
@@ -270,6 +274,7 @@ class AdminUseCaseTest {
         .thenReturn(simResult);
   }
 
+  /** Verifies that batch execution keeps semifinal losers eligible for third place. */
   @Test
   void runAllBattles_shouldNotEliminateLoser_whenSemifinalMatch() {
     UUID sessionId = UUID.randomUUID();
@@ -290,6 +295,7 @@ class AdminUseCaseTest {
     verify(eliminationRepository, times(0)).save(any(Elimination.class));
   }
 
+  /** Verifies that batch execution records no elimination for a drawn match. */
   @Test
   void runAllBattles_shouldNotEliminate_whenMatchIsDraw() {
     UUID sessionId = UUID.randomUUID();

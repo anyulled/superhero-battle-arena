@@ -58,6 +58,7 @@ public class MatchUseCase {
   private final TeamRepositoryPort teamRepository;
   private final EliminationRepositoryPort eliminationRepository;
 
+  /** Creates the match use case with battle, tournament, and elimination dependencies. */
   public MatchUseCase(
       SubmissionRepositoryPort submissionRepository,
       MatchRepositoryPort matchRepository,
@@ -79,6 +80,11 @@ public class MatchUseCase {
     this.eliminationRepository = eliminationRepository;
   }
 
+  /**
+   * Returns existing round match identifiers or creates matches for the current bracket stage. The
+   * first round requires at least two teams and a power-of-two team count; later rounds require
+   * completed previous matches.
+   */
   public List<UUID> autoMatch(UUID sessionId, Integer roundNo) {
     MDC.put("roundNo", roundNo.toString());
     MDC.put("sessionId", sessionId.toString());
@@ -138,6 +144,10 @@ public class MatchUseCase {
     }
   }
 
+  /**
+   * Builds seeded first-round pairings for a power-of-two field of at least two teams. Teams
+   * without submissions are recorded as eliminated.
+   */
   private List<Match> createRoundOneMatches(
       UUID sessionId,
       Round round,
@@ -196,6 +206,10 @@ public class MatchUseCase {
     return matches;
   }
 
+  /**
+   * Builds the next bracket stage from completed previous matches ordered by bracket position.
+   * Missing or unfinished previous matches and a single remaining match are rejected.
+   */
   private List<Match> createSubsequentRoundMatches(
       UUID sessionId, int roundNo, Map<UUID, Submission> submissionMap) {
     List<Match> prevMatches = matchRepository.findByRoundNoAndSessionId(roundNo - 1, sessionId);
@@ -226,6 +240,10 @@ public class MatchUseCase {
     return createKnockoutMatches(sessionId, roundNo, sortedPrev, submissionMap);
   }
 
+  /**
+   * Pairs semifinal winners in the final and losers in the third-place match. Final-stage teams
+   * without submissions are recorded as eliminated.
+   */
   private List<Match> createFinalsStageMatches(
       UUID sessionId,
       int roundNo,
@@ -260,6 +278,7 @@ public class MatchUseCase {
     return List.of(grandFinal, thirdPlace);
   }
 
+  /** Pairs adjacent previous-match winners and records eliminations for missing submissions. */
   private List<Match> createKnockoutMatches(
       UUID sessionId, int roundNo, List<Match> prevMatches, Map<UUID, Submission> submissionMap) {
     int prevCount = prevMatches.size();
@@ -288,6 +307,10 @@ public class MatchUseCase {
     return matches;
   }
 
+  /**
+   * Builds a pending match when both teams submitted, a completed walkover when one submitted, or a
+   * cancelled match when neither submitted.
+   */
   private Match buildMatch(
       UUID sessionId,
       int roundNo,
@@ -343,6 +366,10 @@ public class MatchUseCase {
     return match.getMatchId();
   }
 
+  /**
+   * Runs a pending match and persists its result, elimination, events, and hero usage. Returns the
+   * winner identifier or DRAW; rejects matches that are no longer pending.
+   */
   public String runMatch(UUID matchId) {
     long startTime = System.currentTimeMillis();
     MDC.put("matchId", matchId.toString());
@@ -531,6 +558,10 @@ public class MatchUseCase {
     fatigueUseCase.recordUsage(teamId, roundNo, heroIds);
   }
 
+  /**
+   * Records a completed match loser as eliminated when a session and winner are present. Semifinal
+   * losers remain eligible for the third-place match.
+   */
   private void recordEliminationOnMatchEnd(Match match) {
     if (match.getSessionId() == null || match.getWinnerTeam() == null) {
       return;
