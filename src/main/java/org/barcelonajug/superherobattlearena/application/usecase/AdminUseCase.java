@@ -138,6 +138,13 @@ public class AdminUseCase {
         throw new IllegalStateException(
             "Session " + sessionId + " does not exist or is not active");
       }
+      final List<Round> existingRounds = roundRepository.findBySessionId(sessionId);
+      for (final Round existingRound : existingRounds) {
+        if (existingRound.getStatus() == RoundStatus.OPEN) {
+          existingRound.setStatus(RoundStatus.CLOSED);
+          roundRepository.save(existingRound);
+        }
+      }
 
       final Round round = new Round();
       round.setRoundId(UUID.randomUUID());
@@ -236,8 +243,10 @@ public class AdminUseCase {
 
       final long duration = System.currentTimeMillis() - startTime;
 
+      final List<Match> roundMatches =
+          matchRepository.findByRoundNoAndSessionId(roundNo, sessionId);
       final List<Match> remainingPending = matchRepository.findPendingMatches(roundNo, sessionId);
-      if (remainingPending.isEmpty()) {
+      if (!roundMatches.isEmpty() && remainingPending.isEmpty()) {
         round.setStatus(RoundStatus.CLOSED);
         roundRepository.save(round);
         log.info("Closed round {} for session {} as all matches are completed", roundNo, sessionId);

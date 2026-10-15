@@ -87,11 +87,30 @@ $(document).ready(function () {
      * Resolves final and third-place matches by type, falling back to semifinal participants and
      * list order for older match data.
      */
+    /**
+     * Resolves final and third-place matches by type, falling back to semifinal participants and
+     * list order for older match data.
+     */
     function resolveFinalMatches() {
-        const round3Matches = allMatches.filter(m => m.roundNo === 3);
-        const round4Matches = allMatches.filter(m => m.roundNo === 4);
+        let finalMatch = allMatches.find(m => m.matchType === 'FINAL');
+        let thirdPlaceMatch = allMatches.find(m => m.matchType === 'THIRD_PLACE');
 
-        const sfCompleted = round3Matches.filter(m => m.status === 'COMPLETED' && m.winnerTeam);
+        let totalStages = 4;
+        const round1Matches = allMatches.filter(m => m.roundNo === 1);
+        if (round1Matches.length > 0) {
+            if (round1Matches.length >= 8) totalStages = 4;
+            else if (round1Matches.length >= 4) totalStages = 3;
+            else totalStages = 2;
+        } else if (teamsList.length > 0) {
+            if (teamsList.length >= 16) totalStages = 4;
+            else if (teamsList.length >= 8) totalStages = 3;
+            else totalStages = 2;
+        }
+
+        const sfRoundNo = finalMatch ? (finalMatch.roundNo - 1) : (totalStages - 1);
+        const sfMatches = allMatches.filter(m => m.roundNo === sfRoundNo && m.matchType !== 'FINAL' && m.matchType !== 'THIRD_PLACE');
+
+        const sfCompleted = sfMatches.filter(m => m.status === 'COMPLETED' && m.winnerTeam);
         let sfWinners = [];
         let sfLosers = [];
 
@@ -104,34 +123,38 @@ $(document).ready(function () {
             });
         }
 
-        let finalMatch = round4Matches.find(m => m.matchType === 'FINAL');
-        let thirdPlaceMatch = round4Matches.find(m => m.matchType === 'THIRD_PLACE');
-
-        if (!finalMatch && round4Matches.length > 0) {
-            if (sfWinners.length >= 2) {
-                finalMatch = round4Matches.find(m =>
-                    (m.teamA === sfWinners[0] && m.teamB === sfWinners[1]) ||
-                    (m.teamA === sfWinners[1] && m.teamB === sfWinners[0])
-                );
-            }
-            if (!finalMatch) {
-                finalMatch = round4Matches[0];
-            }
-        }
-
-        if (!thirdPlaceMatch && round4Matches.length > 1) {
-            if (sfLosers.length >= 2) {
-                thirdPlaceMatch = round4Matches.find(m =>
-                    (m.teamA === sfLosers[0] && m.teamB === sfLosers[1]) ||
-                    (m.teamA === sfLosers[1] && m.teamB === sfLosers[0])
-                );
-            }
-            if (!thirdPlaceMatch) {
-                thirdPlaceMatch = round4Matches[1];
+        if (!finalMatch) {
+            const finalRoundMatches = allMatches.filter(m => m.roundNo === totalStages);
+            if (finalRoundMatches.length > 0) {
+                if (sfWinners.length >= 2) {
+                    finalMatch = finalRoundMatches.find(m =>
+                        (m.teamA === sfWinners[0] && m.teamB === sfWinners[1]) ||
+                        (m.teamA === sfWinners[1] && m.teamB === sfWinners[0])
+                    );
+                }
+                if (!finalMatch) {
+                    finalMatch = finalRoundMatches[0];
+                }
             }
         }
 
-        return { sfCompleted, finalMatch, thirdPlaceMatch };
+        if (!thirdPlaceMatch && finalMatch) {
+            const finalRoundMatches = allMatches.filter(m => m.roundNo === finalMatch.roundNo);
+            if (finalRoundMatches.length > 1) {
+                if (sfLosers.length >= 2) {
+                    thirdPlaceMatch = finalRoundMatches.find(m =>
+                        m.matchId !== finalMatch.matchId &&
+                        ((m.teamA === sfLosers[0] && m.teamB === sfLosers[1]) ||
+                         (m.teamA === sfLosers[1] && m.teamB === sfLosers[0]))
+                    );
+                }
+                if (!thirdPlaceMatch) {
+                    thirdPlaceMatch = finalRoundMatches.find(m => m.matchId !== finalMatch.matchId);
+                }
+            }
+        }
+
+        return { sfMatches, sfCompleted, finalMatch, thirdPlaceMatch, totalStages, sfRoundNo };
     }
 
     /**
@@ -140,43 +163,55 @@ $(document).ready(function () {
     function renderBracket() {
         /** Orders matches by bracket position, treating an unassigned position as zero. */
         const sortByBracket = (a, b) => (a.bracketPosition ?? 0) - (b.bracketPosition ?? 0);
-        const round1Matches = allMatches.filter(m => m.roundNo === 1).sort(sortByBracket);
-        const round2Matches = allMatches.filter(m => m.roundNo === 2).sort(sortByBracket);
-        const round3Matches = allMatches.filter(m => m.roundNo === 3).sort(sortByBracket);
-        const round4Matches = allMatches.filter(m => m.roundNo === 4).sort(sortByBracket);
+        const { sfMatches, sfCompleted, finalMatch, thirdPlaceMatch, totalStages } = resolveFinalMatches();
 
-        updateStepper(round1Matches, round2Matches, round3Matches, round4Matches);
+        let initialMatches = [];
+        let qfMatches = [];
+
+        if (totalStages === 4) {
+            initialMatches = allMatches.filter(m => m.roundNo === 1).sort(sortByBracket);
+            qfMatches = allMatches.filter(m => m.roundNo === 2).sort(sortByBracket);
+        } else if (totalStages === 3) {
+            qfMatches = allMatches.filter(m => m.roundNo === 1).sort(sortByBracket);
+        }
+
+        const sortedSfMatches = sfMatches.slice().sort(sortByBracket);
+        const finalMatches = [finalMatch, thirdPlaceMatch].filter(Boolean);
+
+        updateStepper(initialMatches, qfMatches, sortedSfMatches, finalMatches, totalStages);
 
         const colInitial = $('#colInitialMatches');
         colInitial.empty();
-        if (round1Matches.length === 0) {
+        if (totalStages < 4) {
+            renderEmptyStage(colInitial, `Format: ${teamsList.length || (totalStages === 3 ? 8 : 4)} Teams (Bypassed)`);
+        } else if (initialMatches.length === 0) {
             renderEmptyStage(colInitial, 'Waiting for Initial Round matchmaking...');
         } else {
-            round1Matches.forEach(m => colInitial.append(renderMatchCard(m, false)));
+            initialMatches.forEach(m => colInitial.append(renderMatchCard(m, false)));
         }
 
         const colQuarter = $('#colQuarterMatches');
         colQuarter.empty();
-        if (round2Matches.length === 0) {
-            renderEmptyStage(colQuarter, 'Quarter Finals will unlock after Round 1');
+        if (totalStages < 3) {
+            renderEmptyStage(colQuarter, `Format: ${teamsList.length || 4} Teams (Bypassed)`);
+        } else if (qfMatches.length === 0) {
+            renderEmptyStage(colQuarter, 'Quarter Finals will unlock after Initial Round');
         } else {
-            round2Matches.forEach(m => colQuarter.append(renderMatchCard(m, false)));
+            qfMatches.forEach(m => colQuarter.append(renderMatchCard(m, false)));
         }
 
         const colSemi = $('#colSemiMatches');
         colSemi.empty();
-        if (round3Matches.length === 0) {
-            renderEmptyStage(colSemi, 'Semifinals will unlock after Quarter Finals');
+        if (sortedSfMatches.length === 0) {
+            renderEmptyStage(colSemi, totalStages === 2 ? 'Waiting for Semifinals matchmaking...' : 'Semifinals will unlock after Quarter Finals');
         } else {
-            round3Matches.forEach(m => colSemi.append(renderMatchCard(m, true)));
+            sortedSfMatches.forEach(m => colSemi.append(renderMatchCard(m, true)));
         }
 
         const colFinal = $('#colFinalMatch');
         const colThird = $('#colThirdPlaceMatch');
         colFinal.empty();
         colThird.empty();
-
-        const { sfCompleted, finalMatch, thirdPlaceMatch } = resolveFinalMatches();
 
         if (finalMatch) {
             colFinal.html(renderMatchCard(finalMatch, true));
@@ -194,25 +229,28 @@ $(document).ready(function () {
         lucide.createIcons();
     }
 
-    function updateStepper(r1, r2, r3, r4) {
-        function setStep(id, matches) {
+    function updateStepper(initialMatches, qfMatches, sfMatches, finalMatches, totalStages) {
+        function setStep(id, matches, isBypassed) {
             const el = $(`#${id}`);
-            if (matches.length === 0) {
-                el.removeClass('border-green-500/50 bg-green-950/20 border-yellow-500/50 bg-yellow-950/20')
+            if (isBypassed) {
+                el.removeClass('border-green-500/50 bg-green-950/20 border-yellow-500/50 bg-yellow-950/20 opacity-60')
+                  .addClass('border-slate-800 bg-slate-900/30 opacity-40');
+            } else if (!matches || matches.length === 0) {
+                el.removeClass('border-green-500/50 bg-green-950/20 border-yellow-500/50 bg-yellow-950/20 border-slate-800 bg-slate-900/30 opacity-40')
                   .addClass('border-slate-700 bg-slate-900/50 opacity-60');
             } else if (matches.every(m => m.status === 'COMPLETED')) {
-                el.removeClass('border-slate-700 bg-slate-900/50 opacity-60 border-yellow-500/50 bg-yellow-950/20')
+                el.removeClass('border-slate-700 bg-slate-900/50 opacity-60 border-yellow-500/50 bg-yellow-950/20 border-slate-800 bg-slate-900/30 opacity-40')
                   .addClass('border-green-500/50 bg-green-950/20');
             } else {
-                el.removeClass('border-slate-700 bg-slate-900/50 opacity-60 border-green-500/50 bg-green-950/20')
+                el.removeClass('border-slate-700 bg-slate-900/50 opacity-60 border-green-500/50 bg-green-950/20 border-slate-800 bg-slate-900/30 opacity-40')
                   .addClass('border-yellow-500/50 bg-yellow-950/20');
             }
         }
 
-        setStep('step-initial', r1);
-        setStep('step-qf', r2);
-        setStep('step-sf', r3);
-        setStep('step-finals', r4);
+        setStep('step-initial', initialMatches, totalStages < 4);
+        setStep('step-qf', qfMatches, totalStages < 3);
+        setStep('step-sf', sfMatches, false);
+        setStep('step-finals', finalMatches, false);
     }
 
     function renderPodium(sfCompleted, finalMatch, thirdPlaceMatch) {
@@ -285,7 +323,7 @@ $(document).ready(function () {
             return;
         }
 
-        const { finalMatch, thirdPlaceMatch } = resolveFinalMatches();
+        const { sfMatches, finalMatch, thirdPlaceMatch } = resolveFinalMatches();
 
         teamsList.forEach(team => {
             const membersStr = (team.members && team.members.length > 0)
@@ -305,8 +343,9 @@ $(document).ready(function () {
                 (thirdPlaceMatch.teamA === team.teamId || thirdPlaceMatch.teamB === team.teamId) &&
                 thirdPlaceMatch.winnerTeam !== team.teamId;
 
-            const inFinals = allMatches.some(m => m.roundNo === 4 && (m.teamA === team.teamId || m.teamB === team.teamId));
-            const inSemis = allMatches.some(m => m.roundNo === 3 && (m.teamA === team.teamId || m.teamB === team.teamId));
+            const inFinals = (finalMatch && (finalMatch.teamA === team.teamId || finalMatch.teamB === team.teamId)) ||
+                (thirdPlaceMatch && (thirdPlaceMatch.teamA === team.teamId || thirdPlaceMatch.teamB === team.teamId));
+            const inSemis = sfMatches && sfMatches.some(m => m.teamA === team.teamId || m.teamB === team.teamId);
 
             if (isChampion) {
                 statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">🥇 Champion</span>';
@@ -317,7 +356,7 @@ $(document).ready(function () {
             } else if (isFourthPlace) {
                 statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-900/20 text-blue-300 border border-blue-600/30">4th Place</span>';
             } else if (inFinals) {
-                statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">Stage 4 Finalist</span>';
+                statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">Finalist</span>';
             } else if (inSemis) {
                 statusBadge = '<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">Top 4 Semifinalist</span>';
             } else if (teamMatches.length > 0) {

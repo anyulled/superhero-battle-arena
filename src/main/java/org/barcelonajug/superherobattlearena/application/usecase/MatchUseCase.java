@@ -218,8 +218,18 @@ public class MatchUseCase {
           "Previous round matches not found for round " + (roundNo - 1));
     }
 
+    boolean tournamentAlreadyFinished =
+        prevMatches.stream().anyMatch(m -> m.getMatchType() == MatchType.FINAL);
+    if (tournamentAlreadyFinished) {
+      throw new IllegalStateException("Tournament already completed at round " + (roundNo - 1));
+    }
+
     boolean allCompleted =
-        prevMatches.stream().allMatch(m -> m.getStatus() == MatchStatus.COMPLETED);
+        prevMatches.stream()
+            .allMatch(
+                m ->
+                    m.getStatus() == MatchStatus.COMPLETED
+                        || m.getStatus() == MatchStatus.CANCELLED);
     if (!allCompleted) {
       throw new IllegalStateException(
           "Previous round matches must be completed before auto-matching round " + roundNo);
@@ -251,11 +261,10 @@ public class MatchUseCase {
       Map<UUID, Submission> submissionMap) {
     Match sf0 = semifinalMatches.get(0);
     Match sf1 = semifinalMatches.get(1);
-
-    UUID winner0 = Objects.requireNonNull(sf0.getWinnerTeam());
-    UUID winner1 = Objects.requireNonNull(sf1.getWinnerTeam());
-    UUID loser0 = sf0.loserTeam().orElseThrow();
-    UUID loser1 = sf1.loserTeam().orElseThrow();
+    UUID winner0 = winnerOf(sf0);
+    UUID winner1 = winnerOf(sf1);
+    UUID loser0 = sf0.loserTeam().orElseGet(sf0::getTeamB);
+    UUID loser1 = sf1.loserTeam().orElseGet(sf1::getTeamB);
 
     List<UUID> allFinalsTeams = List.of(winner0, winner1, loser0, loser1);
     for (UUID teamId : allFinalsTeams) {
@@ -286,7 +295,7 @@ public class MatchUseCase {
     MatchType matchType = MatchType.KNOCKOUT;
 
     for (Match prev : prevMatches) {
-      UUID winner = Objects.requireNonNull(prev.getWinnerTeam());
+      UUID winner = winnerOf(prev);
       if (!submissionMap.containsKey(winner)) {
         eliminationRepository.save(
             new Elimination(
@@ -300,11 +309,17 @@ public class MatchUseCase {
 
     List<Match> matches = new ArrayList<>();
     for (int k = 0; k < nextCount; k++) {
-      UUID teamA = Objects.requireNonNull(prevMatches.get(2 * k).getWinnerTeam());
-      UUID teamB = Objects.requireNonNull(prevMatches.get(2 * k + 1).getWinnerTeam());
+      Match matchA = prevMatches.get(2 * k);
+      Match matchB = prevMatches.get(2 * k + 1);
+      UUID teamA = winnerOf(matchA);
+      UUID teamB = winnerOf(matchB);
       matches.add(buildMatch(sessionId, roundNo, teamA, teamB, matchType, k, submissionMap));
     }
     return matches;
+  }
+
+  private UUID winnerOf(Match match) {
+    return Objects.requireNonNullElseGet(match.getWinnerTeam(), match::getTeamA);
   }
 
   /**

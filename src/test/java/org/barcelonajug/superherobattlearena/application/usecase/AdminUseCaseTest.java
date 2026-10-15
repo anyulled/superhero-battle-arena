@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +32,7 @@ import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.MatchType;
 import org.barcelonajug.superherobattlearena.domain.Round;
+import org.barcelonajug.superherobattlearena.domain.RoundStatus;
 import org.barcelonajug.superherobattlearena.domain.Session;
 import org.barcelonajug.superherobattlearena.domain.SimulationResult;
 import org.barcelonajug.superherobattlearena.domain.Submission;
@@ -439,5 +441,84 @@ class AdminUseCaseTest {
     // Should be swallowed by the loop catch block and return 0 success
     Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
     assertThat(result).containsEntry("successCount", 0);
+  }
+
+  @Test
+  void createRound_shouldCloseExistingOpenRounds_whenNewRoundCreated() {
+    UUID sessionId = UUID.randomUUID();
+    RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
+    when(roundRepository.findMaxRoundNo(sessionId)).thenReturn(Optional.of(1));
+    when(sessionRepository.findById(sessionId))
+        .thenReturn(Optional.of(SessionMother.anActiveSession(sessionId)));
+
+    Round openRound = new Round();
+    openRound.setRoundNo(1);
+    openRound.setSessionId(sessionId);
+    openRound.setStatus(RoundStatus.OPEN);
+
+    Round alreadyClosedRound = new Round();
+    alreadyClosedRound.setRoundNo(0);
+    alreadyClosedRound.setSessionId(sessionId);
+    alreadyClosedRound.setStatus(RoundStatus.CLOSED);
+
+    when(roundRepository.findBySessionId(sessionId))
+        .thenReturn(List.of(openRound, alreadyClosedRound));
+
+    Integer roundNo = adminUseCase.createRound(sessionId, spec);
+
+    assertThat(roundNo).isEqualTo(2);
+    assertThat(openRound.getStatus()).isEqualTo(RoundStatus.CLOSED);
+    assertThat(alreadyClosedRound.getStatus()).isEqualTo(RoundStatus.CLOSED);
+    verify(roundRepository).save(openRound);
+    verify(roundRepository, never()).save(alreadyClosedRound);
+  }
+
+  @Test
+  void runAllBattles_shouldNotCloseRound_whenRoundHasNoMatches() {
+    UUID sessionId = UUID.randomUUID();
+    when(matchRepository.findAll()).thenReturn(List.of());
+    Round round = new Round();
+    round.setRoundNo(1);
+    round.setSessionId(sessionId);
+    round.setStatus(RoundStatus.OPEN);
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of());
+    when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of());
+
+    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+
+    assertThat(result).containsEntry("total", 0);
+    assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
+    verify(roundRepository, never()).save(round);
+  }
+
+  @Test
+  void runAllBattles_shouldNotCloseRound_whenRemainingPendingMatchesExist() {
+    UUID sessionId = UUID.randomUUID();
+    UUID teamA = UUID.randomUUID();
+    UUID teamB = UUID.randomUUID();
+    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+    when(matchRepository.findAll()).thenReturn(List.of(match));
+
+    Round round = new Round();
+    round.setRoundNo(1);
+    round.setSessionId(sessionId);
+    round.setStatus(RoundStatus.OPEN);
+    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
+
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of(match));
+    when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of(match));
+
+    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
+    when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
+        .thenThrow(new IllegalArgumentException("Hero not found"));
+
+    adminUseCase.runAllBattles(1, sessionId);
+
+    assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
+    verify(roundRepository, never()).save(round);
   }
 }

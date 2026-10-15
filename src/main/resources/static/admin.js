@@ -372,7 +372,9 @@ async function autoMatch() {
             ).join('');
             lucide.createIcons();
         } else {
-            showError('matchStatus', 'Failed to create matches');
+            const err = await response.json().catch(() => null);
+            const msg = err?.detail || err?.title || 'Failed to create matches';
+            showError('matchStatus', msg);
         }
     } catch (error) {
         showError('matchStatus', 'Error: ' + error.message);
@@ -408,7 +410,9 @@ async function runAllBattles() {
             }).join('');
             lucide.createIcons();
         } else {
-            showError('battleStatus', 'Failed to run battles');
+            const err = await response.json().catch(() => null);
+            const msg = err?.detail || err?.title || 'Failed to run battles';
+            showError('battleStatus', msg);
         }
     } catch (error) {
         showError('battleStatus', 'Error: ' + error.message);

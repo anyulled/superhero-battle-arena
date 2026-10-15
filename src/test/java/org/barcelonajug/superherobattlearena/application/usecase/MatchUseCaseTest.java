@@ -892,4 +892,83 @@ class MatchUseCaseTest {
     List<MatchEventSnapshot> result = matchUseCase.getMatchEvents(matchId);
     assertThat(result).isNotNull();
   }
+
+  @Test
+  void autoMatch_subsequentRound_shouldThrowException_whenTournamentAlreadyFinishedWithFinal() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 3;
+    Match finalMatch =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(2)
+            .teamA(UUID.randomUUID())
+            .teamB(UUID.randomUUID())
+            .matchType(MatchType.FINAL)
+            .status(MatchStatus.COMPLETED)
+            .winnerTeam(UUID.randomUUID())
+            .build();
+    Match thirdPlace =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(2)
+            .teamA(UUID.randomUUID())
+            .teamB(UUID.randomUUID())
+            .matchType(MatchType.THIRD_PLACE)
+            .status(MatchStatus.COMPLETED)
+            .winnerTeam(UUID.randomUUID())
+            .build();
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(2, sessionId))
+        .thenReturn(List.of(finalMatch, thirdPlace));
+
+    assertThatThrownBy(() -> matchUseCase.autoMatch(sessionId, roundNo))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Tournament already completed at round 2");
+  }
+
+  @Test
+  void autoMatch_subsequentRound_shouldSucceed_whenPreviousRoundHasCancelledMatch() {
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 2;
+    UUID team1 = UUID.randomUUID();
+    UUID team2 = UUID.randomUUID();
+    UUID team3 = UUID.randomUUID();
+    UUID team4 = UUID.randomUUID();
+
+    Match m1 =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(1)
+            .teamA(team1)
+            .teamB(team2)
+            .matchType(MatchType.KNOCKOUT)
+            .status(MatchStatus.COMPLETED)
+            .winnerTeam(team1)
+            .bracketPosition(0)
+            .build();
+
+    Match m2 =
+        Match.builder()
+            .matchId(UUID.randomUUID())
+            .sessionId(sessionId)
+            .roundNo(1)
+            .teamA(team3)
+            .teamB(team4)
+            .matchType(MatchType.KNOCKOUT)
+            .status(MatchStatus.CANCELLED)
+            .bracketPosition(1)
+            .build();
+
+    when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
+    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of(m1, m2));
+    when(submissionRepository.findByRoundNo(roundNo)).thenReturn(List.of());
+
+    List<UUID> createdIds = matchUseCase.autoMatch(sessionId, roundNo);
+
+    assertThat(createdIds).hasSize(2);
+  }
 }
