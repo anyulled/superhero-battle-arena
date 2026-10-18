@@ -53,22 +53,20 @@ $(document).ready(async function () {
         els.log.prepend(el);
     }
 
-    // Helper: Render Hero Card
     function renderHeroCard(heroId, container, teamId) {
-        const hero = state.heroes[heroId];
+        const hero = state.heroes[heroId] || { id: heroId, name: `Hero #${heroId}` };
         const uniqueId = `${teamId}_${heroId}`;
 
         const maxHealth = hero.powerstats ? hero.powerstats.durability : 100;
 
-        // Store initial state
         state.rosters[uniqueId] = { ...hero, currentHealth: maxHealth, maxHealth: maxHealth };
 
         const card = $(`
             <div id="hero-${uniqueId}" class="hero-card bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center gap-3 relative overflow-hidden">
-                <img src="${hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50'}" class="w-12 h-12 rounded-full border-2 border-slate-500 object-cover" alt="${hero.name}">
+                <img src="${hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50'}" class="hero-avatar w-12 h-12 rounded-full border-2 border-slate-500 object-cover" alt="${hero.name}">
                 <div class="flex-1">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-sm text-white">${hero.name}</span>
+                        <span class="hero-name font-bold text-sm text-white">${hero.name}</span>
                         <span class="text-xs text-slate-400 font-mono hp-text">${maxHealth}/${maxHealth}</span>
                     </div>
                     <div class="w-full bg-slate-700 h-2 rounded-full mt-1 overflow-hidden">
@@ -80,26 +78,52 @@ $(document).ready(async function () {
         container.append(card);
     }
 
+    function hydrateHeroCards() {
+        Object.keys(state.rosters).forEach(uniqueId => {
+            const heroId = Number.parseInt(uniqueId.split('_')[1], 10);
+            const hero = state.heroes[heroId];
+            if (!hero) {
+                return;
+            }
+            const existing = state.rosters[uniqueId];
+            const maxHealth = hero.powerstats ? hero.powerstats.durability : existing.maxHealth;
+            const wasFullHealth = existing.currentHealth === existing.maxHealth;
+            state.rosters[uniqueId] = {
+                ...hero,
+                maxHealth,
+                currentHealth: wasFullHealth ? maxHealth : Math.min(existing.currentHealth, maxHealth)
+            };
+            const card = $(document.getElementById(`hero-${uniqueId}`));
+            if (card.length) {
+                card.find('.hero-name').text(hero.name);
+                card.find('.hero-avatar')
+                    .attr('src', hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50')
+                    .attr('alt', hero.name);
+                card.find('.hp-text').text(`${Math.ceil(state.rosters[uniqueId].currentHealth)}/${maxHealth}`);
+            }
+        });
+    }
+
     try {
         els.status.text('LOADING MATCH DATA...');
 
-        // 1. Load Heroes Metadata
-        const heroesList = await API.teams.getHeroes();
-        state.heroes = heroesList.reduce((acc, h) => ({ ...acc, [h.id]: h }), {});
-
-        // 2. Load Match Info
         state.match = await API.matches.get(matchId);
 
-        // 2b. Load Round Info to get Map Type
+        const allTeams = await API.teams.list(state.match.sessionId);
+        state.teamA = allTeams.find(t => t.teamId === state.match.teamA);
+        state.teamB = allTeams.find(t => t.teamId === state.match.teamB);
+
+        els.teamAName.text(state.teamA ? state.teamA.name : 'Unknown Team A');
+        els.teamBName.text(state.teamB ? state.teamB.name : 'Unknown Team B');
+
         try {
             const roundSpec = await API.rounds.get(state.match.roundNo, state.match.sessionId);
             const mapType = roundSpec.mapType;
-            let bgImage = 'images/backgrounds/arena_1.png'; // Default
+            let bgImage = 'images/backgrounds/arena_1.png';
 
             if (mapType === 'ARENA_2') bgImage = 'images/backgrounds/arena_2.png';
             else if (mapType === 'COSMIC') bgImage = 'images/backgrounds/cosmic.png';
 
-            // Apply background
             $('body').css({
                 'background-image': `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('${bgImage}')`,
                 'background-size': 'cover',
@@ -111,16 +135,6 @@ $(document).ready(async function () {
             console.warn('Failed to load round spec for background', e);
         }
 
-        // 3. Load Team Names
-        const allTeams = await API.teams.list(state.match.sessionId);
-        state.teamA = allTeams.find(t => t.teamId === state.match.teamA);
-        state.teamB = allTeams.find(t => t.teamId === state.match.teamB);
-
-        els.teamAName.text(state.teamA ? state.teamA.name : 'Unknown Team A');
-        els.teamBName.text(state.teamB ? state.teamB.name : 'Unknown Team B');
-
-        // 4. Load Rosters (Submissions)
-        // Try to fetch submissions for current round (or 1)
         const roundNo = state.match.roundNo || 1;
 
         try {
@@ -145,7 +159,6 @@ $(document).ready(async function () {
             els.teamBRoster.html('<div class="text-red-500 text-xs">Roster hidden/failed</div>');
         }
 
-        // 5. Connect SSE
         els.status.text('Connecting Stream...');
         evtSource = API.matches.eventsStream(matchId);
 
@@ -163,6 +176,12 @@ $(document).ready(async function () {
 
         els.status.text('LIVE REPLAY');
 
+        API.teams.getHeroes().then(function (heroesList) {
+            state.heroes = heroesList.reduce((acc, h) => ({ ...acc, [h.id]: h }), {});
+            hydrateHeroCards();
+        }).catch(function (e) {
+            console.warn('Failed to load full hero metadata', e);
+        });
 
     } catch (err) {
         alert('Failed to initialize battle: ' + err.message);
@@ -334,6 +353,23 @@ $(document).ready(async function () {
         updateHealth(uniqueId, 0, true);
     }
 
+    function renderWinnerDetails(matchData) {
+        const winnerTeamId = matchData.winnerTeam;
+        const winner = (winnerTeamId === matchData.teamA) ? state.teamA : state.teamB;
+        if (winner && winnerTeamId) {
+            els.winnerName.text(winner.name);
+            if (winner.members && winner.members.length > 0) {
+                els.winnerMembers.text('by ' + winner.members.join(' & '));
+            } else {
+                els.winnerMembers.text('');
+            }
+            $(`[id^="hero-${winnerTeamId}_"]`).addClass('victory-glow');
+        } else {
+            els.winnerName.text('Draw!');
+            els.winnerMembers.text('');
+        }
+    }
+
     function handleWin() {
         if (evtSource) {
             evtSource.close();
@@ -342,23 +378,14 @@ $(document).ready(async function () {
         log('🏆 Match Ended!', 'special');
         $('#winnerModal').removeClass('hidden').addClass('flex');
 
+        if (state.match && state.match.status === 'COMPLETED') {
+            renderWinnerDetails(state.match);
+            return;
+        }
+
         API.matches.get(matchId).then(function (updatedMatch) {
             state.match = updatedMatch;
-            const winnerTeamId = updatedMatch.winnerTeam;
-            const winner = (winnerTeamId === state.match.teamA) ? state.teamA : state.teamB;
-            if (winner) {
-                els.winnerName.text(winner.name);
-                if (winner.members && winner.members.length > 0) {
-                    els.winnerMembers.text('by ' + winner.members.join(' & '));
-                } else {
-                    els.winnerMembers.text('');
-                }
-
-                $(`[id^="hero-${winnerTeamId}_"]`).addClass('victory-glow');
-            } else {
-                els.winnerName.text('Draw!');
-                els.winnerMembers.text('');
-            }
+            renderWinnerDetails(updatedMatch);
         }).fail(function () {
             els.winnerName.text('Match Complete');
             els.winnerMembers.text('');

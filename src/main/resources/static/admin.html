@@ -4,326 +4,603 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Superhero Battle Arena</title>
+    <title>Admin Operations Center - Superhero Battle Arena</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" type="image/png" href="images/barcelonajug.png">
+    <link rel="stylesheet" href="style.css">
 </head>
 
-<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white">
-    <!-- Header with Logo -->
-    <div class="absolute top-6 left-6 z-50">
-        <a href="index.html">
-            <img src="images/barcelonajug.png" alt="Barcelona JUG"
-                class="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity">
-        </a>
-    </div>
-
-    <!-- Login Panel -->
-    <section id="loginPanel" class="flex items-center justify-center min-h-screen p-4">
-        <div
-            class="bg-slate-800/80 backdrop-blur-lg p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md">
-            <div class="flex items-center gap-3 mb-6">
-                <i data-lucide="shield-check" class="w-8 h-8 text-purple-400"></i>
-                <h2 class="text-2xl font-bold">Admin Login</h2>
+<body class="bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 min-h-screen text-slate-100">
+    <section id="loginPanel" aria-labelledby="loginTitle" class="flex items-center justify-center min-h-screen p-4">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl border border-slate-700/80 w-full max-w-md space-y-6">
+            <div class="flex items-center justify-between">
+                <a href="index.html" class="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors">
+                    <img src="images/barcelonajug.png" alt="Barcelona JUG" class="h-8 w-auto opacity-85 hover:opacity-100 transition-opacity">
+                    <span>Return to Home</span>
+                </a>
+                <span class="px-2.5 py-1 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-semibold uppercase tracking-wider">
+                    Restricted Access
+                </span>
             </div>
+
+            <div class="flex items-center gap-3">
+                <div class="p-3 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-400">
+                    <i data-lucide="shield-check" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <h1 id="loginTitle" class="text-2xl font-bold text-white">Tournament Director Login</h1>
+                    <p class="text-xs text-slate-400">Authenticate to manage sessions, rounds, and live battles</p>
+                </div>
+            </div>
+
             <form id="loginForm" class="space-y-4">
                 <div>
-                    <label for="username" class="block text-sm font-medium text-slate-300 mb-2">Username</label>
+                    <label for="username" class="block text-sm font-medium text-slate-300 mb-1.5">Username</label>
                     <div class="relative">
-                        <i data-lucide="user"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                        <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                         <input type="text" id="username" required autocomplete="username"
-                            class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white">
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white">
                     </div>
                 </div>
                 <div>
-                    <label for="password" class="block text-sm font-medium text-slate-300 mb-2">Password</label>
+                    <label for="password" class="block text-sm font-medium text-slate-300 mb-1.5">Password</label>
                     <div class="relative">
-                        <i data-lucide="lock"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                        <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
                         <input type="password" id="password" required autocomplete="current-password"
-                            class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white">
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-900/80 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white">
                     </div>
                 </div>
                 <button type="submit"
-                    class="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/20">
+                    class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/20">
                     <i data-lucide="log-in" class="w-5 h-5"></i>
                     Login
                 </button>
-                <div id="loginError"
+                <div id="loginError" role="alert" aria-live="polite"
                     class="hidden mt-2 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300 text-sm"></div>
             </form>
         </div>
     </section>
 
-    <!-- Admin Dashboard -->
-    <section id="adminPanel" class="hidden p-8 max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-8">
-            <div class="flex items-center gap-3">
-                <i data-lucide="swords" class="w-10 h-10 text-purple-400"></i>
-                <h1
-                    class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
-                    Tournament Admin
-                </h1>
-            </div>
+    <main id="adminPanel" class="hidden p-4 md:p-8 max-w-7xl mx-auto space-y-6">
+        <header class="glass-panel p-4 md:p-6 rounded-2xl border border-slate-700/80 shadow-xl flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-4">
-                <a href="/swagger-ui/index.html" target="_blank"
-                    class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm border border-slate-700">
-                    <i data-lucide="book-open" class="w-4 h-4"></i> API Docs
+                <a href="index.html" class="flex items-center gap-2 shrink-0" title="Return to Home">
+                    <img src="images/barcelonajug.png" alt="Barcelona JUG" class="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity">
                 </a>
-                <button onclick="logout()"
-                    class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                <div>
+                    <div class="flex items-center gap-2.5">
+                        <i data-lucide="swords" class="w-7 h-7 text-purple-400"></i>
+                        <h1 class="text-2xl md:text-3xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300">
+                            Tournament Operations Center
+                        </h1>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Real-time session control, stage configuration, squad readiness, and knockout bracket execution
+                    </p>
+                </div>
+            </div>
+
+            <nav aria-label="Admin Navigation and Live Controls" class="flex flex-wrap items-center gap-2.5">
+                <label for="autoRefreshToggle" class="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-300 bg-slate-900/80 border border-slate-700 px-3 py-2 rounded-lg">
+                    <input type="checkbox" id="autoRefreshToggle" class="sr-only peer">
+                    <span class="w-8 h-4 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600 relative"></span>
+                    <span class="flex items-center gap-1.5 font-medium">
+                        <span id="liveSyncDot" class="w-2 h-2 rounded-full bg-emerald-400 opacity-25"></span>
+                        Auto-Sync
+                    </span>
+                </label>
+
+                <button type="button" id="refreshDashboardBtn"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium border border-slate-700">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh
+                </button>
+
+                <a href="lobby.html" target="_blank"
+                    class="bg-slate-800 hover:bg-slate-700 text-blue-300 px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium border border-slate-700">
+                    <i data-lucide="users" class="w-3.5 h-3.5"></i> Public Lobby
+                </a>
+
+                <a href="bracket.html" target="_blank"
+                    class="bg-purple-950/60 hover:bg-purple-900/70 text-purple-200 px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold border border-purple-500/40">
+                    <i data-lucide="git-branch" class="w-3.5 h-3.5"></i> Live Bracket
+                </a>
+
+                <a href="/swagger-ui/index.html" target="_blank"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium border border-slate-700">
+                    <i data-lucide="book-open" class="w-3.5 h-3.5"></i> API Docs
+                </a>
+
+                <button type="button" id="logoutBtn"
+                    class="bg-slate-700 hover:bg-slate-600 text-white px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-semibold">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
                     Logout
                 </button>
-            </div>
-        </div>
+            </nav>
+        </header>
 
-        <!-- Session Management Card -->
-        <div class="bg-slate-800/80 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-slate-700 mb-6">
-            <div class="flex items-center gap-2 mb-4">
-                <i data-lucide="calendar" class="w-6 h-6 text-purple-400"></i>
-                <h2 class="text-2xl font-semibold">Session Management</h2>
+        <section aria-label="Tournament Progression Guide" class="glass-panel p-4 md:p-5 rounded-2xl border border-slate-700/80 shadow-lg space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="px-2.5 py-1 rounded-md bg-purple-500/20 border border-purple-500/40 text-purple-300 text-xs font-bold uppercase tracking-wider">
+                        Live Operations Guide
+                    </span>
+                    <p id="nextActionBanner" class="text-sm font-semibold text-white">
+                        Initializing tournament telemetry...
+                    </p>
+                </div>
+                <span id="lastSyncedLabel" class="text-xs text-slate-400 font-mono"></span>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Session Selector -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Select Session</label>
-                    <div class="relative">
-                        <i data-lucide="list"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"></i>
-                        <select id="sessionSelector"
-                            class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white appearance-none cursor-pointer">
-                            <option value="">No sessions available</option>
-                        </select>
-                        <i data-lucide="chevron-down"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"></i>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-left">
+                <div id="pipelineStepSession" class="p-3 rounded-xl border border-slate-700 bg-slate-900/60 space-y-1 transition-all">
+                    <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>1. Session</span>
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-purple-400"></i>
                     </div>
-                    <div id="sessionInfo" class="mt-2 text-sm text-slate-400"></div>
+                    <div id="pipelineSessionText" class="text-xs font-bold text-white truncate">No session</div>
+                    <div id="pipelineSessionSub" class="text-[11px] text-slate-400 truncate">Select or start</div>
                 </div>
 
-                <!-- Create Session Form -->
-                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                    <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <i data-lucide="plus-circle" class="w-5 h-5 text-green-400"></i>
-                        Create New Session
-                    </h3>
-                    <div class="space-y-3">
+                <div id="pipelineStepTeams" class="p-3 rounded-xl border border-slate-700 bg-slate-900/60 space-y-1 transition-all">
+                    <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>2. Registered Teams</span>
+                        <i data-lucide="shield" class="w-3.5 h-3.5 text-blue-400"></i>
+                    </div>
+                    <div id="pipelineTeamsText" class="text-xs font-bold text-white">0 Teams</div>
+                    <div id="pipelineTeamsSub" class="text-[11px] text-slate-400">Power-of-2 check</div>
+                </div>
 
-                        <button onclick="createSession()"
-                            class="w-full bg-green-600 hover:bg-green-500 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                <div id="pipelineStepRound" class="p-3 rounded-xl border border-slate-700 bg-slate-900/60 space-y-1 transition-all">
+                    <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>3. Active Round</span>
+                        <i data-lucide="target" class="w-3.5 h-3.5 text-indigo-400"></i>
+                    </div>
+                    <div id="pipelineRoundText" class="text-xs font-bold text-white">No Round</div>
+                    <div id="pipelineRoundSub" class="text-[11px] text-slate-400">Configure stage</div>
+                </div>
+
+                <div id="pipelineStepSquads" class="p-3 rounded-xl border border-slate-700 bg-slate-900/60 space-y-1 transition-all">
+                    <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>4. Squad Drafts</span>
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-amber-400"></i>
+                    </div>
+                    <div id="pipelineSquadsText" class="text-xs font-bold text-white">0 Submitted</div>
+                    <div id="pipelineSquadsSub" class="text-[11px] text-slate-400">Awaiting entries</div>
+                </div>
+
+                <div id="pipelineStepBattles" class="p-3 rounded-xl border border-slate-700 bg-slate-900/60 space-y-1 transition-all col-span-2 md:col-span-1">
+                    <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <span>5. Battles</span>
+                        <i data-lucide="flame" class="w-3.5 h-3.5 text-red-400"></i>
+                    </div>
+                    <div id="pipelineBattlesText" class="text-xs font-bold text-white">No Matches</div>
+                    <div id="pipelineBattlesSub" class="text-[11px] text-slate-400">Auto-match &amp; run</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid lg:grid-cols-12 gap-6 items-start">
+            <div class="lg:col-span-5 space-y-6">
+                <section aria-labelledby="sessionManagementHeading" class="glass-panel p-6 rounded-2xl shadow-xl border border-slate-700/80 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-5 h-5 text-purple-400"></i>
+                            <h2 id="sessionManagementHeading" class="text-xl font-bold text-white">Session Management</h2>
+                        </div>
+                        <button type="button" id="createSessionBtn"
+                            class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2 px-3.5 rounded-lg transition-colors flex items-center gap-1.5 shadow">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
                             Create Session
                         </button>
                     </div>
-                </div>
-            </div>
-            <div id="sessionStatus" class="mt-4"></div>
-        </div>
 
-        <!-- Round Management Card -->
-        <div class="bg-slate-800/80 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-slate-700 mb-6">
-            <div class="flex items-center gap-2 mb-4">
-                <i data-lucide="target" class="w-6 h-6 text-blue-400"></i>
-                <h2 class="text-2xl font-semibold">Round Management</h2>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-6">
-                <!-- Round Selector -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-2">Select Round</label>
-                    <div class="relative">
-                        <i data-lucide="layers"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"></i>
-                        <select id="roundSelector"
-                            class="w-full pl-10 pr-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white appearance-none cursor-pointer">
-                            <option value="">Select a session first</option>
-                        </select>
-                        <i data-lucide="chevron-down"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none"></i>
-                    </div>
-                    <div id="roundInfo" class="mt-2 text-sm text-slate-400"></div>
-                </div>
-
-                <!-- Create Round Form -->
-                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
-                    <h3 class="text-lg font-semibold mb-3 flex items-center gap-2">
-                        <i data-lucide="plus-square" class="w-5 h-5 text-blue-400"></i>
-                        Create New Round
-                    </h3>
-                    <div class="space-y-3">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-sm text-slate-300 mb-1">Team Size</label>
-                                <input type="number" id="newRoundTeamSize" min="1" max="10" value="5"
-                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white">
-                            </div>
-
-                        </div>
-                        <div>
-                            <label class="block text-sm text-slate-300 mb-1">Budget Cap</label>
-                            <input type="number" id="newRoundBudget" min="0" value="100"
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-slate-300 mb-1">Description</label>
-                            <input type="text" id="newRoundDescription" value="Tournament Round"
-                                placeholder="Round description"
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-slate-300 mb-1">Map Type</label>
-                            <select id="newRoundMapType"
-                                class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white">
-                                <option value="ARENA_1">Arena 1</option>
-                                <option value="ARENA_2">Arena 2</option>
-                                <option value="COSMIC">Cosmic Battlefield</option>
+                    <div>
+                        <label for="sessionSelector" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                            Select Session
+                        </label>
+                        <div class="relative">
+                            <i data-lucide="list" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            <select id="sessionSelector"
+                                class="w-full pl-9 pr-9 py-2.5 bg-slate-900/80 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm appearance-none cursor-pointer">
+                                <option value="">No sessions available</option>
                             </select>
+                            <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
                         </div>
-                        <div class="grid md:grid-cols-2 gap-3">
+                        <div class="mt-2 flex items-center justify-between gap-2">
+                            <div id="sessionInfo" class="text-xs text-slate-400 font-mono truncate"></div>
+                            <button type="button" id="copySessionIdBtn"
+                                class="text-xs text-purple-300 hover:text-purple-200 bg-purple-950/50 border border-purple-500/30 px-2 py-1 rounded flex items-center gap-1 shrink-0">
+                                <i data-lucide="copy" class="w-3 h-3"></i> Copy ID
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="sessionStatus" role="status" aria-live="polite"></div>
+                </section>
+
+                <section aria-labelledby="teamEntriesHeading" class="glass-panel p-6 rounded-2xl shadow-xl border border-slate-700/80 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="users" class="w-5 h-5 text-amber-400"></i>
+                            <h2 id="teamEntriesHeading" class="text-xl font-bold text-white">Team Entries &amp; Readiness</h2>
+                        </div>
+                        <button type="button" id="refreshTeamEntriesBtn"
+                            class="text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 bg-slate-900/70 p-4 rounded-xl border border-slate-700/80 text-center">
+                        <div>
+                            <div id="teamEntriesCount" class="text-5xl font-extrabold text-amber-400 mb-1">-</div>
+                            <p class="text-xs text-slate-400">Round Squad Submissions</p>
+                        </div>
+                        <div class="border-l border-slate-800 pl-3 flex flex-col justify-center">
+                            <div id="registeredTeamsCount" class="text-3xl font-bold text-blue-400 mb-1">0</div>
+                            <p class="text-xs text-slate-400">Registered Session Teams</p>
+                            <div id="bracketPowerBadge" class="mt-1.5 text-[11px] font-semibold text-slate-400"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-slate-400 font-medium">Round Submission Readiness</span>
+                            <span id="readinessFractionLabel" class="font-mono text-slate-300">0 / 0 eligible</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
+                            <div id="readinessProgressBar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Session Teams Roster</h3>
+                            <button type="button" id="fillPowerOfTwoBtn"
+                                class="hidden text-[11px] bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-md font-semibold transition-colors">
+                                + Auto-Fill to Power of 2
+                            </button>
+                        </div>
+                        <div id="teamReadinessList" class="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                            <div class="text-xs text-slate-500 italic py-3 text-center">No teams registered for this session yet.</div>
+                        </div>
+                    </div>
+
+                    <details class="bg-slate-900/60 rounded-xl border border-slate-700/80 p-3">
+                        <summary class="text-xs font-semibold text-slate-300 cursor-pointer flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="user-plus" class="w-4 h-4 text-blue-400"></i>
+                                Quick Register Team
+                            </span>
+                            <span class="text-[11px] text-slate-400">Add team to active session</span>
+                        </summary>
+                        <div class="mt-3 space-y-2.5 pt-2.5 border-t border-slate-800">
                             <div>
-                                <label class="block text-sm text-slate-300 mb-1">Allowed Roles</label>
-                                <select id="newRoundRoles" multiple size="4" disabled
-                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
-                                    <option value="" disabled selected>Loading values...</option>
-                                </select>
+                                <label for="quickTeamName" class="block text-xs text-slate-400 mb-1">Team Name</label>
+                                <input type="text" id="quickTeamName" placeholder="e.g. Cosmic Defenders"
+                                    class="w-full px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
                             </div>
                             <div>
-                                <label class="block text-sm text-slate-300 mb-1">Allowed Genders</label>
-                                <select id="newRoundGenders" multiple size="4" disabled
-                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
-                                    <option value="" disabled selected>Loading values...</option>
-                                </select>
+                                <label for="quickTeamMembers" class="block text-xs text-slate-400 mb-1">Members (comma-separated)</label>
+                                <input type="text" id="quickTeamMembers" placeholder="Alice, Bob, Charlie"
+                                    class="w-full px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-purple-500">
                             </div>
-                            <div>
-                                <label class="block text-sm text-slate-300 mb-1">Allowed Races</label>
-                                <select id="newRoundRaces" multiple size="4" disabled
-                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
-                                    <option value="" disabled selected>Loading values...</option>
-                                </select>
+                            <button type="button" id="quickRegisterTeamBtn"
+                                class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                Register Team
+                            </button>
+                            <div id="quickTeamStatus" role="status" aria-live="polite"></div>
+                        </div>
+                    </details>
+                </section>
+            </div>
+
+            <div class="lg:col-span-7 space-y-6">
+                <section aria-labelledby="roundManagementHeading" class="glass-panel p-6 rounded-2xl shadow-xl border border-slate-700/80 space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="target" class="w-5 h-5 text-blue-400"></i>
+                            <h2 id="roundManagementHeading" class="text-xl font-bold text-white">Round Management</h2>
+                        </div>
+                        <span class="text-xs text-slate-400">Creating a new round automatically closes any previous open round</span>
+                    </div>
+
+                    <div class="bg-slate-900/70 p-4 rounded-xl border border-slate-700/80 space-y-3">
+                        <div class="flex flex-wrap items-end justify-between gap-3">
+                            <div class="flex-1 min-w-[220px]">
+                                <label for="roundSelector" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                                    Active / Selected Round
+                                </label>
+                                <div class="relative">
+                                    <i data-lucide="layers" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                                    <select id="roundSelector"
+                                        class="w-full pl-9 pr-9 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm appearance-none cursor-pointer">
+                                        <option value="">Select a session first</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-sm text-slate-300 mb-1">Allowed Publishers</label>
-                                <select id="newRoundPublishers" multiple size="6" disabled
-                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-40">
-                                    <option value="" disabled selected>Loading values...</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm text-slate-300 mb-1">Allowed Alignments</label>
-                                <select id="newRoundAlignments" multiple size="4" disabled
-                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white h-32">
-                                    <option value="" disabled selected>Loading values...</option>
-                                </select>
+                            <div id="roundInfo" class="text-xs text-slate-300 font-medium"></div>
+                        </div>
+
+                        <div id="selectedRoundSpecSummary" class="pt-2 border-t border-slate-800 text-xs text-slate-300">
+                            No round selected. Configure and create a round below.
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/80 space-y-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-base font-bold text-white flex items-center gap-2">
+                                <i data-lucide="plus-square" class="w-4 h-4 text-blue-400"></i>
+                                Create New Round
+                            </h3>
+                            <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Tournament Stage Presets">
+                                <span class="text-[11px] text-slate-400 mr-1">Presets:</span>
+                                <button type="button" data-stage-preset="stage1"
+                                    class="stage-preset-btn px-2.5 py-1 rounded-md bg-blue-950/70 hover:bg-blue-900 text-blue-300 border border-blue-500/30 text-[11px] font-semibold transition-colors">
+                                    Stage 1 (16)
+                                </button>
+                                <button type="button" data-stage-preset="qf"
+                                    class="stage-preset-btn px-2.5 py-1 rounded-md bg-indigo-950/70 hover:bg-indigo-900 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold transition-colors">
+                                    Stage 2 QF (8)
+                                </button>
+                                <button type="button" data-stage-preset="sf"
+                                    class="stage-preset-btn px-2.5 py-1 rounded-md bg-amber-950/70 hover:bg-amber-900 text-amber-300 border border-amber-500/30 text-[11px] font-semibold transition-colors">
+                                    Stage 3 SF (4)
+                                </button>
+                                <button type="button" data-stage-preset="finals"
+                                    class="stage-preset-btn px-2.5 py-1 rounded-md bg-yellow-950/70 hover:bg-yellow-900 text-yellow-300 border border-yellow-500/30 text-[11px] font-semibold transition-colors">
+                                    Stage 4 Finals
+                                </button>
                             </div>
                         </div>
-                        <p class="text-xs text-slate-400">
-                            Hold Ctrl or Cmd to select multiple values. Leave a list empty to avoid constraining that attribute.
-                        </p>
-                        <button onclick="createRound()"
-                            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-                            <i data-lucide="zap" class="w-5 h-5"></i>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div>
+                                <label for="newRoundTeamSize" class="block text-xs text-slate-300 mb-1">Team Size</label>
+                                <input type="number" id="newRoundTeamSize" min="1" max="10" value="5"
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm">
+                            </div>
+                            <div>
+                                <label for="newRoundBudget" class="block text-xs text-slate-300 mb-1">Budget Cap</label>
+                                <input type="number" id="newRoundBudget" min="0" value="1000"
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm">
+                            </div>
+                            <div>
+                                <label for="newRoundMapType" class="block text-xs text-slate-300 mb-1">Map Type</label>
+                                <select id="newRoundMapType"
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm">
+                                    <option value="ARENA_1">Arena 1</option>
+                                    <option value="ARENA_2">Arena 2</option>
+                                    <option value="COSMIC">Cosmic Battlefield</option>
+                                    <option value="CITY">City Metropolis</option>
+                                    <option value="COLOSSEUM">Grand Colosseum</option>
+                                    <option value="ARENA">Classic Arena</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="newRoundDescription" class="block text-xs text-slate-300 mb-1">Description</label>
+                                <input type="text" id="newRoundDescription" value="Stage 1: Initial Round"
+                                    placeholder="Round description"
+                                    class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-white text-sm">
+                            </div>
+                        </div>
+
+                        <details id="constraintsDetails" class="bg-slate-950/50 rounded-xl border border-slate-800 p-3">
+                            <summary class="text-xs font-semibold text-slate-300 cursor-pointer flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="sliders" class="w-4 h-4 text-purple-400"></i>
+                                    Hero Roster Constraints (Optional)
+                                </span>
+                                <span id="activeConstraintsCountBadge" class="text-[11px] font-mono text-slate-400">All heroes allowed</span>
+                            </summary>
+
+                            <div class="mt-3 pt-3 border-t border-slate-800 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs text-slate-400">
+                                        Click chips to toggle allowed values. Leave a category empty to allow all values.
+                                    </p>
+                                    <button type="button" id="clearAllConstraintsBtn"
+                                        class="text-xs text-slate-400 hover:text-white underline">
+                                        Clear All
+                                    </button>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <div>
+                                        <label for="newRoundRoles" class="block text-xs font-semibold text-slate-300 mb-1">Allowed Roles</label>
+                                        <div id="chips-newRoundRoles" class="flex flex-wrap gap-1.5 mb-1"></div>
+                                        <select id="newRoundRoles" multiple size="3" disabled
+                                            class="sr-only">
+                                            <option value="" disabled selected>Loading values...</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="newRoundAlignments" class="block text-xs font-semibold text-slate-300 mb-1">Allowed Alignments</label>
+                                        <div id="chips-newRoundAlignments" class="flex flex-wrap gap-1.5 mb-1"></div>
+                                        <select id="newRoundAlignments" multiple size="3" disabled
+                                            class="sr-only">
+                                            <option value="" disabled selected>Loading values...</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="newRoundGenders" class="block text-xs font-semibold text-slate-300 mb-1">Allowed Genders</label>
+                                        <div id="chips-newRoundGenders" class="flex flex-wrap gap-1.5 mb-1"></div>
+                                        <select id="newRoundGenders" multiple size="3" disabled
+                                            class="sr-only">
+                                            <option value="" disabled selected>Loading values...</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="newRoundRaces" class="block text-xs font-semibold text-slate-300 mb-1">Allowed Races</label>
+                                        <div id="chips-newRoundRaces" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-slate-900/60 rounded-lg border border-slate-800"></div>
+                                        <select id="newRoundRaces" multiple size="4" disabled
+                                            class="sr-only">
+                                            <option value="" disabled selected>Loading values...</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label for="newRoundPublishers" class="block text-xs font-semibold text-slate-300 mb-1">Allowed Publishers</label>
+                                        <div id="chips-newRoundPublishers" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-slate-900/60 rounded-lg border border-slate-800"></div>
+                                        <select id="newRoundPublishers" multiple size="6" disabled
+                                            class="sr-only">
+                                            <option value="" disabled selected>Loading values...</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <button type="button" id="createRoundBtn"
+                            class="w-full bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2.5 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+                            <i data-lucide="zap" class="w-4 h-4"></i>
                             Create Round
                         </button>
                     </div>
-                </div>
+
+                    <div id="roundStatus" role="status" aria-live="polite"></div>
+                </section>
+
+                <section aria-labelledby="matchExecutionHeading" class="glass-panel p-6 rounded-2xl shadow-xl border border-slate-700/80 space-y-5">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="swords" class="w-5 h-5 text-red-400"></i>
+                            <h2 id="matchExecutionHeading" class="text-xl font-bold text-white">Match Execution &amp; Live Control</h2>
+                        </div>
+                        <span id="roundMatchesSummaryBadge" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-mono">
+                            0 matches in round
+                        </span>
+                    </div>
+
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                            <div>
+                                <div class="text-xs font-bold uppercase tracking-wider text-purple-300 mb-1">Step A: Bracket Pairing</div>
+                                <p class="text-xs text-slate-400">
+                                    Pairs teams for the selected round. Round 1 seeds registered teams; later rounds advance winners (and semifinal losers to 3rd Place).
+                                </p>
+                            </div>
+                            <button type="button" id="autoMatchBtn"
+                                class="w-full bg-purple-600 hover:bg-purple-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+                                <i data-lucide="shuffle" class="w-5 h-5"></i>
+                                Auto-Match Teams
+                            </button>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 flex flex-col justify-between space-y-3">
+                            <div>
+                                <div class="text-xs font-bold uppercase tracking-wider text-red-300 mb-1">Step B: Battle Simulation</div>
+                                <p class="text-xs text-slate-400">
+                                    Simulates all pending battles in the round, records hero fatigue &amp; eliminations, and closes the round when finished.
+                                </p>
+                            </div>
+                            <button type="button" id="runAllBattlesBtn"
+                                class="w-full bg-red-600 hover:bg-red-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
+                                <i data-lucide="flame" class="w-5 h-5"></i>
+                                Run All Battles
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="matchStatus" role="status" aria-live="polite"></div>
+                    <div id="battleStatus" role="status" aria-live="polite"></div>
+
+                    <div class="grid md:grid-cols-2 gap-4 pt-2">
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 space-y-3">
+                            <h3 class="text-sm font-bold text-white flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="list-checks" class="w-4 h-4 text-purple-400"></i>
+                                    Round Matchups
+                                </span>
+                                <span id="matchResultsCountLabel" class="text-xs font-mono text-slate-400">0</span>
+                            </h3>
+                            <div id="matchResults" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
+                        </div>
+
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-700/80 space-y-3">
+                            <h3 class="text-sm font-bold text-white flex items-center justify-between">
+                                <span class="flex items-center gap-2">
+                                    <i data-lucide="trophy" class="w-4 h-4 text-amber-400"></i>
+                                    Battle Outcomes
+                                </span>
+                                <span id="battleResultsCountLabel" class="text-xs font-mono text-slate-400">0</span>
+                            </h3>
+                            <div id="battleResults" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
+                        </div>
+                    </div>
+
+                    <details class="bg-slate-900/40 rounded-xl border border-slate-800 p-3">
+                        <summary class="text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer flex items-center justify-between">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="git-pull-request" class="w-4 h-4 text-indigo-400"></i>
+                                Manual Custom Match Creation
+                            </span>
+                            <span class="text-[11px] text-slate-500">Pair two specific teams</span>
+                        </summary>
+                        <div class="mt-3 pt-3 border-t border-slate-800 grid sm:grid-cols-3 gap-2.5 items-end">
+                            <div>
+                                <label for="manualTeamASelect" class="block text-xs text-slate-400 mb-1">Team A</label>
+                                <select id="manualTeamASelect"
+                                    class="w-full px-2.5 py-2 bg-slate-800 border border-slate-600 rounded-lg text-xs text-white">
+                                    <option value="">Select Team A</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="manualTeamBSelect" class="block text-xs text-slate-400 mb-1">Team B</label>
+                                <select id="manualTeamBSelect"
+                                    class="w-full px-2.5 py-2 bg-slate-800 border border-slate-600 rounded-lg text-xs text-white">
+                                    <option value="">Select Team B</option>
+                                </select>
+                            </div>
+                            <button type="button" id="createManualMatchBtn"
+                                class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1.5">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                Create Match
+                            </button>
+                        </div>
+                    </details>
+                </section>
             </div>
-            <div id="roundStatus" class="mt-4"></div>
         </div>
 
-        <!-- Team Entries & Match Controls Grid -->
-        <div class="grid md:grid-cols-2 gap-6">
-            <!-- Team Entries Card -->
-            <div class="bg-slate-800/80 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-slate-700">
-                <div class="flex items-center gap-2 mb-4">
-                    <i data-lucide="users" class="w-6 h-6 text-amber-400"></i>
-                    <h2 class="text-2xl font-semibold">Team Entries</h2>
-                </div>
-                <div class="text-center py-8">
-                    <div id="teamEntriesCount" class="text-6xl font-bold text-amber-400 mb-2">-</div>
-                    <p class="text-slate-400">submissions for selected round</p>
-                    <button onclick="refreshTeamEntries()"
-                        class="mt-4 text-slate-400 hover:text-white flex items-center gap-2 mx-auto">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                        Refresh
-                    </button>
-                </div>
-            </div>
-
-            <!-- Match Execution Card -->
-            <div class="bg-slate-800/80 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-slate-700">
-                <div class="flex items-center gap-2 mb-4">
-                    <i data-lucide="swords" class="w-6 h-6 text-red-400"></i>
-                    <h2 class="text-2xl font-semibold">Match Execution</h2>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <button onclick="autoMatch()"
-                            class="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                            <i data-lucide="shuffle" class="w-5 h-5"></i>
-                            Auto-Match Teams
-                        </button>
-                        <p class="text-xs text-slate-400 mt-2">Create matches for the selected round</p>
+        <footer class="pt-4 border-t border-red-500/30">
+            <div class="bg-red-950/20 border border-red-500/30 rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-400"></i>
+                        <h2 class="text-lg font-bold text-red-400">Danger Zone — Reset Database</h2>
                     </div>
-                    <div>
-                        <button onclick="runAllBattles()"
-                            class="w-full bg-red-600 hover:bg-red-500 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg">
-                            <i data-lucide="flame" class="w-5 h-5"></i>
-                            Run All Battles
-                        </button>
-                        <p class="text-xs text-slate-400 mt-2">Execute all pending battles</p>
-                    </div>
-                    <div id="matchStatus" class="mt-4"></div>
-                    <div id="battleStatus" class="mt-4"></div>
+                    <p class="text-slate-400 text-xs">
+                        Permanently deletes all sessions, rounds, matches, teams, submissions, eliminations, and hero usage history.
+                    </p>
                 </div>
-            </div>
-        </div>
 
-        <!-- Results Display -->
-        <div class="mt-6 grid md:grid-cols-2 gap-6">
-            <div class="bg-slate-800/80 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-slate-700">
-                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <i data-lucide="list-checks" class="w-5 h-5 text-purple-400"></i>
-                    Match Results
-                </h3>
-                <div id="matchResults" class="space-y-2 max-h-64 overflow-y-auto"></div>
-            </div>
-            <div class="bg-slate-800/80 backdrop-blur-lg p-6 rounded-2xl shadow-xl border border-slate-700">
-                <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <i data-lucide="trophy" class="w-5 h-5 text-amber-400"></i>
-                    Battle Results
-                </h3>
-                <div id="battleResults" class="space-y-2 max-h-64 overflow-y-auto"></div>
-            </div>
-        </div>
-
-        <!-- Danger Zone -->
-        <div class="mt-8 border-t border-red-500/30 pt-8">
-            <div class="bg-red-900/10 border border-red-500/20 rounded-2xl p-6">
-                <div class="flex items-center gap-2 mb-4">
-                    <i data-lucide="alert-triangle" class="w-6 h-6 text-red-500"></i>
-                    <h2 class="text-2xl font-semibold text-red-500">Danger Zone</h2>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <h3 class="text-lg font-medium text-white">Reset Database</h3>
-                        <p class="text-slate-400 text-sm mt-1">
-                            This will permanently delete all sessions, rounds, matches, teams, and submissions.
-                            This action cannot be undone.
-                        </p>
-                    </div>
-                    <button onclick="resetDatabase()"
-                        class="bg-red-600 hover:bg-red-500 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2 shadow-lg hover:shadow-red-500/20 whitespace-nowrap">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="resetDatabaseBtn"
+                        class="bg-red-600 hover:bg-red-500 text-white text-xs font-semibold py-2.5 px-5 rounded-lg transition-colors flex items-center gap-2 shadow-lg hover:shadow-red-500/20">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
                         Reset All Data
                     </button>
+                    <div id="resetConfirmGroup" class="hidden flex items-center gap-2">
+                        <button type="button" id="confirmResetBtn"
+                            class="bg-red-500 hover:bg-red-400 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition-colors">
+                            Confirm Permanent Wipe
+                        </button>
+                        <button type="button" id="cancelResetBtn"
+                            class="bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold py-2.5 px-3 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </footer>
+    </main>
 
     <script src="api.js"></script>
     <script src="admin.js" defer></script>
