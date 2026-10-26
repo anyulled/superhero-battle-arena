@@ -78,9 +78,9 @@ public class GenerateSuperheroSql {
         String publisher = bio != null ? escapeSql(getText(bio, "publisher")) : null;
 
         String onConflict = dbType.supportsOnConflict ? " ON CONFLICT (id) DO NOTHING" : "";
-        writer.printf(
-                "INSERT INTO superheroes (id, name, slug, alignment, publisher) VALUES (%d, '%s', '%s', '%s', %s)%s;%n",
-                id, name, slug, alignment, quoteOrNull(publisher), onConflict);
+      writer.printf(
+          "INSERT INTO superheroes (id, name, slug, alignment, publisher) VALUES (%d, '%s', '%s', %s, %s)%s;%n",
+          id, name, slug, quoteOrNull(alignment), quoteOrNull(publisher), onConflict);
 
         // Powerstats & Cost
         JsonNode stats = hero.get("powerstats");
