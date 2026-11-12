@@ -74,22 +74,21 @@ public class MatchController {
       @Parameter(description = "ID of the match to stream", required = true) @PathVariable
           UUID matchId) {
     SseEmitter emitter = new SseEmitter(600000L); // 10 min timeout
-    executor.submit(
-        () -> {
-          try {
-            List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);
-            for (MatchEvent event : events) {
-              emitter.send(MatchEventSnapshotDto.from(event.eventJson()));
-              Thread.sleep(500);
-            }
-            emitter.complete();
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            emitter.completeWithError(e);
-          } catch (IOException | RuntimeException e) {
-            emitter.completeWithError(e);
-          }
-        });
+    executor.submit(() -> {
+      try {
+        List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);
+        for (MatchEvent event : events) {
+          emitter.send(MatchEventSnapshotDto.from(event.eventJson()));
+          Thread.sleep(500);
+        }
+        emitter.complete();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        emitter.completeWithError(e);
+      } catch (IOException | RuntimeException e) {
+        emitter.completeWithError(e);
+      }
+    });
     return emitter;
   }
 }
