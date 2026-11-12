@@ -60,12 +60,11 @@ public class SessionUseCase {
       log.info("Starting session - sessionId={}", id);
       sessionRepository.findAll().stream()
           .filter(Session::isActive)
-          .forEach(
-              existingSession -> {
-                log.info("Deactivating previous session: {}", existingSession.getSessionId());
-                existingSession.setActive(false);
-                sessionRepository.save(existingSession);
-              });
+          .forEach(existingSession -> {
+            log.info("Deactivating previous session: {}", existingSession.getSessionId());
+            existingSession.setActive(false);
+            sessionRepository.save(existingSession);
+          });
 
       Session session = new Session(id, OffsetDateTime.now(ZoneOffset.UTC), true);
       Session savedSession = sessionRepository.save(session);

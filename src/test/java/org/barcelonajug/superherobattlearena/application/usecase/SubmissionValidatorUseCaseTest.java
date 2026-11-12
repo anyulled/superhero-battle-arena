@@ -88,11 +88,10 @@ class SubmissionValidatorUseCaseTest {
     List<Hero> allHeroes = List.of(h1, h2, h3);
 
     when(rosterUseCase.getHeroes(anyList()))
-        .thenAnswer(
-            invocation -> {
-              List<Integer> ids = invocation.getArgument(0);
-              return allHeroes.stream().filter(h -> ids.contains(h.id())).toList();
-            });
+        .thenAnswer(invocation -> {
+          List<Integer> ids = invocation.getArgument(0);
+          return allHeroes.stream().filter(h -> ids.contains(h.id())).toList();
+        });
   }
 
   @Test

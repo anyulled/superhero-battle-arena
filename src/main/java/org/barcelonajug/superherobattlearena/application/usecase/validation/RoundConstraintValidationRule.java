@@ -33,11 +33,10 @@ public class RoundConstraintValidationRule implements ValidationRule {
         .map(hero -> Map.entry(hero, selector.valueOf(hero)))
         .filter(entry -> entry.getValue() == null || !allowedValues.contains(entry.getValue()))
         .findFirst()
-        .ifPresent(
-            entry -> {
-              throw new RoundConstraintException(
-                  fieldName, entry.getKey().name(), entry.getValue(), allowedValues);
-            });
+        .ifPresent(entry -> {
+          throw new RoundConstraintException(
+              fieldName, entry.getKey().name(), entry.getValue(), allowedValues);
+        });
   }
 
   private @Nullable String genderOf(Hero hero) {

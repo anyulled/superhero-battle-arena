@@ -31,40 +31,38 @@ public class SecurityConfig {
   @SuppressWarnings({"checkstyle:IllegalThrows", "checkstyle:IllegalCatch"})
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     try {
-      http.authorizeHttpRequests(
-              authorize ->
-                  authorize
-                      // Admin endpoints require ADMIN role
-                      .requestMatchers("/api/admin/**")
-                      .hasRole("ADMIN")
-                      // Public API endpoints
-                      .requestMatchers(
-                          "/api/teams",
-                          "/api/teams/**",
-                          "/api/**",
-                          "/",
-                          "/swagger-ui/**",
-                          "/v3/api-docs/**")
-                      .permitAll()
-                      // Static resources
-                      .requestMatchers(
-                          "/**/*.html",
-                          "/**/*.css",
-                          "/**/*.js",
-                          "/**/*.png",
-                          "/**/*.jpg",
-                          "/**/*.jpeg",
-                          "/images/**")
-                      .permitAll()
-                      // Any other request requires authentication
-                      .anyRequest()
-                      .authenticated())
+      http.authorizeHttpRequests(authorize ->
+              authorize
+                  // Admin endpoints require ADMIN role
+                  .requestMatchers("/api/admin/**")
+                  .hasRole("ADMIN")
+                  // Public API endpoints
+                  .requestMatchers(
+                      "/api/teams",
+                      "/api/teams/**",
+                      "/api/**",
+                      "/",
+                      "/swagger-ui/**",
+                      "/v3/api-docs/**")
+                  .permitAll()
+                  // Static resources
+                  .requestMatchers(
+                      "/**/*.html",
+                      "/**/*.css",
+                      "/**/*.js",
+                      "/**/*.png",
+                      "/**/*.jpg",
+                      "/**/*.jpeg",
+                      "/images/**")
+                  .permitAll()
+                  // Any other request requires authentication
+                  .anyRequest()
+                  .authenticated())
           .httpBasic(customizer -> {})
-          .csrf(
-              csrf ->
-                  csrf
-                      // Disable CSRF for API endpoints to simplify implementation
-                      .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
+          .csrf(csrf ->
+              csrf
+                  // Disable CSRF for API endpoints to simplify implementation
+                  .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
 
       return http.build();
     } catch (RuntimeException e) {

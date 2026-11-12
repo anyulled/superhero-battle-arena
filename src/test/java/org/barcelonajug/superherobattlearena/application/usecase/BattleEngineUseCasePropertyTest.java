@@ -72,48 +72,45 @@ class BattleEngineUseCasePropertyTest {
                 Arbitraries.integers(),
                 Arbitraries.integers(),
                 Arbitraries.integers())
-            .as(
-                (dur, str, pow, spd, intel, cbt) ->
-                    Hero.PowerStats.builder()
-                        .durability(dur)
-                        .strength(str)
-                        .power(pow)
-                        .speed(spd)
-                        .intelligence(intel)
-                        .combat(cbt)
-                        .build());
+            .as((dur, str, pow, spd, intel, cbt) ->
+                Hero.PowerStats.builder()
+                    .durability(dur)
+                    .strength(str)
+                    .power(pow)
+                    .speed(spd)
+                    .intelligence(intel)
+                    .combat(cbt)
+                    .build());
 
-    return powerStatsArbitrary.map(
-        stats ->
-            new BattleEngineUseCase.BattleHeroUseCase(
-                Hero.builder()
-                    .id(1)
-                    .name("Hero")
-                    .slug("hero")
-                    .role("Fighter")
-                    .powerstats(stats)
-                    .build(),
-                UUID.randomUUID()));
+    return powerStatsArbitrary.map(stats ->
+        new BattleEngineUseCase.BattleHeroUseCase(
+            Hero.builder()
+                .id(1)
+                .name("Hero")
+                .slug("hero")
+                .role("Fighter")
+                .powerstats(stats)
+                .build(),
+            UUID.randomUUID()));
   }
 
   @Provide
   Arbitrary<RoundSpec> roundSpecs() {
     Arbitrary<Double> modifiers = Arbitraries.doubles().between(0.5, 2.0);
-    return modifiers.map(
-        m ->
-            new RoundSpec(
-                "Test Round",
-                5,
-                1000,
-                emptyMap(),
-                emptyMap(),
-                emptyList(),
-                Map.of("TECH", m, "MAGIC", m),
-                "ARENA",
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList()));
+    return modifiers.map(m ->
+        new RoundSpec(
+            "Test Round",
+            5,
+            1000,
+            emptyMap(),
+            emptyMap(),
+            emptyList(),
+            Map.of("TECH", m, "MAGIC", m),
+            "ARENA",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            emptyList()));
   }
 }

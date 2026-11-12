@@ -105,10 +105,9 @@ public class MatchUseCase {
       Round round =
           roundRepository
               .findBySessionIdAndRoundNo(sessionId, roundNo)
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Round " + roundNo + " does not exist in session " + sessionId));
+              .orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "Round " + roundNo + " does not exist in session " + sessionId));
 
       List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
       Set<UUID> sessionTeamIds =
@@ -226,10 +225,8 @@ public class MatchUseCase {
 
     boolean allCompleted =
         prevMatches.stream()
-            .allMatch(
-                m ->
-                    m.getStatus() == MatchStatus.COMPLETED
-                        || m.getStatus() == MatchStatus.CANCELLED);
+            .allMatch(m ->
+                m.getStatus() == MatchStatus.COMPLETED || m.getStatus() == MatchStatus.CANCELLED);
     if (!allCompleted) {
       throw new IllegalStateException(
           "Previous round matches must be completed before auto-matching round " + roundNo);
@@ -395,11 +392,10 @@ public class MatchUseCase {
       Match match =
           matchRepository
               .findById(matchId)
-              .orElseThrow(
-                  () -> {
-                    log.error("Match not found - matchId={}", matchId);
-                    return new IllegalArgumentException("Match not found");
-                  });
+              .orElseThrow(() -> {
+                log.error("Match not found - matchId={}", matchId);
+                return new IllegalArgumentException("Match not found");
+              });
 
       MDC.put("roundNo", match.getRoundNo().toString());
       log.debug(
@@ -560,11 +556,10 @@ public class MatchUseCase {
 
     List<Hero> orderedHeroes =
         submission.heroIds().stream()
-            .map(
-                id ->
-                    Optional.ofNullable(heroMap.get(id))
-                        .orElseThrow(
-                            () -> new IllegalArgumentException("Hero not found in roster: " + id)))
+            .map(id ->
+                Optional.ofNullable(heroMap.get(id))
+                    .orElseThrow(
+                        () -> new IllegalArgumentException("Hero not found in roster: " + id)))
             .toList();
     return fatigueUseCase.applyFatigue(teamId, orderedHeroes, roundNo);
   }

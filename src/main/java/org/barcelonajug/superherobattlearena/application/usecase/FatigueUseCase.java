@@ -118,19 +118,18 @@ public class FatigueUseCase {
 
       List<HeroUsage> usages =
           heroIds.stream()
-              .map(
-                  heroId -> {
-                    int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
-                    int newStreak = previousStreak + 1;
-                    BigDecimal multiplier = calculateMultiplier(newStreak);
-                    log.debug(
-                        "Hero {} usage - previousStreak={}, newStreak={}, multiplier={}",
-                        heroId,
-                        previousStreak,
-                        newStreak,
-                        multiplier);
-                    return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
-                  })
+              .map(heroId -> {
+                int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
+                int newStreak = previousStreak + 1;
+                BigDecimal multiplier = calculateMultiplier(newStreak);
+                log.debug(
+                    "Hero {} usage - previousStreak={}, newStreak={}, multiplier={}",
+                    heroId,
+                    previousStreak,
+                    newStreak,
+                    multiplier);
+                return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+              })
               .toList();
 
       heroUsageRepository.saveAll(usages);
@@ -162,29 +161,27 @@ public class FatigueUseCase {
 
       List<HeroUsage> usages =
           teamHeroUsageMap.entrySet().stream()
-              .flatMap(
-                  entry -> {
-                    UUID teamId = entry.getKey();
-                    List<Integer> heroIds = entry.getValue();
-                    Map<Integer, Integer> heroIdToStreakMap =
-                        teamToHeroStreakMap.getOrDefault(teamId, Map.of());
+              .flatMap(entry -> {
+                UUID teamId = entry.getKey();
+                List<Integer> heroIds = entry.getValue();
+                Map<Integer, Integer> heroIdToStreakMap =
+                    teamToHeroStreakMap.getOrDefault(teamId, Map.of());
 
-                    return heroIds.stream()
-                        .map(
-                            heroId -> {
-                              int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
-                              int newStreak = previousStreak + 1;
-                              BigDecimal multiplier = calculateMultiplier(newStreak);
-                              log.debug(
-                                  "Hero {} usage - teamId={}, previousStreak={}, newStreak={}, multiplier={}",
-                                  heroId,
-                                  teamId,
-                                  previousStreak,
-                                  newStreak,
-                                  multiplier);
-                              return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
-                            });
-                  })
+                return heroIds.stream()
+                    .map(heroId -> {
+                      int previousStreak = heroIdToStreakMap.getOrDefault(heroId, 0);
+                      int newStreak = previousStreak + 1;
+                      BigDecimal multiplier = calculateMultiplier(newStreak);
+                      log.debug(
+                          "Hero {} usage - teamId={}, previousStreak={}, newStreak={}, multiplier={}",
+                          heroId,
+                          teamId,
+                          previousStreak,
+                          newStreak,
+                          multiplier);
+                      return new HeroUsage(teamId, heroId, roundNo, newStreak, multiplier);
+                    });
+              })
               .toList();
 
       heroUsageRepository.saveAll(usages);
