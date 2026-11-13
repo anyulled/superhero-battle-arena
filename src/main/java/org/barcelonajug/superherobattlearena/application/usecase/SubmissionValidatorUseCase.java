@@ -18,68 +18,64 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SubmissionValidatorUseCase {
-    private static final Logger log = LoggerFactory.getLogger(SubmissionValidatorUseCase.class);
+  private static final Logger log = LoggerFactory.getLogger(SubmissionValidatorUseCase.class);
 
-    private final RosterUseCase rosterUseCase;
-    private final List<ValidationRule> validationRules;
+  private final RosterUseCase rosterUseCase;
+  private final List<ValidationRule> validationRules;
 
-    public SubmissionValidatorUseCase(
-            RosterUseCase rosterUseCase,
-            List<ValidationRule> validationRules
-    ) {
-        this.rosterUseCase = rosterUseCase;
-        this.validationRules = validationRules;
+  public SubmissionValidatorUseCase(
+      RosterUseCase rosterUseCase, List<ValidationRule> validationRules) {
+    this.rosterUseCase = rosterUseCase;
+    this.validationRules = validationRules;
+  }
+
+  public void validate(DraftSubmission submission, RoundSpec roundSpec) {
+    log.debug(
+        "Validating submission - heroIds={}, roundSpec={}",
+        submission.heroIds(),
+        roundSpec.description());
+
+    List<Integer> heroIds = submission.heroIds();
+
+    validateTeamSize(heroIds, roundSpec);
+    validateDuplicates(heroIds);
+
+    List<Hero> heroes = resolveHeroes(heroIds);
+
+    // Apply all validation rules using strategy pattern
+    validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
+
+    log.info("Submission validation successful - {} heroes validated", heroIds.size());
+  }
+
+  private void validateTeamSize(List<Integer> heroIds, RoundSpec roundSpec) {
+    if (heroIds.size() != roundSpec.teamSize()) {
+      log.warn(
+          "Team size validation failed - expected={}, actual={}",
+          roundSpec.teamSize(),
+          heroIds.size());
+      throw new TeamSizeException(roundSpec.teamSize(), heroIds.size());
     }
+  }
 
-    public void validate(DraftSubmission submission, RoundSpec roundSpec) {
-        log.debug(
-                "Validating submission - heroIds={}, roundSpec={}",
-                submission.heroIds(),
-                roundSpec.description()
-        );
-
-        List<Integer> heroIds = submission.heroIds();
-
-        validateTeamSize(heroIds, roundSpec);
-        validateDuplicates(heroIds);
-
-        List<Hero> heroes = resolveHeroes(heroIds);
-
-        // Apply all validation rules using strategy pattern
-        validationRules.forEach(rule -> rule.validate(heroes, roundSpec));
-
-        log.info("Submission validation successful - {} heroes validated", heroIds.size());
+  private void validateDuplicates(List<Integer> heroIds) {
+    Set<Integer> uniqueIds = new HashSet<>(heroIds);
+    if (uniqueIds.size() != heroIds.size()) {
+      log.warn("Duplicate heroes detected in submission - heroIds={}", heroIds);
+      throw new DuplicateHeroException();
     }
+  }
 
-    private void validateTeamSize(List<Integer> heroIds, RoundSpec roundSpec) {
-        if (heroIds.size() != roundSpec.teamSize()) {
-            log.warn(
-                    "Team size validation failed - expected={}, actual={}",
-                    roundSpec.teamSize(),
-                    heroIds.size()
-            );
-            throw new TeamSizeException(roundSpec.teamSize(), heroIds.size());
+  private List<Hero> resolveHeroes(List<Integer> heroIds) {
+    List<Hero> heroes = rosterUseCase.getHeroes(heroIds);
+    if (heroes.size() != heroIds.size()) {
+      Set<Integer> foundIds = heroes.stream().map(Hero::id).collect(toSet());
+      for (Integer id : heroIds) {
+        if (!foundIds.contains(id)) {
+          throw new HeroNotFoundException(id);
         }
+      }
     }
-
-    private void validateDuplicates(List<Integer> heroIds) {
-        Set<Integer> uniqueIds = new HashSet<>(heroIds);
-        if (uniqueIds.size() != heroIds.size()) {
-            log.warn("Duplicate heroes detected in submission - heroIds={}", heroIds);
-            throw new DuplicateHeroException();
-        }
-    }
-
-    private List<Hero> resolveHeroes(List<Integer> heroIds) {
-        List<Hero> heroes = rosterUseCase.getHeroes(heroIds);
-        if (heroes.size() != heroIds.size()) {
-            Set<Integer> foundIds = heroes.stream().map(Hero::id).collect(toSet());
-            for (Integer id : heroIds) {
-                if (!foundIds.contains(id)) {
-                    throw new HeroNotFoundException(id);
-                }
-            }
-        }
-        return heroes;
-    }
+    return heroes;
+  }
 }

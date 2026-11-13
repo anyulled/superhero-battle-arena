@@ -5,9 +5,8 @@ import java.util.UUID;
 
 @Schema(description = "Request to create a new round with specific constraints")
 public record CreateRoundRequest(
-        @Schema(
-                description = "ID of the tournament session",
-                example = "550e8400-e29b-41d4-a716-446655440001"
-        ) UUID sessionId,
-        @Schema(description = "Specifications and constraints for the round") RoundSpecDto spec
-) {}
+    @Schema(
+            description = "ID of the tournament session",
+            example = "550e8400-e29b-41d4-a716-446655440001")
+        UUID sessionId,
+    @Schema(description = "Specifications and constraints for the round") RoundSpecDto spec) {}

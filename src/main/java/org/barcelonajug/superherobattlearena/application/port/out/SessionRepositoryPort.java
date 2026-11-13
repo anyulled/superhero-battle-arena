@@ -6,13 +6,13 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Session;
 
 public interface SessionRepositoryPort {
-    Session save(Session session);
+  Session save(Session session);
 
-    Optional<Session> findByActiveTrue();
+  Optional<Session> findByActiveTrue();
 
-    List<Session> findAll();
+  List<Session> findAll();
 
-    Optional<Session> findById(UUID id);
+  Optional<Session> findById(UUID id);
 
-    void deleteAll();
+  void deleteAll();
 }

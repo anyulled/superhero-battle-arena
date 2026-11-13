@@ -18,103 +18,103 @@ import org.jspecify.annotations.Nullable;
 @Table(name = "submissions")
 @IdClass(SubmissionEntity.SubmissionId.class)
 public class SubmissionEntity {
-    @Id
-    @Column(name = "team_id")
-    @SuppressWarnings("NullAway.Init")
-    private UUID teamId;
+  @Id
+  @Column(name = "team_id")
+  @SuppressWarnings("NullAway.Init")
+  private UUID teamId;
 
-    @Id
-    @Column(name = "round_no")
-    @SuppressWarnings("NullAway.Init")
-    private Integer roundNo;
+  @Id
+  @Column(name = "round_no")
+  @SuppressWarnings("NullAway.Init")
+  private Integer roundNo;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "submission_json")
-    private @Nullable DraftSubmission submissionJson;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "submission_json")
+  private @Nullable DraftSubmission submissionJson;
 
-    @Column(nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private Boolean accepted;
+  @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private Boolean accepted;
 
-    @Column(name = "rejected_reason")
-    private @Nullable String rejectedReason;
+  @Column(name = "rejected_reason")
+  private @Nullable String rejectedReason;
 
-    @Column(name = "submitted_at")
-    private @Nullable OffsetDateTime submittedAt;
+  @Column(name = "submitted_at")
+  private @Nullable OffsetDateTime submittedAt;
 
-    public static class SubmissionId implements Serializable {
-        private @Nullable UUID teamId;
-        private @Nullable Integer roundNo;
+  public static class SubmissionId implements Serializable {
+    private @Nullable UUID teamId;
+    private @Nullable Integer roundNo;
 
-        public SubmissionId() {}
+    public SubmissionId() {}
 
-        public SubmissionId(@Nullable UUID teamId, @Nullable Integer roundNo) {
-            this.teamId = teamId;
-            this.roundNo = roundNo;
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof SubmissionId that)) {
-                return false;
-            }
-            return Objects.equals(teamId, that.teamId) && Objects.equals(roundNo, that.roundNo);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(teamId, roundNo);
-        }
+    public SubmissionId(@Nullable UUID teamId, @Nullable Integer roundNo) {
+      this.teamId = teamId;
+      this.roundNo = roundNo;
     }
 
-    public UUID getTeamId() {
-        return teamId;
+    @Override
+    public boolean equals(@Nullable Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof SubmissionId that)) {
+        return false;
+      }
+      return Objects.equals(teamId, that.teamId) && Objects.equals(roundNo, that.roundNo);
     }
 
-    public void setTeamId(UUID teamId) {
-        this.teamId = teamId;
+    @Override
+    public int hashCode() {
+      return Objects.hash(teamId, roundNo);
     }
+  }
 
-    public Integer getRoundNo() {
-        return roundNo;
-    }
+  public UUID getTeamId() {
+    return teamId;
+  }
 
-    public void setRoundNo(Integer roundNo) {
-        this.roundNo = roundNo;
-    }
+  public void setTeamId(UUID teamId) {
+    this.teamId = teamId;
+  }
 
-    public @Nullable DraftSubmission getSubmissionJson() {
-        return submissionJson;
-    }
+  public Integer getRoundNo() {
+    return roundNo;
+  }
 
-    public void setSubmissionJson(@Nullable DraftSubmission submissionJson) {
-        this.submissionJson = submissionJson;
-    }
+  public void setRoundNo(Integer roundNo) {
+    this.roundNo = roundNo;
+  }
 
-    public Boolean getAccepted() {
-        return accepted;
-    }
+  public @Nullable DraftSubmission getSubmissionJson() {
+    return submissionJson;
+  }
 
-    public void setAccepted(Boolean accepted) {
-        this.accepted = accepted;
-    }
+  public void setSubmissionJson(@Nullable DraftSubmission submissionJson) {
+    this.submissionJson = submissionJson;
+  }
 
-    public @Nullable String getRejectedReason() {
-        return rejectedReason;
-    }
+  public Boolean getAccepted() {
+    return accepted;
+  }
 
-    public void setRejectedReason(@Nullable String rejectedReason) {
-        this.rejectedReason = rejectedReason;
-    }
+  public void setAccepted(Boolean accepted) {
+    this.accepted = accepted;
+  }
 
-    public @Nullable OffsetDateTime getSubmittedAt() {
-        return submittedAt;
-    }
+  public @Nullable String getRejectedReason() {
+    return rejectedReason;
+  }
 
-    public void setSubmittedAt(@Nullable OffsetDateTime submittedAt) {
-        this.submittedAt = submittedAt;
-    }
+  public void setRejectedReason(@Nullable String rejectedReason) {
+    this.rejectedReason = rejectedReason;
+  }
+
+  public @Nullable OffsetDateTime getSubmittedAt() {
+    return submittedAt;
+  }
+
+  public void setSubmittedAt(@Nullable OffsetDateTime submittedAt) {
+    this.submittedAt = submittedAt;
+  }
 }

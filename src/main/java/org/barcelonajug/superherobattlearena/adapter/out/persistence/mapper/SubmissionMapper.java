@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface SubmissionMapper {
-    @Nullable Submission toDomain(SubmissionEntity entity);
+  @Nullable Submission toDomain(SubmissionEntity entity);
 
-    @Nullable SubmissionEntity toEntity(Submission domain);
+  @Nullable SubmissionEntity toEntity(Submission domain);
 }

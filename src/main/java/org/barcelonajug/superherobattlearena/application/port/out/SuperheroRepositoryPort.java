@@ -7,19 +7,19 @@ import org.barcelonajug.superherobattlearena.domain.HeroSearchCriteria;
 import org.barcelonajug.superherobattlearena.domain.HeroSearchResult;
 
 public interface SuperheroRepositoryPort {
-    List<Hero> findAll();
+  List<Hero> findAll();
 
-    Optional<Hero> findById(Integer id);
+  Optional<Hero> findById(Integer id);
 
-    List<Hero> searchByName(String term);
+  List<Hero> searchByName(String term);
 
-    List<Hero> findByAlignmentAndPublisher(String alignment, String publisher);
+  List<Hero> findByAlignmentAndPublisher(String alignment, String publisher);
 
-    List<Hero> findAll(int page, int size);
+  List<Hero> findAll(int page, int size);
 
-    List<Hero> findByIds(List<Integer> ids);
+  List<Hero> findByIds(List<Integer> ids);
 
-    long count();
+  long count();
 
-    HeroSearchResult search(HeroSearchCriteria criteria);
+  HeroSearchResult search(HeroSearchCriteria criteria);
 }

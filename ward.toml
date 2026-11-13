@@ -16,9 +16,14 @@ profiles = ["pre-push", "ci"]
 command = "./mvnw jacoco:check"
 
 [checks.ward-format]
-enabled = true
+enabled = false
 profiles = ["default", "pre-commit", "pre-push", "ci", "edit"]
 uses = "ward-format"
+
+[checks.spotless]
+enabled = true
+profiles = ["default", "pre-commit", "pre-push", "ci", "edit"]
+command = "./mvnw spotless:check"
 
 [checks.ward-format.paths]
 match = ["**/*.java"]

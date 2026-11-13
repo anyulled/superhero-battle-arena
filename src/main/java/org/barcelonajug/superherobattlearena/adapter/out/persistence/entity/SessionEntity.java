@@ -10,38 +10,38 @@ import java.util.UUID;
 @Entity
 @Table(name = "sessions")
 public class SessionEntity {
-    @Id
-    @SuppressWarnings("NullAway.Init")
-    private UUID sessionId;
+  @Id
+  @SuppressWarnings("NullAway.Init")
+  private UUID sessionId;
 
-    @Column(name = "created_at", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private OffsetDateTime createdAt;
+  @Column(name = "created_at", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private OffsetDateTime createdAt;
 
-    @Column(nullable = false)
-    private boolean active;
+  @Column(nullable = false)
+  private boolean active;
 
-    public UUID getSessionId() {
-        return sessionId;
-    }
+  public UUID getSessionId() {
+    return sessionId;
+  }
 
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(UUID sessionId) {
+    this.sessionId = sessionId;
+  }
 
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
+  public OffsetDateTime getCreatedAt() {
+    return createdAt;
+  }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+  public void setCreatedAt(OffsetDateTime createdAt) {
+    this.createdAt = createdAt;
+  }
 
-    public boolean isActive() {
-        return active;
-    }
+  public boolean isActive() {
+    return active;
+  }
 
-    public void setActive(boolean active) {
-        this.active = active;
-    }
+  public void setActive(boolean active) {
+    this.active = active;
+  }
 }

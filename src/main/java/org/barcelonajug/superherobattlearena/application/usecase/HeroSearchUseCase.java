@@ -11,23 +11,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class HeroSearchUseCase {
-    private static final Logger log = LoggerFactory.getLogger(HeroSearchUseCase.class);
+  private static final Logger log = LoggerFactory.getLogger(HeroSearchUseCase.class);
 
-    private final SuperheroRepositoryPort superheroRepository;
+  private final SuperheroRepositoryPort superheroRepository;
 
-    public HeroSearchUseCase(SuperheroRepositoryPort superheroRepository) {
-        this.superheroRepository = superheroRepository;
-    }
+  public HeroSearchUseCase(SuperheroRepositoryPort superheroRepository) {
+    this.superheroRepository = superheroRepository;
+  }
 
-    public HeroSearchResult search(HeroSearchCriteria criteria) {
-        log.debug("Searching heroes with criteria: {}", criteria);
-        HeroSearchResult result = superheroRepository.search(criteria);
-        log.debug(
-                "Found {} heroes (page {}/{})",
-                result.totalElements(),
-                result.currentPage() + 1,
-                result.totalPages()
-        );
-        return result;
-    }
+  public HeroSearchResult search(HeroSearchCriteria criteria) {
+    log.debug("Searching heroes with criteria: {}", criteria);
+    HeroSearchResult result = superheroRepository.search(criteria);
+    log.debug(
+        "Found {} heroes (page {}/{})",
+        result.totalElements(),
+        result.currentPage() + 1,
+        result.totalPages());
+    return result;
+  }
 }

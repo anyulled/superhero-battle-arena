@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface MatchEventMapper {
-    @Nullable MatchEvent toDomain(MatchEventEntity entity);
+  @Nullable MatchEvent toDomain(MatchEventEntity entity);
 
-    @Nullable MatchEventEntity toEntity(MatchEvent domain);
+  @Nullable MatchEventEntity toEntity(MatchEvent domain);
 }

@@ -13,38 +13,36 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RoundPersistenceAdapter implements RoundRepositoryPort {
-    private final SpringDataRoundRepository repository;
-    private final RoundMapper mapper;
+  private final SpringDataRoundRepository repository;
+  private final RoundMapper mapper;
 
-    public RoundPersistenceAdapter(SpringDataRoundRepository repository, RoundMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public RoundPersistenceAdapter(SpringDataRoundRepository repository, RoundMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public Optional<Round> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo) {
-        return repository.findBySessionIdAndRoundNo(sessionId, roundNo).map(mapper::toDomain);
-    }
+  @Override
+  public Optional<Round> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo) {
+    return repository.findBySessionIdAndRoundNo(sessionId, roundNo).map(mapper::toDomain);
+  }
 
-    @Override
-    public List<Round> findBySessionId(UUID sessionId) {
-        return repository.findBySessionId(sessionId).stream().map(mapper::toDomain).toList();
-    }
+  @Override
+  public List<Round> findBySessionId(UUID sessionId) {
+    return repository.findBySessionId(sessionId).stream().map(mapper::toDomain).toList();
+  }
 
-    @Override
-    public Round save(Round round) {
-        return requireNonNull(
-                mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(round))))
-        );
-    }
+  @Override
+  public Round save(Round round) {
+    return requireNonNull(mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(round)))));
+  }
 
-    @Override
-    public Optional<Integer> findMaxRoundNo(UUID sessionId) {
-        return repository.findMaxRoundNo(sessionId);
-    }
+  @Override
+  public Optional<Integer> findMaxRoundNo(UUID sessionId) {
+    return repository.findMaxRoundNo(sessionId);
+  }
 
-    @Override
-    public void deleteAll() {
-        repository.deleteAll();
-    }
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

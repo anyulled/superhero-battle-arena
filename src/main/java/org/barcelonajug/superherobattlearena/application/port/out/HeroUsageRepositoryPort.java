@@ -6,20 +6,20 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.HeroUsage;
 
 public interface HeroUsageRepositoryPort {
-    HeroUsage save(HeroUsage heroUsage);
+  HeroUsage save(HeroUsage heroUsage);
 
-    /**
+  /**
    * Saves all hero usages.
    *
    * @param heroUsages the list of hero usages to save
    */
-    void saveAll(List<HeroUsage> heroUsages);
+  void saveAll(List<HeroUsage> heroUsages);
 
-    List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
+  List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
 
-    List<HeroUsage> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo);
+  List<HeroUsage> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo);
 
-    List<HeroUsage> findByTeamId(UUID teamId);
+  List<HeroUsage> findByTeamId(UUID teamId);
 
-    void deleteAll();
+  void deleteAll();
 }

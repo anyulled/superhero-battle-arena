@@ -5,30 +5,30 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.MatchEvent;
 
 public interface MatchEventRepositoryPort {
-    /**
+  /**
    * Save a single match event.
    *
    * @param matchEvent the event to save
    * @return the saved event
    */
-    MatchEvent save(MatchEvent matchEvent);
+  MatchEvent save(MatchEvent matchEvent);
 
-    /**
+  /**
    * Save a list of match events.
    *
    * @param matchEvents the list of events to save
    * @return the list of saved events
    */
-    List<MatchEvent> saveAll(List<MatchEvent> matchEvents);
+  List<MatchEvent> saveAll(List<MatchEvent> matchEvents);
 
-    /**
+  /**
    * Find events by match ID.
    *
    * @param matchId the match ID
    * @return list of events
    */
-    List<MatchEvent> findByMatchId(UUID matchId);
+  List<MatchEvent> findByMatchId(UUID matchId);
 
-    /** Delete all match events. */
-    void deleteAll();
+  /** Delete all match events. */
+  void deleteAll();
 }

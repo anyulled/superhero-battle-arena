@@ -18,55 +18,48 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/sessions")
 @Tag(name = "Session Management", description = "Endpoints for managing tournament sessions")
 public class SessionController {
-    private final SessionUseCase sessionUseCase;
+  private final SessionUseCase sessionUseCase;
 
-    public SessionController(SessionUseCase sessionUseCase) {
-        this.sessionUseCase = sessionUseCase;
-    }
+  public SessionController(SessionUseCase sessionUseCase) {
+    this.sessionUseCase = sessionUseCase;
+  }
 
-    @Operation(
-            summary = "Create a new session",
-            description = "Initializes a new tournament session."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Session created",
-            content = @Content(schema = @Schema(implementation = SessionDto.class))
-    )
-    @PostMapping
-    public ResponseEntity<SessionDto> createSession() {
-        return ResponseEntity.ok(SessionDto.from(sessionUseCase.createSession()));
-    }
+  @Operation(
+      summary = "Create a new session",
+      description = "Initializes a new tournament session.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Session created",
+      content = @Content(schema = @Schema(implementation = SessionDto.class)))
+  @PostMapping
+  public ResponseEntity<SessionDto> createSession() {
+    return ResponseEntity.ok(SessionDto.from(sessionUseCase.createSession()));
+  }
 
-    @Operation(summary = "List all sessions", description = "Returns all tournament sessions.")
-    @ApiResponse(
-            responseCode = "200",
-            description = "Sessions retrieved",
-            content = @Content(schema = @Schema(implementation = SessionDto.class))
-    )
-    @GetMapping
-    public ResponseEntity<List<SessionDto>> listSessions() {
-        return ResponseEntity.ok(
-                sessionUseCase.listSessions().stream().map(SessionDto::from).toList()
-        );
-    }
+  @Operation(summary = "List all sessions", description = "Returns all tournament sessions.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Sessions retrieved",
+      content = @Content(schema = @Schema(implementation = SessionDto.class)))
+  @GetMapping
+  public ResponseEntity<List<SessionDto>> listSessions() {
+    return ResponseEntity.ok(sessionUseCase.listSessions().stream().map(SessionDto::from).toList());
+  }
 
-    @Operation(
-            summary = "Get active session",
-            description = "Retrieves the currently active tournament session."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Active session found",
-            content = @Content(schema = @Schema(implementation = SessionDto.class))
-    )
-    @ApiResponse(responseCode = "404", description = "No active session found")
-    @GetMapping("/active")
-    public ResponseEntity<SessionDto> getActiveSession() {
-        return sessionUseCase
-                .getActiveSession()
-                .map(SessionDto::from)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+  @Operation(
+      summary = "Get active session",
+      description = "Retrieves the currently active tournament session.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Active session found",
+      content = @Content(schema = @Schema(implementation = SessionDto.class)))
+  @ApiResponse(responseCode = "404", description = "No active session found")
+  @GetMapping("/active")
+  public ResponseEntity<SessionDto> getActiveSession() {
+    return sessionUseCase
+        .getActiveSession()
+        .map(SessionDto::from)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
+  }
 }

@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface HeroUsageMapper {
-    @Nullable HeroUsage toDomain(HeroUsageEntity entity);
+  @Nullable HeroUsage toDomain(HeroUsageEntity entity);
 
-    @Nullable HeroUsageEntity toEntity(HeroUsage domain);
+  @Nullable HeroUsageEntity toEntity(HeroUsage domain);
 }

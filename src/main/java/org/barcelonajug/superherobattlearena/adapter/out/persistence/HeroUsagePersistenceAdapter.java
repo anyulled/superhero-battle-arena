@@ -12,64 +12,60 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class HeroUsagePersistenceAdapter implements HeroUsageRepositoryPort {
-    private final SpringDataHeroUsageRepository repository;
-    private final HeroUsageMapper mapper;
+  private final SpringDataHeroUsageRepository repository;
+  private final HeroUsageMapper mapper;
 
-    public HeroUsagePersistenceAdapter(
-            SpringDataHeroUsageRepository repository,
-            HeroUsageMapper mapper
-    ) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public HeroUsagePersistenceAdapter(
+      SpringDataHeroUsageRepository repository, HeroUsageMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public HeroUsage save(HeroUsage heroUsage) {
-        return Objects.requireNonNull(
-                mapper.toDomain(repository.save(Objects.requireNonNull(mapper.toEntity(heroUsage))))
-        );
-    }
+  @Override
+  public HeroUsage save(HeroUsage heroUsage) {
+    return Objects.requireNonNull(
+        mapper.toDomain(repository.save(Objects.requireNonNull(mapper.toEntity(heroUsage)))));
+  }
 
-    @Override
-    public void saveAll(final List<HeroUsage> heroUsages) {
-        repository.saveAll(
-                heroUsages.stream()
-                        .map(mapper::toEntity)
-                        .filter(Objects::nonNull)
-                        .map(Objects::requireNonNull)
-                        .toList()
-        );
-    }
+  @Override
+  public void saveAll(final List<HeroUsage> heroUsages) {
+    repository.saveAll(
+        heroUsages.stream()
+            .map(mapper::toEntity)
+            .filter(Objects::nonNull)
+            .map(Objects::requireNonNull)
+            .toList());
+  }
 
-    @Override
-    public List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
-        return repository.findByTeamIdAndRoundNo(teamId, roundNo).stream()
-                .map(mapper::toDomain)
-                .filter(Objects::nonNull)
-                .map(Objects::requireNonNull)
-                .toList();
-    }
+  @Override
+  public List<HeroUsage> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo) {
+    return repository.findByTeamIdAndRoundNo(teamId, roundNo).stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
+  }
 
-    @Override
-    public List<HeroUsage> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo) {
-        return repository.findByTeamIdInAndRoundNo(teamIds, roundNo).stream()
-                .map(mapper::toDomain)
-                .filter(Objects::nonNull)
-                .map(Objects::requireNonNull)
-                .toList();
-    }
+  @Override
+  public List<HeroUsage> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo) {
+    return repository.findByTeamIdInAndRoundNo(teamIds, roundNo).stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
+  }
 
-    @Override
-    public List<HeroUsage> findByTeamId(UUID teamId) {
-        return repository.findByTeamId(teamId).stream()
-                .map(mapper::toDomain)
-                .filter(Objects::nonNull)
-                .map(Objects::requireNonNull)
-                .toList();
-    }
+  @Override
+  public List<HeroUsage> findByTeamId(UUID teamId) {
+    return repository.findByTeamId(teamId).stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
+  }
 
-    @Override
-    public void deleteAll() {
-        repository.deleteAll();
-    }
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

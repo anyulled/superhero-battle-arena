@@ -6,13 +6,13 @@ import java.util.UUID;
 import org.barcelonajug.superherobattlearena.domain.Round;
 
 public interface RoundRepositoryPort {
-    Optional<Round> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo);
+  Optional<Round> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo);
 
-    List<Round> findBySessionId(UUID sessionId);
+  List<Round> findBySessionId(UUID sessionId);
 
-    Round save(Round round);
+  Round save(Round round);
 
-    Optional<Integer> findMaxRoundNo(UUID sessionId);
+  Optional<Integer> findMaxRoundNo(UUID sessionId);
 
-    void deleteAll();
+  void deleteAll();
 }

@@ -27,164 +27,141 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class RoundUseCase {
-    private static final Logger log = LoggerFactory.getLogger(RoundUseCase.class);
+  private static final Logger log = LoggerFactory.getLogger(RoundUseCase.class);
 
-    private final RoundRepositoryPort roundRepository;
-    private final SubmissionRepositoryPort submissionRepository;
-    private final TeamRepositoryPort teamRepository;
-    private final EliminationRepositoryPort eliminationRepository;
+  private final RoundRepositoryPort roundRepository;
+  private final SubmissionRepositoryPort submissionRepository;
+  private final TeamRepositoryPort teamRepository;
+  private final EliminationRepositoryPort eliminationRepository;
 
-    /** Creates the round use case with round, submission, team, and elimination repositories. */
-    public RoundUseCase(
-            RoundRepositoryPort roundRepository,
-            SubmissionRepositoryPort submissionRepository,
-            TeamRepositoryPort teamRepository,
-            EliminationRepositoryPort eliminationRepository
-    ) {
-        this.roundRepository = roundRepository;
-        this.submissionRepository = submissionRepository;
-        this.teamRepository = teamRepository;
-        this.eliminationRepository = eliminationRepository;
+  /** Creates the round use case with round, submission, team, and elimination repositories. */
+  public RoundUseCase(
+      RoundRepositoryPort roundRepository,
+      SubmissionRepositoryPort submissionRepository,
+      TeamRepositoryPort teamRepository,
+      EliminationRepositoryPort eliminationRepository) {
+    this.roundRepository = roundRepository;
+    this.submissionRepository = submissionRepository;
+    this.teamRepository = teamRepository;
+    this.eliminationRepository = eliminationRepository;
+  }
+
+  public Optional<RoundSpec> getRoundSpec(Integer roundNo, @Nullable UUID sessionId) {
+    if (sessionId == null) {
+      log.warn("getRoundSpec called without sessionId for roundNo={}", roundNo);
+      return Optional.empty();
     }
+    return roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo).map(Round::getSpecJson);
+  }
 
-    public Optional<RoundSpec> getRoundSpec(Integer roundNo, @Nullable UUID sessionId) {
-        if (sessionId == null) {
-            log.warn("getRoundSpec called without sessionId for roundNo={}", roundNo);
-            return Optional.empty();
-        }
-        return roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo).map(
-                Round::getSpecJson
-        );
-    }
-
-    /**
+  /**
    * Accepts a squad after checking the team, session round, elimination status, prior submission,
    * and required squad size. Eliminated teams are rejected with TeamEliminatedException.
    */
-    public void submitTeam(Integer roundNo, UUID teamId, DraftSubmission draft) {
-        MDC.put("roundNo", roundNo.toString());
-        MDC.put("teamId", teamId.toString());
+  public void submitTeam(Integer roundNo, UUID teamId, DraftSubmission draft) {
+    MDC.put("roundNo", roundNo.toString());
+    MDC.put("teamId", teamId.toString());
 
-        try {
-            log.info(
-                    "Submitting team - teamId={}, roundNo={}, heroes={}",
-                    teamId,
-                    roundNo,
-                    draft.heroIds().size()
-            );
+    try {
+      log.info(
+          "Submitting team - teamId={}, roundNo={}, heroes={}",
+          teamId,
+          roundNo,
+          draft.heroIds().size());
 
-            // Validate team exists and identify session
-            Team team =
-                    teamRepository
-                            .findById(teamId)
-                            .orElseThrow(
-                                    () -> new IllegalArgumentException("Team not found: " + teamId)
-                            );
+      // Validate team exists and identify session
+      Team team =
+          teamRepository
+              .findById(teamId)
+              .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
 
-            // Validate round exists for this session
-            // Team is record -> accessors are name(), sessionId()
-            Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(
-                    team.sessionId(),
-                    roundNo
-            );
-            if (round.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Round " + roundNo + " does not exist in session " + team.sessionId()
-                );
-            }
+      // Validate round exists for this session
+      // Team is record -> accessors are name(), sessionId()
+      Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(team.sessionId(), roundNo);
+      if (round.isEmpty()) {
+        throw new IllegalArgumentException(
+            "Round " + roundNo + " does not exist in session " + team.sessionId());
+      }
 
-            if (team.sessionId() != null
-                    && eliminationRepository.isEliminated(team.sessionId(), teamId)) {
-                log.warn(
-                        "Eliminated team attempted submission - teamId={}, roundNo={}",
-                        teamId,
-                        roundNo
-                );
-                throw new TeamEliminatedException(teamId, roundNo);
-            }
+      if (team.sessionId() != null
+          && eliminationRepository.isEliminated(team.sessionId(), teamId)) {
+        log.warn("Eliminated team attempted submission - teamId={}, roundNo={}", teamId, roundNo);
+        throw new TeamEliminatedException(teamId, roundNo);
+      }
 
-            if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
-                log.warn("Team already submitted - teamId={}, roundNo={}", teamId, roundNo);
-                throw new IllegalStateException(
-                        "Team " + teamId + " already submitted for round " + roundNo
-                );
-            }
+      if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
+        log.warn("Team already submitted - teamId={}, roundNo={}", teamId, roundNo);
+        throw new IllegalStateException(
+            "Team " + teamId + " already submitted for round " + roundNo);
+      }
 
-            RoundSpec spec = round.get().getSpecJson();
-            int requiredTeamSize = 5;
-            if (spec != null) {
-                int teamSize = spec.teamSize();
-                if (teamSize > 0) {
-                    requiredTeamSize = teamSize;
-                }
-            }
-            if (draft.heroIds().size() != requiredTeamSize) {
-                log.error(
-                        "Invalid team size - teamId={}, roundNo={}, size={}, required={}",
-                        teamId,
-                        roundNo,
-                        draft.heroIds().size(),
-                        requiredTeamSize
-                );
-                throw new IllegalArgumentException(
-                        "Team must have exactly " + requiredTeamSize + " heroes"
-                );
-            }
-
-            Submission submission =
-                    Submission.builder()
-                            .teamId(teamId)
-                            .roundNo(roundNo)
-                            .submissionJson(draft)
-                            .accepted(true)
-                            .submittedAt(OffsetDateTime.now(ZoneOffset.UTC))
-                            .build();
-
-            submissionRepository.save(submission);
-            log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            throw e;
-        } catch (RuntimeException e) {
-            throw new IllegalStateException(
-                    String.format(
-                            "Team submission failed - teamId=%s, roundNo=%d",
-                            teamId,
-                            roundNo
-                    ),
-                    e
-            );
-        } finally {
-            MDC.remove("roundNo");
-            MDC.remove("teamId");
+      RoundSpec spec = round.get().getSpecJson();
+      int requiredTeamSize = 5;
+      if (spec != null) {
+        int teamSize = spec.teamSize();
+        if (teamSize > 0) {
+          requiredTeamSize = teamSize;
         }
+      }
+      if (draft.heroIds().size() != requiredTeamSize) {
+        log.error(
+            "Invalid team size - teamId={}, roundNo={}, size={}, required={}",
+            teamId,
+            roundNo,
+            draft.heroIds().size(),
+            requiredTeamSize);
+        throw new IllegalArgumentException(
+            "Team must have exactly " + requiredTeamSize + " heroes");
+      }
+
+      Submission submission =
+          Submission.builder()
+              .teamId(teamId)
+              .roundNo(roundNo)
+              .submissionJson(draft)
+              .accepted(true)
+              .submittedAt(OffsetDateTime.now(ZoneOffset.UTC))
+              .build();
+
+      submissionRepository.save(submission);
+      log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
+    } catch (IllegalArgumentException | IllegalStateException e) {
+      throw e;
+    } catch (RuntimeException e) {
+      throw new IllegalStateException(
+          String.format("Team submission failed - teamId=%s, roundNo=%d", teamId, roundNo), e);
+    } finally {
+      MDC.remove("roundNo");
+      MDC.remove("teamId");
+    }
+  }
+
+  public Optional<DraftSubmission> getSubmission(Integer roundNo, UUID teamId) {
+    return submissionRepository
+        .findByTeamIdAndRoundNo(teamId, roundNo)
+        .map(Submission::getSubmissionJson);
+  }
+
+  public List<Submission> getSubmissions(Integer roundNo, @Nullable UUID sessionId) {
+    if (sessionId == null) {
+      log.warn("getSubmissions called without sessionId");
+      return emptyList();
     }
 
-    public Optional<DraftSubmission> getSubmission(Integer roundNo, UUID teamId) {
-        return submissionRepository
-                .findByTeamIdAndRoundNo(teamId, roundNo)
-                .map(Submission::getSubmissionJson);
+    Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo);
+    if (round.isEmpty()) {
+      return emptyList();
     }
 
-    public List<Submission> getSubmissions(Integer roundNo, @Nullable UUID sessionId) {
-        if (sessionId == null) {
-            log.warn("getSubmissions called without sessionId");
-            return emptyList();
-        }
+    List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
+    Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(toSet());
 
-        Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo);
-        if (round.isEmpty()) {
-            return emptyList();
-        }
+    return submissionRepository.findByRoundNo(roundNo).stream()
+        .filter(s -> sessionTeamIds.contains(s.getTeamId()))
+        .toList();
+  }
 
-        List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
-        Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(toSet());
-
-        return submissionRepository.findByRoundNo(roundNo).stream()
-                .filter(s -> sessionTeamIds.contains(s.getTeamId()))
-                .toList();
-    }
-
-    public List<Round> listRounds(UUID sessionId) {
-        return roundRepository.findBySessionId(sessionId);
-    }
+  public List<Round> listRounds(UUID sessionId) {
+    return roundRepository.findBySessionId(sessionId);
+  }
 }

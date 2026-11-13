@@ -15,76 +15,76 @@ import org.jspecify.annotations.Nullable;
 @Entity
 @Table(name = "superhero_biography")
 public class SuperheroBiographyEntity {
-    @Id
-    @Column(name = "superhero_id")
-    @SuppressWarnings("NullAway.Init")
-    private Integer superheroId;
+  @Id
+  @Column(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
+  private Integer superheroId;
 
-    @Column(name = "full_name")
-    private @Nullable String fullName;
+  @Column(name = "full_name")
+  private @Nullable String fullName;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    private @Nullable List<String> aliases;
+  @JdbcTypeCode(SqlTypes.JSON)
+  private @Nullable List<String> aliases;
 
-    @Column(name = "place_of_birth")
-    private @Nullable String placeOfBirth;
+  @Column(name = "place_of_birth")
+  private @Nullable String placeOfBirth;
 
-    @Column(name = "first_appearance")
-    private @Nullable String firstAppearance;
+  @Column(name = "first_appearance")
+  private @Nullable String firstAppearance;
 
-    @OneToOne
-    @MapsId
-    @JoinColumn(name = "superhero_id")
-    @SuppressWarnings("NullAway.Init")
-    private SuperheroEntity superhero;
+  @OneToOne
+  @MapsId
+  @JoinColumn(name = "superhero_id")
+  @SuppressWarnings("NullAway.Init")
+  private SuperheroEntity superhero;
 
-    public SuperheroBiographyEntity() {}
+  public SuperheroBiographyEntity() {}
 
-    public Integer getSuperheroId() {
-        return superheroId;
-    }
+  public Integer getSuperheroId() {
+    return superheroId;
+  }
 
-    public void setSuperheroId(Integer superheroId) {
-        this.superheroId = superheroId;
-    }
+  public void setSuperheroId(Integer superheroId) {
+    this.superheroId = superheroId;
+  }
 
-    public @Nullable String getFullName() {
-        return fullName;
-    }
+  public @Nullable String getFullName() {
+    return fullName;
+  }
 
-    public void setFullName(@Nullable String fullName) {
-        this.fullName = fullName;
-    }
+  public void setFullName(@Nullable String fullName) {
+    this.fullName = fullName;
+  }
 
-    public @Nullable List<String> getAliases() {
-        return aliases;
-    }
+  public @Nullable List<String> getAliases() {
+    return aliases;
+  }
 
-    public void setAliases(@Nullable List<String> aliases) {
-        this.aliases = aliases;
-    }
+  public void setAliases(@Nullable List<String> aliases) {
+    this.aliases = aliases;
+  }
 
-    public @Nullable String getPlaceOfBirth() {
-        return placeOfBirth;
-    }
+  public @Nullable String getPlaceOfBirth() {
+    return placeOfBirth;
+  }
 
-    public void setPlaceOfBirth(@Nullable String placeOfBirth) {
-        this.placeOfBirth = placeOfBirth;
-    }
+  public void setPlaceOfBirth(@Nullable String placeOfBirth) {
+    this.placeOfBirth = placeOfBirth;
+  }
 
-    public @Nullable String getFirstAppearance() {
-        return firstAppearance;
-    }
+  public @Nullable String getFirstAppearance() {
+    return firstAppearance;
+  }
 
-    public void setFirstAppearance(@Nullable String firstAppearance) {
-        this.firstAppearance = firstAppearance;
-    }
+  public void setFirstAppearance(@Nullable String firstAppearance) {
+    this.firstAppearance = firstAppearance;
+  }
 
-    public SuperheroEntity getSuperhero() {
-        return superhero;
-    }
+  public SuperheroEntity getSuperhero() {
+    return superhero;
+  }
 
-    public void setSuperhero(SuperheroEntity superhero) {
-        this.superhero = superhero;
-    }
+  public void setSuperhero(SuperheroEntity superhero) {
+    this.superhero = superhero;
+  }
 }
