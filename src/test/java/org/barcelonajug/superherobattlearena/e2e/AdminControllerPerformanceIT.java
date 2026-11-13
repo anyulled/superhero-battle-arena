@@ -12,7 +12,7 @@ import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 import org.barcelonajug.superherobattlearena.domain.Round;
 import org.barcelonajug.superherobattlearena.domain.RoundStatus;
-import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
+import org.barcelonajug.superherobattlearena.testconfig.AbstractPostgresTestContainerConfig;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -26,104 +26,104 @@ import org.springframework.transaction.annotation.Transactional;
 
 @AutoConfigureMockMvc
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class AdminControllerPerformanceIT extends PostgresTestContainerConfig {
+class AdminControllerPerformanceIT extends AbstractPostgresTestContainerConfig {
+    private static final Logger log = LoggerFactory.getLogger(AdminControllerPerformanceIT.class);
+    private static final String ADMIN_USER = "admin";
+    private static final String ADMIN_PASS = "test";
 
-  private static final Logger log = LoggerFactory.getLogger(AdminControllerPerformanceIT.class);
-  private static final String ADMIN_USER = "admin";
-  private static final String ADMIN_PASS = "test";
+    @Autowired private MockMvc mockMvc;
+    @Autowired private MatchRepositoryPort matchRepository;
+    @Autowired private RoundRepositoryPort roundRepository;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-  @Autowired private MockMvc mockMvc;
-  @Autowired private MatchRepositoryPort matchRepository;
-  @Autowired private RoundRepositoryPort roundRepository;
-  @Autowired private JdbcTemplate jdbcTemplate;
-
-  @AfterEach
-  void tearDown() {
-    jdbcTemplate.execute("TRUNCATE TABLE matches, rounds CASCADE");
-  }
-
-  @Test
-  void measureRunAllBattlesPerformance() throws Exception {
-    // 1. Setup
-    UUID sessionId = UUID.randomUUID();
-    Integer roundNo = 1;
-
-    createRound(roundNo, sessionId);
-    generateNoiseData(roundNo, sessionId);
-    generateTargetData(roundNo, sessionId);
-
-    // 4. Measure
-    long startTime = System.nanoTime();
-
-    mockMvc
-        .perform(
-            post("/api/admin/matches/run-all")
-                .param("roundNo", roundNo.toString())
-                .param("sessionId", sessionId.toString())
-                .with(httpBasic(ADMIN_USER, ADMIN_PASS)))
-        .andExpect(status().isOk());
-
-    long endTime = System.nanoTime();
-    long durationMs = (endTime - startTime) / 1_000_000;
-
-    log.info("Execution time for run-all matches: {} ms", durationMs);
-    assertThat(durationMs).isLessThan(2000L);
-  }
-
-  private void createRound(Integer roundNo, UUID sessionId) {
-    Round round = new Round();
-    round.setRoundId(UUID.randomUUID());
-    round.setRoundNo(roundNo);
-    round.setSessionId(sessionId);
-    round.setStatus(RoundStatus.OPEN);
-    roundRepository.save(round);
-  }
-
-  private void generateNoiseData(Integer roundNo, UUID sessionId) {
-    log.info("Generating noise data...");
-    // 2000 matches that should NOT be selected.
-    for (int i = 0; i < 2000; i++) {
-      Match match =
-          Match.builder()
-              .matchId(UUID.randomUUID())
-              .sessionId(UUID.randomUUID()) // Random session
-              .roundNo(roundNo + 1) // Different round
-              .teamA(UUID.randomUUID())
-              .teamB(UUID.randomUUID())
-              .status(MatchStatus.COMPLETED)
-              .build();
-      matchRepository.save(match);
+    @AfterEach
+    void tearDown() {
+        jdbcTemplate.execute("TRUNCATE TABLE matches, rounds CASCADE");
     }
 
-    // Add some matches that are in the same round but WRONG status
-    for (int i = 0; i < 500; i++) {
-      Match match =
-          Match.builder()
-              .matchId(UUID.randomUUID())
-              .sessionId(sessionId)
-              .roundNo(roundNo)
-              .teamA(UUID.randomUUID())
-              .teamB(UUID.randomUUID())
-              .status(MatchStatus.COMPLETED)
-              .build();
-      matchRepository.save(match);
-    }
-  }
+    @Test
+    void measureRunAllBattlesPerformance() throws Exception {
+        // 1. Setup
+        UUID sessionId = UUID.randomUUID();
+        Integer roundNo = 1;
 
-  private void generateTargetData(Integer roundNo, UUID sessionId) {
-    log.info("Generating target data...");
-    // 20 matches that SHOULD be selected.
-    for (int i = 0; i < 20; i++) {
-      Match match =
-          Match.builder()
-              .matchId(UUID.randomUUID())
-              .sessionId(sessionId)
-              .roundNo(roundNo)
-              .teamA(UUID.randomUUID())
-              .teamB(UUID.randomUUID())
-              .status(MatchStatus.PENDING)
-              .build();
-      matchRepository.save(match);
+        createRound(roundNo, sessionId);
+        generateNoiseData(roundNo, sessionId);
+        generateTargetData(roundNo, sessionId);
+
+        // 4. Measure
+        long startTime = System.nanoTime();
+
+        mockMvc
+                .perform(
+                        post("/api/admin/matches/run-all")
+                                .param("roundNo", roundNo.toString())
+                                .param("sessionId", sessionId.toString())
+                                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                )
+                .andExpect(status().isOk());
+
+        long endTime = System.nanoTime();
+        long durationMs = (endTime - startTime) / 1_000_000;
+
+        log.info("Execution time for run-all matches: {} ms", durationMs);
+        assertThat(durationMs).isLessThan(2000L);
     }
-  }
+
+    private void createRound(Integer roundNo, UUID sessionId) {
+        Round round = new Round();
+        round.setRoundId(UUID.randomUUID());
+        round.setRoundNo(roundNo);
+        round.setSessionId(sessionId);
+        round.setStatus(RoundStatus.OPEN);
+        roundRepository.save(round);
+    }
+
+    private void generateNoiseData(Integer roundNo, UUID sessionId) {
+        log.info("Generating noise data...");
+        // 2000 matches that should NOT be selected.
+        for (int i = 0; i < 2000; i++) {
+            Match match =
+                    Match.builder()
+                            .matchId(UUID.randomUUID())
+                            .sessionId(UUID.randomUUID()) // Random session
+                            .roundNo(roundNo + 1) // Different round
+                            .teamA(UUID.randomUUID())
+                            .teamB(UUID.randomUUID())
+                            .status(MatchStatus.COMPLETED)
+                            .build();
+            matchRepository.save(match);
+        }
+
+        // Add some matches that are in the same round but WRONG status
+        for (int i = 0; i < 500; i++) {
+            Match match =
+                    Match.builder()
+                            .matchId(UUID.randomUUID())
+                            .sessionId(sessionId)
+                            .roundNo(roundNo)
+                            .teamA(UUID.randomUUID())
+                            .teamB(UUID.randomUUID())
+                            .status(MatchStatus.COMPLETED)
+                            .build();
+            matchRepository.save(match);
+        }
+    }
+
+    private void generateTargetData(Integer roundNo, UUID sessionId) {
+        log.info("Generating target data...");
+        // 20 matches that SHOULD be selected.
+        for (int i = 0; i < 20; i++) {
+            Match match =
+                    Match.builder()
+                            .matchId(UUID.randomUUID())
+                            .sessionId(sessionId)
+                            .roundNo(roundNo)
+                            .teamA(UUID.randomUUID())
+                            .teamB(UUID.randomUUID())
+                            .status(MatchStatus.PENDING)
+                            .build();
+            matchRepository.save(match);
+        }
+    }
 }

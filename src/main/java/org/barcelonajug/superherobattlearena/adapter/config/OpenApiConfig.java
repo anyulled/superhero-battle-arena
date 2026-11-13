@@ -8,10 +8,11 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-
-  @Bean
-  public OpenAPI openApi() {
-    return new OpenAPI()
-        .servers(List.of(new Server().url("https://superhero-battle-arena.barcelonajug.org")));
-  }
+    @Bean
+    public OpenAPI openApi() {
+        return new OpenAPI()
+                .servers(
+                        List.of(new Server().url("https://superhero-battle-arena.barcelonajug.org"))
+                );
+    }
 }

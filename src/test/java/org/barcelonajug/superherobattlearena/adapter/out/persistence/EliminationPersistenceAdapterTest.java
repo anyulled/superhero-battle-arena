@@ -18,103 +18,109 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class EliminationPersistenceAdapterTest {
+    private SpringDataEliminationRepository repository;
+    private EliminationMapper mapper;
+    private EliminationPersistenceAdapter adapter;
 
-  private SpringDataEliminationRepository repository;
-  private EliminationMapper mapper;
-  private EliminationPersistenceAdapter adapter;
+    /** Creates an elimination adapter with isolated repository and mapper mocks. */
+    @BeforeEach
+    void setUp() {
+        repository = mock(SpringDataEliminationRepository.class);
+        mapper = mock(EliminationMapper.class);
+        adapter = new EliminationPersistenceAdapter(repository, mapper);
+    }
 
-  /** Creates an elimination adapter with isolated repository and mapper mocks. */
-  @BeforeEach
-  void setUp() {
-    repository = mock(SpringDataEliminationRepository.class);
-    mapper = mock(EliminationMapper.class);
-    adapter = new EliminationPersistenceAdapter(repository, mapper);
-  }
+    /** Verifies that saving an elimination persists its mapped entity. */
+    @Test
+    void shouldSaveElimination() {
+        UUID teamId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        Elimination domain =
+                new Elimination(
+                        teamId,
+                        sessionId,
+                        1,
+                        EliminationReason.LOST_MATCH,
+                        OffsetDateTime.now(ZoneOffset.UTC)
+                );
+        EliminationEntity entity = new EliminationEntity();
+        entity.setTeamId(teamId);
+        entity.setSessionId(sessionId);
+        entity.setRoundNo(1);
+        entity.setReason(EliminationReason.LOST_MATCH);
+        entity.setEliminatedAt(domain.eliminatedAt());
 
-  /** Verifies that saving an elimination persists its mapped entity. */
-  @Test
-  void shouldSaveElimination() {
-    UUID teamId = UUID.randomUUID();
-    UUID sessionId = UUID.randomUUID();
-    Elimination domain =
-        new Elimination(
-            teamId, sessionId, 1, EliminationReason.LOST_MATCH, OffsetDateTime.now(ZoneOffset.UTC));
-    EliminationEntity entity = new EliminationEntity();
-    entity.setTeamId(teamId);
-    entity.setSessionId(sessionId);
-    entity.setRoundNo(1);
-    entity.setReason(EliminationReason.LOST_MATCH);
-    entity.setEliminatedAt(domain.eliminatedAt());
+        when(mapper.toEntity(domain)).thenReturn(entity);
+        when(repository.save(entity)).thenReturn(entity);
 
-    when(mapper.toEntity(domain)).thenReturn(entity);
-    when(repository.save(entity)).thenReturn(entity);
+        adapter.save(domain);
 
-    adapter.save(domain);
+        verify(repository).save(entity);
+    }
 
-    verify(repository).save(entity);
-  }
+    /** Verifies that bulk saving persists the mapped elimination entities. */
+    @Test
+    void shouldSaveAllEliminations() {
+        UUID teamId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
+        Elimination domain =
+                new Elimination(
+                        teamId,
+                        sessionId,
+                        1,
+                        EliminationReason.NO_SUBMISSION,
+                        OffsetDateTime.now(ZoneOffset.UTC)
+                );
+        EliminationEntity entity = new EliminationEntity();
 
-  /** Verifies that bulk saving persists the mapped elimination entities. */
-  @Test
-  void shouldSaveAllEliminations() {
-    UUID teamId = UUID.randomUUID();
-    UUID sessionId = UUID.randomUUID();
-    Elimination domain =
-        new Elimination(
-            teamId,
-            sessionId,
-            1,
-            EliminationReason.NO_SUBMISSION,
-            OffsetDateTime.now(ZoneOffset.UTC));
-    EliminationEntity entity = new EliminationEntity();
+        when(mapper.toEntity(domain)).thenReturn(entity);
 
-    when(mapper.toEntity(domain)).thenReturn(entity);
+        adapter.saveAll(List.of(domain));
 
-    adapter.saveAll(List.of(domain));
+        verify(repository).saveAll(List.of(entity));
+    }
 
-    verify(repository).saveAll(List.of(entity));
-  }
+    /** Verifies that elimination lookup uses both the session and team identifiers. */
+    @Test
+    void shouldCheckIfEliminated() {
+        UUID teamId = UUID.randomUUID();
+        UUID sessionId = UUID.randomUUID();
 
-  /** Verifies that elimination lookup uses both the session and team identifiers. */
-  @Test
-  void shouldCheckIfEliminated() {
-    UUID teamId = UUID.randomUUID();
-    UUID sessionId = UUID.randomUUID();
+        when(repository.existsBySessionIdAndTeamId(sessionId, teamId)).thenReturn(true);
 
-    when(repository.existsBySessionIdAndTeamId(sessionId, teamId)).thenReturn(true);
+        boolean result = adapter.isEliminated(sessionId, teamId);
 
-    boolean result = adapter.isEliminated(sessionId, teamId);
+        assertThat(result).isTrue();
+        verify(repository).existsBySessionIdAndTeamId(sessionId, teamId);
+    }
 
-    assertThat(result).isTrue();
-    verify(repository).existsBySessionIdAndTeamId(sessionId, teamId);
-  }
+    /** Verifies that session lookup returns mapped domain eliminations. */
+    @Test
+    void shouldFindBySessionId() {
+        UUID sessionId = UUID.randomUUID();
+        EliminationEntity entity = new EliminationEntity();
+        Elimination domain =
+                new Elimination(
+                        UUID.randomUUID(),
+                        sessionId,
+                        1,
+                        EliminationReason.LOST_MATCH,
+                        OffsetDateTime.now(ZoneOffset.UTC)
+                );
 
-  /** Verifies that session lookup returns mapped domain eliminations. */
-  @Test
-  void shouldFindBySessionId() {
-    UUID sessionId = UUID.randomUUID();
-    EliminationEntity entity = new EliminationEntity();
-    Elimination domain =
-        new Elimination(
-            UUID.randomUUID(),
-            sessionId,
-            1,
-            EliminationReason.LOST_MATCH,
-            OffsetDateTime.now(ZoneOffset.UTC));
+        when(repository.findBySessionId(sessionId)).thenReturn(List.of(entity));
+        when(mapper.toDomain(entity)).thenReturn(domain);
 
-    when(repository.findBySessionId(sessionId)).thenReturn(List.of(entity));
-    when(mapper.toDomain(entity)).thenReturn(domain);
+        List<Elimination> results = adapter.findBySessionId(sessionId);
 
-    List<Elimination> results = adapter.findBySessionId(sessionId);
+        assertThat(results).containsExactly(domain);
+    }
 
-    assertThat(results).containsExactly(domain);
-  }
+    /** Verifies that deleting eliminations delegates to the persistence repository. */
+    @Test
+    void shouldDeleteAll() {
+        adapter.deleteAll();
 
-  /** Verifies that deleting eliminations delegates to the persistence repository. */
-  @Test
-  void shouldDeleteAll() {
-    adapter.deleteAll();
-
-    verify(repository).deleteAll();
-  }
+        verify(repository).deleteAll();
+    }
 }

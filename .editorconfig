@@ -1,0 +1,15 @@
+# ward-owned: editorconfig v1 begin
+root = true
+
+[*]
+max_line_length = 100
+indent_style = space
+insert_final_newline = true
+ward_max_blank_lines = 1
+
+[*.java]
+indent_size = 4
+
+[*.java]
+ward_continuation_indent_size = 8
+# ward-owned: editorconfig v1 end

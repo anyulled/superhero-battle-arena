@@ -17,86 +17,85 @@ import org.jspecify.annotations.Nullable;
 @Entity
 @Table(name = "rounds")
 public class RoundEntity {
+    @Id
+    @Column(name = "round_id")
+    @SuppressWarnings("NullAway.Init")
+    private UUID roundId;
 
-  @Id
-  @Column(name = "round_id")
-  @SuppressWarnings("NullAway.Init")
-  private UUID roundId;
+    @Column(name = "round_no", nullable = false)
+    @SuppressWarnings("NullAway.Init")
+    private Integer roundNo;
 
-  @Column(name = "round_no", nullable = false)
-  @SuppressWarnings("NullAway.Init")
-  private Integer roundNo;
+    @Column(name = "session_id")
+    private @Nullable UUID sessionId;
 
-  @Column(name = "session_id")
-  private @Nullable UUID sessionId;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "spec_json")
+    private @Nullable RoundSpec specJson;
 
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "spec_json")
-  private @Nullable RoundSpec specJson;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @SuppressWarnings("NullAway.Init")
+    private RoundStatus status;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
-  @SuppressWarnings("NullAway.Init")
-  private RoundStatus status;
+    @Column(name = "submission_deadline")
+    private @Nullable OffsetDateTime submissionDeadline;
 
-  @Column(name = "submission_deadline")
-  private @Nullable OffsetDateTime submissionDeadline;
+    private @Nullable Long seed;
 
-  private @Nullable Long seed;
+    public UUID getRoundId() {
+        return roundId;
+    }
 
-  public UUID getRoundId() {
-    return roundId;
-  }
+    public void setRoundId(UUID roundId) {
+        this.roundId = roundId;
+    }
 
-  public void setRoundId(UUID roundId) {
-    this.roundId = roundId;
-  }
+    public Integer getRoundNo() {
+        return roundNo;
+    }
 
-  public Integer getRoundNo() {
-    return roundNo;
-  }
+    public void setRoundNo(Integer roundNo) {
+        this.roundNo = roundNo;
+    }
 
-  public void setRoundNo(Integer roundNo) {
-    this.roundNo = roundNo;
-  }
+    public @Nullable UUID getSessionId() {
+        return sessionId;
+    }
 
-  public @Nullable UUID getSessionId() {
-    return sessionId;
-  }
+    public void setSessionId(@Nullable UUID sessionId) {
+        this.sessionId = sessionId;
+    }
 
-  public void setSessionId(@Nullable UUID sessionId) {
-    this.sessionId = sessionId;
-  }
+    public @Nullable RoundSpec getSpecJson() {
+        return specJson;
+    }
 
-  public @Nullable RoundSpec getSpecJson() {
-    return specJson;
-  }
+    public void setSpecJson(@Nullable RoundSpec specJson) {
+        this.specJson = specJson;
+    }
 
-  public void setSpecJson(@Nullable RoundSpec specJson) {
-    this.specJson = specJson;
-  }
+    public RoundStatus getStatus() {
+        return status;
+    }
 
-  public RoundStatus getStatus() {
-    return status;
-  }
+    public void setStatus(RoundStatus status) {
+        this.status = status;
+    }
 
-  public void setStatus(RoundStatus status) {
-    this.status = status;
-  }
+    public @Nullable OffsetDateTime getSubmissionDeadline() {
+        return submissionDeadline;
+    }
 
-  public @Nullable OffsetDateTime getSubmissionDeadline() {
-    return submissionDeadline;
-  }
+    public void setSubmissionDeadline(@Nullable OffsetDateTime submissionDeadline) {
+        this.submissionDeadline = submissionDeadline;
+    }
 
-  public void setSubmissionDeadline(@Nullable OffsetDateTime submissionDeadline) {
-    this.submissionDeadline = submissionDeadline;
-  }
+    public @Nullable Long getSeed() {
+        return seed;
+    }
 
-  public @Nullable Long getSeed() {
-    return seed;
-  }
-
-  public void setSeed(@Nullable Long seed) {
-    this.seed = seed;
-  }
+    public void setSeed(@Nullable Long seed) {
+        this.seed = seed;
+    }
 }

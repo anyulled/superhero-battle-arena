@@ -16,64 +16,67 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "match_events")
 @IdClass(MatchEventEntity.MatchEventId.class)
 public class MatchEventEntity {
-
-  @Id
-  @Column(name = "match_id")
-  @SuppressWarnings("NullAway.Init")
-  private UUID matchId;
-
-  @Id
-  @SuppressWarnings("NullAway.Init")
-  private Integer seq;
-
-  @JdbcTypeCode(SqlTypes.JSON)
-  @Column(name = "event_json")
-  @SuppressWarnings("NullAway.Init")
-  private MatchEventSnapshot eventJson;
-
-  public static class MatchEventId implements Serializable {
+    @Id
+    @Column(name = "match_id")
     @SuppressWarnings("NullAway.Init")
     private UUID matchId;
 
+    @Id
     @SuppressWarnings("NullAway.Init")
     private Integer seq;
 
-    public MatchEventId() {}
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "event_json")
+    @SuppressWarnings("NullAway.Init")
+    private MatchEventSnapshot eventJson;
 
-    @Override
-    public boolean equals(Object o) {
-      if (this == o) return true;
-      if (!(o instanceof MatchEventId that)) return false;
-      return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
+    public static class MatchEventId implements Serializable {
+        @SuppressWarnings("NullAway.Init")
+        private UUID matchId;
+
+        @SuppressWarnings("NullAway.Init")
+        private Integer seq;
+
+        public MatchEventId() {}
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof MatchEventId that)) {
+                return false;
+            }
+            return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(matchId, seq);
+        }
     }
 
-    @Override
-    public int hashCode() {
-      return Objects.hash(matchId, seq);
+    public UUID getMatchId() {
+        return matchId;
     }
-  }
 
-  public UUID getMatchId() {
-    return matchId;
-  }
+    public void setMatchId(UUID matchId) {
+        this.matchId = matchId;
+    }
 
-  public void setMatchId(UUID matchId) {
-    this.matchId = matchId;
-  }
+    public Integer getSeq() {
+        return seq;
+    }
 
-  public Integer getSeq() {
-    return seq;
-  }
+    public void setSeq(Integer seq) {
+        this.seq = seq;
+    }
 
-  public void setSeq(Integer seq) {
-    this.seq = seq;
-  }
+    public MatchEventSnapshot getEventJson() {
+        return eventJson;
+    }
 
-  public MatchEventSnapshot getEventJson() {
-    return eventJson;
-  }
-
-  public void setEventJson(MatchEventSnapshot eventJson) {
-    this.eventJson = eventJson;
-  }
+    public void setEventJson(MatchEventSnapshot eventJson) {
+        this.eventJson = eventJson;
+    }
 }

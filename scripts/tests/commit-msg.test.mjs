@@ -20,10 +20,14 @@ function fixture(t, dependencies = true) {
 function validate(directory, message) {
   const messagePath = join(directory, 'message with spaces.txt');
   writeFileSync(messagePath, message);
-  return spawnSync('sh', [join(repository, '.githooks/commit-msg'), messagePath], {
-    cwd: directory,
-    encoding: 'utf8',
-  });
+  return spawnSync(
+    'sh',
+    [join(repository, '.githooks/commit-msg'), messagePath],
+    {
+      cwd: directory,
+      encoding: 'utf8',
+    }
+  );
 }
 
 test('validates the explicitly supplied message path', t => {
@@ -34,7 +38,9 @@ test('validates the explicitly supplied message path', t => {
   assert.equal(result.status, 0, result.stdout + result.stderr);
 });
 
-for (const message of ['fix: Uppercase subject\n', 'revert: unsupported type\n', 'invalid message\n']) {
+for (
+  const message of ['fix: Uppercase subject\n', 'revert: unsupported type\n', 'invalid message\n']
+) {
   test(`rejects ${message.trim()}`, t => {
     const directory = fixture(t);
 

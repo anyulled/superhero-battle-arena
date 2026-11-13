@@ -13,16 +13,23 @@ async function fixture(t) {
   await mkdir(join(directory, '.mvn'));
   await copyFile('scripts/security-audit.sh', join(directory, 'scripts/security-audit.sh'));
   await copyFile('.mvn/security-settings.xml', join(directory, '.mvn/security-settings.xml'));
-  await copyFile('.mvn/dependency-check-suppressions.xml', join(directory, '.mvn/dependency-check-suppressions.xml'));
+  await copyFile(
+    '.mvn/dependency-check-suppressions.xml',
+    join(directory, '.mvn/dependency-check-suppressions.xml')
+  );
   const wrapper = join(directory, 'mvnw');
-  writeFileSync(wrapper, '#!/bin/sh\nprintf "%s\\n" "$@" > "$AUDIT_ARGUMENTS"\nexit "${MOCK_AUDIT_STATUS:-0}"\n');
+  writeFileSync(
+    wrapper,
+    '#!/bin/sh\nprintf "%s\\n" "$@" > "$AUDIT_ARGUMENTS"\nexit "${MOCK_AUDIT_STATUS:-0}"\n'
+  );
   await chmod(wrapper, 0o755);
   t.after(() => rm(directory, { recursive: true, force: true }));
   const argumentsPath = join(directory, 'arguments.txt');
-  return {
-    argumentsPath,
-    run(overrides = {}) {
-      return spawnSync('sh', [join(directory, 'scripts/security-audit.sh')], {
+  return { argumentsPath, run(overrides = {}) {
+    return spawnSync(
+      'sh',
+      [join(directory, 'scripts/security-audit.sh')],
+      {
         encoding: 'utf8',
         env: {
           PATH: process.env.PATH,
@@ -32,9 +39,9 @@ async function fixture(t) {
           AUDIT_ARGUMENTS: argumentsPath,
           ...overrides,
         },
-      });
-    },
-  };
+      }
+    );
+  }, };
 }
 
 for (const missingSecret of ['GUIDE_API_TOKEN', 'NVD_API_KEY']) {
@@ -56,21 +63,27 @@ test('runs the pinned scanner with strict remote failure handling and indirect c
   const arguments_ = (await readFile(audit.argumentsPath, 'utf8')).trim().split('\n');
 
   assert.equal(result.status, 0);
-  for (const required of [
-    'org.owasp:dependency-check-maven:13.0.0:check',
-    '-DfailOnError=true',
-    '-DfailBuildOnCVSS=7',
-    '-DossIndexAnalyzerEnabled=true',
-    '-DossIndexWarnOnlyOnRemoteErrors=false',
-    '-DossIndexAnalyzerUrl=https://api.guide.sonatype.com',
-    '-DossIndexAnalyzerUseCache=false',
-    '-DossIndexServerId=sonatype-guide',
-    '-DnvdApiKeyEnvironmentVariable=NVD_API_KEY',
-    '-DsuppressionFile=.mvn/dependency-check-suppressions.xml',
-  ]) assert.ok(arguments_.includes(required), `Missing scanner configuration: ${required}`);
+  for (
+    const required of [
+      'org.owasp:dependency-check-maven:13.0.0:check',
+      '-DfailOnError=true',
+      '-DfailBuildOnCVSS=7',
+      '-DossIndexAnalyzerEnabled=true',
+      '-DossIndexWarnOnlyOnRemoteErrors=false',
+      '-DossIndexAnalyzerUrl=https://api.guide.sonatype.com',
+      '-DossIndexAnalyzerUseCache=false',
+      '-DossIndexServerId=sonatype-guide',
+      '-DnvdApiKeyEnvironmentVariable=NVD_API_KEY',
+      '-DsuppressionFile=.mvn/dependency-check-suppressions.xml',
+    ]
+  ) assert.ok(arguments_.includes(required), `Missing scanner configuration: ${required}`);
   assert.ok(arguments_.some(argument => argument.startsWith('-DdataDirectory=')));
   assert.ok(arguments_.includes('.mvn/security-settings.xml'));
-  assert.ok(arguments_.every(argument => !argument.includes('test-guide-token') && !argument.includes('test-nvd-key')));
+  assert.ok(
+    arguments_.every(
+      argument => !argument.includes('test-guide-token') && !argument.includes('test-nvd-key')
+    )
+  );
 });
 
 test('propagates scanner failure instead of reporting a successful audit', async t => {
@@ -102,7 +115,10 @@ test('only trusted security scans receive Guide credentials', async () => {
   assert.equal(scan.env.NVD_API_KEY, '${{ secrets.NVD_API_KEY }}');
   assert.equal(workflow.jobs['dependency-review'].if, "github.event_name == 'pull_request'");
   assert.ok(!JSON.stringify(workflow.jobs['dependency-review']).includes('secrets.'));
-  assert.equal(caller.jobs['security-audit'].secrets.GUIDE_API_TOKEN, '${{ secrets.GUIDE_API_TOKEN }}');
+  assert.equal(
+    caller.jobs['security-audit'].secrets.GUIDE_API_TOKEN,
+    '${{ secrets.GUIDE_API_TOKEN }}'
+  );
   assert.equal(caller.jobs['security-audit'].secrets.NVD_API_KEY, '${{ secrets.NVD_API_KEY }}');
   assert.equal(caller.jobs['dependency-review'].secrets, undefined);
   assert.ok(!JSON.stringify(workflow).includes('ossindex-maven-plugin'));
@@ -128,7 +144,10 @@ test('caches Dependency-Check data independently from Maven dependencies', async
   assert.equal(restore.with.key, expectedKey);
   assert.equal(restore.with['restore-keys'], 'dependency-check-${{ runner.os }}-v13-\n');
   assert.equal(save.uses, 'actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9');
-  assert.equal(save.if, "success() && steps['dependency-check-cache-restore'].outputs['cache-hit'] != 'true'");
+  assert.equal(
+    save.if,
+    "success() && steps['dependency-check-cache-restore'].outputs['cache-hit'] != 'true'"
+  );
   assert.equal(save.with.path, expectedPath);
   assert.equal(save.with.key, expectedKey);
 });

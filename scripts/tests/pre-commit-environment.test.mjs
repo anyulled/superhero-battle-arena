@@ -11,9 +11,17 @@ test('hook regression fixtures cannot change the invoking worktree or shared Git
   const repository = join(directory, 'repository');
   const worktree = join(directory, 'worktree');
   const environment = { ...process.env, GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null' };
-  const localVariables = execFileSync('git', ['rev-parse', '--local-env-vars'], { encoding: 'utf8' }).trim().split('\n');
+  const localVariables = execFileSync(
+    'git',
+    ['rev-parse', '--local-env-vars'],
+    { encoding: 'utf8' }
+  ).trim().split('\n');
   for (const variable of localVariables) delete environment[variable];
-  const git = (arguments_, cwd = directory) => execFileSync('git', arguments_, { cwd, env: environment, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
+  const git = (arguments_, cwd = directory) => execFileSync(
+    'git',
+    arguments_,
+    { cwd, env: environment, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  ).trim();
   git(['init', '--quiet', repository]);
   git(['config', 'user.name', 'Environment Test'], repository);
   git(['config', 'user.email', 'environment@example.invalid'], repository);
@@ -29,10 +37,21 @@ test('hook regression fixtures cannot change the invoking worktree or shared Git
     index: git(['write-tree'], worktree),
   };
 
-  const result = spawnSync('sh', [resolve(import.meta.dirname, 'pre-commit-test.sh')], {
-    cwd: worktree, encoding: 'utf8',
-    env: { ...environment, GIT_DIR: gitDirectory, GIT_COMMON_DIR: commonDirectory, GIT_WORK_TREE: worktree, GIT_INDEX_FILE: join(gitDirectory, 'index') },
-  });
+  const result = spawnSync(
+    'sh',
+    [resolve(import.meta.dirname, 'pre-commit-test.sh')],
+    {
+      cwd: worktree,
+      encoding: 'utf8',
+      env: {
+        ...environment,
+        GIT_DIR: gitDirectory,
+        GIT_COMMON_DIR: commonDirectory,
+        GIT_WORK_TREE: worktree,
+        GIT_INDEX_FILE: join(gitDirectory, 'index')
+      },
+    }
+  );
 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   assert.equal(readFileSync(join(commonDirectory, 'config'), 'utf8'), before.config);

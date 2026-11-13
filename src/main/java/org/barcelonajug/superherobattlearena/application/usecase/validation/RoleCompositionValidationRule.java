@@ -13,37 +13,43 @@ import org.springframework.stereotype.Component;
 /** Validates role composition requirements and limits. */
 @Component
 public class RoleCompositionValidationRule implements ValidationRule {
+    @Override
+    public void validate(List<Hero> heroes, RoundSpec roundSpec) {
+        Map<String, Long> roleCounts = heroes.stream().collect(groupingBy(Hero::role, counting()));
 
-  @Override
-  public void validate(List<Hero> heroes, RoundSpec roundSpec) {
-    Map<String, Long> roleCounts = heroes.stream().collect(groupingBy(Hero::role, counting()));
-
-    validateRequiredRoles(roleCounts, roundSpec);
-    validateMaxSameRole(roleCounts, roundSpec);
-  }
-
-  private void validateRequiredRoles(Map<String, Long> roleCounts, RoundSpec roundSpec) {
-    if (roundSpec.requiredRoles() != null) {
-      roundSpec.requiredRoles().entrySet().stream()
-          .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0L) < entry.getValue())
-          .findFirst()
-          .ifPresent(
-              entry -> {
-                throw RoleCompositionException.missingRequiredRole(
-                    entry.getKey(), entry.getValue());
-              });
+        validateRequiredRoles(roleCounts, roundSpec);
+        validateMaxSameRole(roleCounts, roundSpec);
     }
-  }
 
-  private void validateMaxSameRole(Map<String, Long> roleCounts, RoundSpec roundSpec) {
-    if (roundSpec.maxSameRole() != null) {
-      roundSpec.maxSameRole().entrySet().stream()
-          .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0L) > entry.getValue())
-          .findFirst()
-          .ifPresent(
-              entry -> {
-                throw RoleCompositionException.tooManyOfRole(entry.getKey(), entry.getValue());
-              });
+    private void validateRequiredRoles(Map<String, Long> roleCounts, RoundSpec roundSpec) {
+        if (roundSpec.requiredRoles() != null) {
+            roundSpec.requiredRoles().entrySet().stream()
+                    .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0L) < entry.getValue())
+                    .findFirst()
+                    .ifPresent(
+                            entry -> {
+                                throw RoleCompositionException.missingRequiredRole(
+                                        entry.getKey(),
+                                        entry.getValue()
+                                );
+                            }
+                    );
+        }
     }
-  }
+
+    private void validateMaxSameRole(Map<String, Long> roleCounts, RoundSpec roundSpec) {
+        if (roundSpec.maxSameRole() != null) {
+            roundSpec.maxSameRole().entrySet().stream()
+                    .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0L) > entry.getValue())
+                    .findFirst()
+                    .ifPresent(
+                            entry -> {
+                                throw RoleCompositionException.tooManyOfRole(
+                                        entry.getKey(),
+                                        entry.getValue()
+                                );
+                            }
+                    );
+        }
+    }
 }

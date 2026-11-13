@@ -5,7 +5,9 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import {
-  validateAllSkills, validateConfig, validateSkill,
+  validateAllSkills,
+  validateConfig,
+  validateSkill,
 } from '../../.agents/skills/skill-creator/scripts/quick_validate.mjs';
 
 const validator = resolve('.agents/skills/skill-creator/scripts/quick_validate.mjs');
@@ -32,14 +34,32 @@ test('accepts a valid canonical skill and its compatibility symlink', async cont
   assert.deepEqual(result, { count: 1, errors: [] });
 });
 
-for (const [label, frontmatter, expected] of [
-  ['missing frontmatter', '# Example', /frontmatter delimiters/],
-  ['malformed YAML', '---\nname: [\n---\n', /Frontmatter:/],
-  ['duplicate YAML keys', `${validFrontmatter.replace('description:', 'name: other\ndescription:')}`, /Map keys must be unique/],
-  ['empty name', validFrontmatter.replace('name: example-skill', 'name: ""'), /nonempty lowercase/],
-  ['empty description', validFrontmatter.replace('Validate an example skill.', '""'), /Description must be a nonempty/],
-  ['unknown metadata', validFrontmatter.replace('description:', 'unexpected: true\ndescription:'), /Unexpected frontmatter property/],
-]) {
+for (
+  const [label, frontmatter, expected] of [
+    ['missing frontmatter', '# Example', /frontmatter delimiters/],
+    ['malformed YAML', '---\nname: [\n---\n', /Frontmatter:/],
+    [
+      'duplicate YAML keys',
+      `${validFrontmatter.replace('description:', 'name: other\ndescription:')}`,
+      /Map keys must be unique/
+    ],
+    [
+      'empty name',
+      validFrontmatter.replace('name: example-skill', 'name: ""'),
+      /nonempty lowercase/
+    ],
+    [
+      'empty description',
+      validFrontmatter.replace('Validate an example skill.', '""'),
+      /Description must be a nonempty/
+    ],
+    [
+      'unknown metadata',
+      validFrontmatter.replace('description:', 'unexpected: true\ndescription:'),
+      /Unexpected frontmatter property/
+    ],
+  ]
+) {
   test(`rejects ${label}`, async context => {
     const { skill } = await fixture(context, frontmatter);
 
@@ -52,8 +72,10 @@ for (const [label, frontmatter, expected] of [
 test('configuration failure exits nonzero despite valid directory structure', async context => {
   const { skill } = await fixture(context);
   await mkdir(join(skill, 'assets'));
-  await writeFile(join(skill, 'assets/config.yaml'),
-    'skill:\n  name: example-skill\n  version: "1.0"\nsettings:\n  log_level: invalid\n');
+  await writeFile(
+    join(skill, 'assets/config.yaml'),
+    'skill:\n  name: example-skill\n  version: "1.0"\nsettings:\n  log_level: invalid\n'
+  );
 
   const result = spawnSync(process.execPath, [validator, skill], { encoding: 'utf8' });
 
@@ -80,8 +102,10 @@ test('rejects missing local Markdown targets', async context => {
 });
 
 test('does not treat external links or fenced examples as local resources', async context => {
-  const { skill } = await fixture(context,
-    `${validFrontmatter}\n[Online](https://example.invalid)\n[Section](#section)\n\`\`\`markdown\n[Example](missing.md)\n\`\`\`\n`);
+  const { skill } = await fixture(
+    context,
+    `${validFrontmatter}\n[Online](https://example.invalid)\n[Section](#section)\n\`\`\`markdown\n[Example](missing.md)\n\`\`\`\n`
+  );
 
   const errors = await validateSkill(skill);
 
@@ -119,7 +143,10 @@ test('structured Java skills reject missing configuration and required directori
   const { canonical } = await fixture(context);
   const skill = join(canonical, 'java-testing');
   await mkdir(skill);
-  await writeFile(join(skill, 'SKILL.md'), validFrontmatter.replace('example-skill', 'java-testing'));
+  await writeFile(
+    join(skill, 'SKILL.md'),
+    validFrontmatter.replace('example-skill', 'java-testing')
+  );
 
   const errors = await validateSkill(skill);
 

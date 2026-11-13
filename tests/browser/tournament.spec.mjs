@@ -13,36 +13,61 @@ async function post(request, path, options = {}) {
 async function createTournament(request) {
   const session = await post(request, '/api/admin/sessions/start', { headers: adminHeaders });
   const sessionId = await session.json();
-  const round = await post(request, '/api/admin/rounds/create', {
-    headers: adminHeaders,
-    data: {
-      sessionId,
-      spec: {
-        description: 'Browser acceptance round', teamSize: 1, budgetCap: 10000,
-        requiredRoles: {}, maxSameRole: {}, bannedTags: [], tagModifiers: {},
-        mapType: 'ARENA', allowedRoles: [], allowedGenders: [], allowedRaces: [],
-        allowedPublishers: [], allowedAlignments: [],
+  const round = await post(
+    request,
+    '/api/admin/rounds/create',
+    {
+      headers: adminHeaders,
+      data: {
+        sessionId,
+        spec: {
+          description: 'Browser acceptance round',
+          teamSize: 1,
+          budgetCap: 10000,
+          requiredRoles: {},
+          maxSameRole: {},
+          bannedTags: [],
+          tagModifiers: {},
+          mapType: 'ARENA',
+          allowedRoles: [],
+          allowedGenders: [],
+          allowedRaces: [],
+          allowedPublishers: [],
+          allowedAlignments: [],
+        },
       },
-    },
-  });
+    }
+  );
   const roundNo = await round.json();
   const roster = await request.get('/api/teams/heroes');
   expect(roster.ok()).toBeTruthy();
   const heroes = await roster.json();
   expect(heroes.length).toBeGreaterThanOrEqual(2);
   for (const [index, name] of ['Browser Avengers', 'Browser Defenders'].entries()) {
-    const team = await post(request, '/api/teams/register', {
-      params: { sessionId, name, members: `Participant ${index + 1}A,Participant ${index + 1}B` },
-    });
+    const team = await post(
+      request,
+      '/api/teams/register',
+      {
+        params: { sessionId, name, members: `Participant ${index + 1}A,Participant ${index + 1}B` },
+      }
+    );
     const teamId = await team.json();
-    await post(request, `/api/rounds/${roundNo}/submit`, {
-      params: { teamId }, data: { heroIds: [heroes[index].id], strategy: 'balanced' },
-    });
+    await post(
+      request,
+      `/api/rounds/${roundNo}/submit`,
+      {
+        params: { teamId },
+        data: { heroIds: [heroes[index].id], strategy: 'balanced' },
+      }
+    );
   }
   return { sessionId, roundNo };
 }
 
-test('registered teams progress through admin battle execution to a public replay', async ({ page, request }) => {
+test('registered teams progress through admin battle execution to a public replay', async ({
+  page,
+  request
+}) => {
   const { sessionId, roundNo } = await createTournament(request);
   const browserErrors = [];
   page.on('pageerror', error => browserErrors.push(error.message));

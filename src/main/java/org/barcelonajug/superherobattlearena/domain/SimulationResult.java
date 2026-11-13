@@ -7,4 +7,7 @@ import org.jspecify.annotations.Nullable;
 
 /** Represents the result of a match simulation. */
 public record SimulationResult(
-    @Nullable UUID winnerTeamId, int totalTurns, List<MatchEventSnapshot> events) {}
+        @Nullable UUID winnerTeamId,
+        int totalTurns,
+        List<MatchEventSnapshot> events
+) {}

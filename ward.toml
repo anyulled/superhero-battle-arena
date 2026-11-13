@@ -1,0 +1,34 @@
+version = 2
+
+[checks.compile]
+enabled = true
+profiles = ["pre-push", "ci"]
+command = "./mvnw compile"
+
+[checks.tests]
+enabled = true
+profiles = ["pre-push", "ci"]
+command = "./mvnw test"
+
+[checks.coverage]
+enabled = true
+profiles = ["pre-push", "ci"]
+command = "./mvnw jacoco:check"
+
+[checks.ward-format]
+enabled = true
+profiles = ["default", "pre-commit", "pre-push", "ci", "edit"]
+uses = "ward-format"
+
+[checks.ward-format.paths]
+match = ["**/*.java"]
+full = [".editorconfig"]
+
+[checks.ward]
+enabled = true
+profiles = ["default", "pre-commit", "pre-push", "ci", "edit"]
+uses = "ward"
+
+[[checks.ward.layers]]
+from = ["domain", "application"]
+forbidden = ["adapter", "infrastructure"]

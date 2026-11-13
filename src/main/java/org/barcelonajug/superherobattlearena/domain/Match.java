@@ -7,10 +7,107 @@ import org.jspecify.annotations.Nullable;
 
 /** Represents a battle match between two teams in a tournament session. */
 public class Match {
+    /** Builder for creating Match instances. */
+    public static class Builder {
+        // We suppress init because these will be set by builder
+        @SuppressWarnings("NullAway.Init")
+        private UUID matchId;
 
-  /** Builder for creating Match instances. */
-  public static class Builder {
-    // We suppress init because these will be set by builder
+        private @Nullable UUID sessionId;
+
+        @SuppressWarnings("NullAway.Init")
+        private Integer roundNo;
+
+        @SuppressWarnings("NullAway.Init")
+        private UUID teamA;
+
+        @SuppressWarnings("NullAway.Init")
+        private UUID teamB;
+
+        private @Nullable UUID winnerTeam;
+
+        @SuppressWarnings("NullAway.Init")
+        private MatchStatus status;
+
+        private @Nullable MatchResult resultJson;
+
+        private MatchType matchType = MatchType.KNOCKOUT;
+
+        private @Nullable Integer bracketPosition;
+
+        public Builder matchId(UUID matchId) {
+            this.matchId = matchId;
+            return this;
+        }
+
+        public Builder sessionId(@Nullable UUID sessionId) {
+            this.sessionId = sessionId;
+            return this;
+        }
+
+        public Builder roundNo(Integer roundNo) {
+            this.roundNo = roundNo;
+            return this;
+        }
+
+        public Builder teamA(UUID teamA) {
+            this.teamA = teamA;
+            return this;
+        }
+
+        public Builder teamB(UUID teamB) {
+            this.teamB = teamB;
+            return this;
+        }
+
+        public Builder winnerTeam(@Nullable UUID winnerTeam) {
+            this.winnerTeam = winnerTeam;
+            return this;
+        }
+
+        public Builder status(MatchStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public Builder resultJson(@Nullable MatchResult resultJson) {
+            this.resultJson = resultJson;
+            return this;
+        }
+
+        /** Sets the tournament stage on this builder and returns the builder. */
+        public Builder matchType(MatchType matchType) {
+            this.matchType = matchType;
+            return this;
+        }
+
+        /** Sets the optional bracket position on this builder and returns the builder. */
+        public Builder bracketPosition(@Nullable Integer bracketPosition) {
+            this.bracketPosition = bracketPosition;
+            return this;
+        }
+
+        /** Creates a match from the configured values, including its type and bracket position. */
+        public Match build() {
+            Match match = new Match();
+            match.matchId = this.matchId;
+            match.sessionId = this.sessionId;
+            match.roundNo = this.roundNo;
+            match.teamA = this.teamA;
+            match.teamB = this.teamB;
+            match.winnerTeam = this.winnerTeam;
+            match.status = this.status;
+            match.resultJson = this.resultJson;
+            match.matchType = this.matchType;
+            match.bracketPosition = this.bracketPosition;
+            return match;
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     @SuppressWarnings("NullAway.Init")
     private UUID matchId;
 
@@ -36,196 +133,98 @@ public class Match {
 
     private @Nullable Integer bracketPosition;
 
-    public Builder matchId(UUID matchId) {
-      this.matchId = matchId;
-      return this;
+    public UUID getMatchId() {
+        return matchId;
     }
 
-    public Builder sessionId(@Nullable UUID sessionId) {
-      this.sessionId = sessionId;
-      return this;
+    public void setMatchId(UUID matchId) {
+        this.matchId = matchId;
     }
 
-    public Builder roundNo(Integer roundNo) {
-      this.roundNo = roundNo;
-      return this;
+    public @Nullable UUID getSessionId() {
+        return sessionId;
     }
 
-    public Builder teamA(UUID teamA) {
-      this.teamA = teamA;
-      return this;
+    public void setSessionId(@Nullable UUID sessionId) {
+        this.sessionId = sessionId;
     }
 
-    public Builder teamB(UUID teamB) {
-      this.teamB = teamB;
-      return this;
+    public Integer getRoundNo() {
+        return roundNo;
     }
 
-    public Builder winnerTeam(@Nullable UUID winnerTeam) {
-      this.winnerTeam = winnerTeam;
-      return this;
+    public void setRoundNo(Integer roundNo) {
+        this.roundNo = roundNo;
     }
 
-    public Builder status(MatchStatus status) {
-      this.status = status;
-      return this;
+    public UUID getTeamA() {
+        return teamA;
     }
 
-    public Builder resultJson(@Nullable MatchResult resultJson) {
-      this.resultJson = resultJson;
-      return this;
+    public void setTeamA(UUID teamA) {
+        this.teamA = teamA;
     }
 
-    /** Sets the tournament stage on this builder and returns the builder. */
-    public Builder matchType(MatchType matchType) {
-      this.matchType = matchType;
-      return this;
+    public UUID getTeamB() {
+        return teamB;
     }
 
-    /** Sets the optional bracket position on this builder and returns the builder. */
-    public Builder bracketPosition(@Nullable Integer bracketPosition) {
-      this.bracketPosition = bracketPosition;
-      return this;
+    public void setTeamB(UUID teamB) {
+        this.teamB = teamB;
     }
 
-    /** Creates a match from the configured values, including its type and bracket position. */
-    public Match build() {
-      Match match = new Match();
-      match.matchId = this.matchId;
-      match.sessionId = this.sessionId;
-      match.roundNo = this.roundNo;
-      match.teamA = this.teamA;
-      match.teamB = this.teamB;
-      match.winnerTeam = this.winnerTeam;
-      match.status = this.status;
-      match.resultJson = this.resultJson;
-      match.matchType = this.matchType;
-      match.bracketPosition = this.bracketPosition;
-      return match;
+    public @Nullable UUID getWinnerTeam() {
+        return winnerTeam;
     }
-  }
 
-  public static Builder builder() {
-    return new Builder();
-  }
+    public void setWinnerTeam(@Nullable UUID winnerTeam) {
+        this.winnerTeam = winnerTeam;
+    }
 
-  @SuppressWarnings("NullAway.Init")
-  private UUID matchId;
+    public MatchStatus getStatus() {
+        return status;
+    }
 
-  private @Nullable UUID sessionId;
+    public void setStatus(MatchStatus status) {
+        this.status = status;
+    }
 
-  @SuppressWarnings("NullAway.Init")
-  private Integer roundNo;
+    public @Nullable MatchResult getResultJson() {
+        return resultJson;
+    }
 
-  @SuppressWarnings("NullAway.Init")
-  private UUID teamA;
+    public void setResultJson(@Nullable MatchResult resultJson) {
+        this.resultJson = resultJson;
+    }
 
-  @SuppressWarnings("NullAway.Init")
-  private UUID teamB;
+    /** Returns the tournament stage represented by this match. */
+    public MatchType getMatchType() {
+        return matchType;
+    }
 
-  private @Nullable UUID winnerTeam;
+    /** Sets the tournament stage represented by this match. */
+    public void setMatchType(MatchType matchType) {
+        this.matchType = matchType;
+    }
 
-  @SuppressWarnings("NullAway.Init")
-  private MatchStatus status;
+    /** Returns the bracket position, or null when no position has been assigned. */
+    public @Nullable Integer getBracketPosition() {
+        return bracketPosition;
+    }
 
-  private @Nullable MatchResult resultJson;
+    /** Sets the bracket position, allowing null for matches without an assigned position. */
+    public void setBracketPosition(@Nullable Integer bracketPosition) {
+        this.bracketPosition = bracketPosition;
+    }
 
-  private MatchType matchType = MatchType.KNOCKOUT;
-
-  private @Nullable Integer bracketPosition;
-
-  public UUID getMatchId() {
-    return matchId;
-  }
-
-  public void setMatchId(UUID matchId) {
-    this.matchId = matchId;
-  }
-
-  public @Nullable UUID getSessionId() {
-    return sessionId;
-  }
-
-  public void setSessionId(@Nullable UUID sessionId) {
-    this.sessionId = sessionId;
-  }
-
-  public Integer getRoundNo() {
-    return roundNo;
-  }
-
-  public void setRoundNo(Integer roundNo) {
-    this.roundNo = roundNo;
-  }
-
-  public UUID getTeamA() {
-    return teamA;
-  }
-
-  public void setTeamA(UUID teamA) {
-    this.teamA = teamA;
-  }
-
-  public UUID getTeamB() {
-    return teamB;
-  }
-
-  public void setTeamB(UUID teamB) {
-    this.teamB = teamB;
-  }
-
-  public @Nullable UUID getWinnerTeam() {
-    return winnerTeam;
-  }
-
-  public void setWinnerTeam(@Nullable UUID winnerTeam) {
-    this.winnerTeam = winnerTeam;
-  }
-
-  public MatchStatus getStatus() {
-    return status;
-  }
-
-  public void setStatus(MatchStatus status) {
-    this.status = status;
-  }
-
-  public @Nullable MatchResult getResultJson() {
-    return resultJson;
-  }
-
-  public void setResultJson(@Nullable MatchResult resultJson) {
-    this.resultJson = resultJson;
-  }
-
-  /** Returns the tournament stage represented by this match. */
-  public MatchType getMatchType() {
-    return matchType;
-  }
-
-  /** Sets the tournament stage represented by this match. */
-  public void setMatchType(MatchType matchType) {
-    this.matchType = matchType;
-  }
-
-  /** Returns the bracket position, or null when no position has been assigned. */
-  public @Nullable Integer getBracketPosition() {
-    return bracketPosition;
-  }
-
-  /** Sets the bracket position, allowing null for matches without an assigned position. */
-  public void setBracketPosition(@Nullable Integer bracketPosition) {
-    this.bracketPosition = bracketPosition;
-  }
-
-  /**
+    /**
    * Returns the opposing team when the match is completed and has a winner; otherwise returns an
    * empty optional.
    */
-  public Optional<UUID> loserTeam() {
-    if (status == MatchStatus.COMPLETED && winnerTeam != null) {
-      return Optional.of(winnerTeam.equals(teamA) ? teamB : teamA);
+    public Optional<UUID> loserTeam() {
+        if (status == MatchStatus.COMPLETED && winnerTeam != null) {
+            return Optional.of(winnerTeam.equals(teamA) ? teamB : teamA);
+        }
+        return Optional.empty();
     }
-    return Optional.empty();
-  }
 }

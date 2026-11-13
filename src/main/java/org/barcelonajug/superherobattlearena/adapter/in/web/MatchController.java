@@ -24,72 +24,84 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 @RequestMapping("/api/matches")
 @Tag(name = "Match Management", description = "Endpoints for creating and simulating matches")
 public class MatchController {
+    private final MatchUseCase matchUseCase;
 
-  private final MatchUseCase matchUseCase;
+    // A simple executor for async simulation (demo purpose)
+    private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
-  // A simple executor for async simulation (demo purpose)
-  private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+    public MatchController(MatchUseCase matchUseCase) {
+        this.matchUseCase = matchUseCase;
+    }
 
-  public MatchController(MatchUseCase matchUseCase) {
-    this.matchUseCase = matchUseCase;
-  }
+    @Operation(
+            summary = "Get match events",
+            description = "Retrieves a list of all events that occurred during a match."
+    )
+    @ApiResponse(responseCode = "200", description = "List of events retrieved")
+    @GetMapping("/{matchId}/events")
+    public List<MatchEventSnapshotDto> getEvents(
+            @Parameter(description = "ID of the match", required = true) @PathVariable UUID matchId
+    ) {
+        return matchUseCase.getMatchEvents(matchId).stream().map(
+                MatchEventSnapshotDto::from
+        ).toList();
+    }
 
-  @Operation(
-      summary = "Get match events",
-      description = "Retrieves a list of all events that occurred during a match.")
-  @ApiResponse(responseCode = "200", description = "List of events retrieved")
-  @GetMapping("/{matchId}/events")
-  public List<MatchEventSnapshotDto> getEvents(
-      @Parameter(description = "ID of the match", required = true) @PathVariable UUID matchId) {
-    return matchUseCase.getMatchEvents(matchId).stream().map(MatchEventSnapshotDto::from).toList();
-  }
+    @Operation(summary = "List all matches", description = "Retrieves a list of all matches.")
+    @GetMapping
+    public ResponseEntity<List<MatchDto>> getAllMatches() {
+        return ResponseEntity.ok(
+                matchUseCase.getAllMatches().stream().map(MatchDto::from).toList()
+        );
+    }
 
-  @Operation(summary = "List all matches", description = "Retrieves a list of all matches.")
-  @GetMapping
-  public ResponseEntity<List<MatchDto>> getAllMatches() {
-    return ResponseEntity.ok(matchUseCase.getAllMatches().stream().map(MatchDto::from).toList());
-  }
+    @Operation(
+            summary = "Get match details",
+            description = "Retrieves detailed information about a specific match."
+    )
+    @ApiResponse(responseCode = "200", description = "Match details found")
+    @ApiResponse(responseCode = "404", description = "Match not found")
+    @GetMapping("/{matchId}")
+    public ResponseEntity<MatchDto> getMatch(
+            @Parameter(description = "ID of the match", required = true) @PathVariable UUID matchId
+    ) {
+        return matchUseCase
+                .getMatch(matchId)
+                .map(MatchDto::from)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-  @Operation(
-      summary = "Get match details",
-      description = "Retrieves detailed information about a specific match.")
-  @ApiResponse(responseCode = "200", description = "Match details found")
-  @ApiResponse(responseCode = "404", description = "Match not found")
-  @GetMapping("/{matchId}")
-  public ResponseEntity<MatchDto> getMatch(
-      @Parameter(description = "ID of the match", required = true) @PathVariable UUID matchId) {
-    return matchUseCase
-        .getMatch(matchId)
-        .map(MatchDto::from)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
-  }
-
-  @Operation(
-      summary = "Stream match events",
-      description = "Streams events for a match using Server-Sent Events (SSE).")
-  @GetMapping("/{matchId}/events/stream")
-  @SuppressWarnings("FutureReturnValueIgnored")
-  public SseEmitter streamEvents(
-      @Parameter(description = "ID of the match to stream", required = true) @PathVariable
-          UUID matchId) {
-    SseEmitter emitter = new SseEmitter(600000L); // 10 min timeout
-    executor.submit(
-        () -> {
-          try {
-            List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);
-            for (MatchEvent event : events) {
-              emitter.send(MatchEventSnapshotDto.from(event.eventJson()));
-              Thread.sleep(500);
-            }
-            emitter.complete();
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            emitter.completeWithError(e);
-          } catch (IOException | RuntimeException e) {
-            emitter.completeWithError(e);
-          }
-        });
-    return emitter;
-  }
+    @Operation(
+            summary = "Stream match events",
+            description = "Streams events for a match using Server-Sent Events (SSE)."
+    )
+    @GetMapping("/{matchId}/events/stream")
+    @SuppressWarnings("FutureReturnValueIgnored")
+    public SseEmitter streamEvents(
+            @Parameter(
+                    description = "ID of the match to stream",
+                    required = true
+            ) @PathVariable UUID matchId
+    ) {
+        SseEmitter emitter = new SseEmitter(600_000L);
+        executor.submit(
+                () -> {
+                    try {
+                        List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);
+                        for (MatchEvent event : events) {
+                            emitter.send(MatchEventSnapshotDto.from(event.eventJson()));
+                            Thread.sleep(500);
+                        }
+                        emitter.complete();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        emitter.completeWithError(e);
+                    } catch (IOException | RuntimeException e) {
+                        emitter.completeWithError(e);
+                    }
+                }
+        );
+        return emitter;
+    }
 }

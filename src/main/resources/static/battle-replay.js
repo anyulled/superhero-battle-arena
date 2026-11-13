@@ -1,67 +1,69 @@
 $(document).ready(async function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const matchId = urlParams.get('matchId');
+  const urlParams = new URLSearchParams(window.location.search);
+  const matchId = urlParams.get('matchId');
 
-    if (!matchId) {
-        alert('No Match ID provided!');
-        window.location.href = 'bracket.html';
-        return;
+  if (!matchId) {
+    alert('No Match ID provided!');
+    window.location.href = 'bracket.html';
+    return;
+  }
+
+  // State
+  const state = {
+    heroes: {}, // Metadata from RosterService
+    match: null,
+    teamA: null,
+    teamB: null,
+    rosters: { // heroId -> { ...hero, teamId, currentHealth }
+    },
+    teamAffiliation: {}, // heroId -> teamId
+  };
+
+  // UI Elements
+  const els = {
+    status: $('#battleStatus'),
+    log: $('#battleLog'),
+    teamAName: $('#teamAName'),
+    teamBName: $('#teamBName'),
+    teamARoster: $('#teamARoster'),
+    teamBRoster: $('#teamBRoster'),
+    winnerModal: $('#winnerModal'),
+    winnerName: $('#winnerName'),
+    winnerMembers: $('#winnerMembers')
+  };
+
+  let evtSource = null;
+
+  // Helper: Log message
+  function log(msg, type = 'info') {
+    let color;
+    switch (type) {
+      case 'damage':
+      color = 'text-red-400';
+      break;
+      case 'special':
+      color = 'text-yellow-400 font-bold';
+      break;
+      default:
+      color = 'text-slate-300';
     }
 
-    // State
-    const state = {
-        heroes: {}, // Metadata from RosterService
-        match: null,
-        teamA: null,
-        teamB: null,
-        rosters: { // heroId -> { ...hero, teamId, currentHealth }
-        },
-        teamAffiliation: {}, // heroId -> teamId
-    };
+    const time = new Date().toLocaleTimeString();
+    const el = $(
+      `<div class="${color} border-l-2 border-slate-700 pl-2 mb-1"><span class="text-slate-500 text-xs mr-2">[${time}]</span>${msg}</div>`
+    );
+    els.log.prepend(el);
+  }
 
-    // UI Elements
-    const els = {
-        status: $('#battleStatus'),
-        log: $('#battleLog'),
-        teamAName: $('#teamAName'),
-        teamBName: $('#teamBName'),
-        teamARoster: $('#teamARoster'),
-        teamBRoster: $('#teamBRoster'),
-        winnerModal: $('#winnerModal'),
-        winnerName: $('#winnerName'),
-        winnerMembers: $('#winnerMembers')
-    };
+  function renderHeroCard(heroId, container, teamId) {
+    const hero = state.heroes[heroId] || { id: heroId, name: `Hero #${heroId}` };
+    const uniqueId = `${teamId}_${heroId}`;
 
-    let evtSource = null;
+    const maxHealth = hero.powerstats ? hero.powerstats.durability : 100;
 
-    // Helper: Log message
-    function log(msg, type = 'info') {
-        let color;
-        switch (type) {
-            case 'damage':
-                color = 'text-red-400';
-                break;
-            case 'special':
-                color = 'text-yellow-400 font-bold';
-                break;
-            default:
-                color = 'text-slate-300';
-        }
+    state.rosters[uniqueId] = { ...hero, currentHealth: maxHealth, maxHealth: maxHealth };
 
-        const time = new Date().toLocaleTimeString();
-        const el = $(`<div class="${color} border-l-2 border-slate-700 pl-2 mb-1"><span class="text-slate-500 text-xs mr-2">[${time}]</span>${msg}</div>`);
-        els.log.prepend(el);
-    }
-
-    function renderHeroCard(heroId, container, teamId) {
-        const hero = state.heroes[heroId] || { id: heroId, name: `Hero #${heroId}` };
-        const uniqueId = `${teamId}_${heroId}`;
-
-        const maxHealth = hero.powerstats ? hero.powerstats.durability : 100;
-
-        state.rosters[uniqueId] = { ...hero, currentHealth: maxHealth, maxHealth: maxHealth };
-
-        const card = $(`
+    const card = $(`
             <div id="hero-${uniqueId}" class="hero-card bg-slate-800 p-3 rounded-lg border border-slate-700 flex items-center gap-3 relative overflow-hidden">
                 <img src="${hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50'}" class="hero-avatar w-12 h-12 rounded-full border-2 border-slate-500 object-cover" alt="${hero.name}">
                 <div class="flex-1">
@@ -75,321 +77,328 @@ $(document).ready(async function () {
                 </div>
             </div>
         `);
-        container.append(card);
+    container.append(card);
+  }
+
+  function hydrateHeroCards() {
+    Object.keys(state.rosters).forEach(uniqueId => {
+      const heroId = Number.parseInt(uniqueId.split('_')[1], 10);
+      const hero = state.heroes[heroId];
+      if (!hero) {
+        return;
+      }
+      const existing = state.rosters[uniqueId];
+      const maxHealth = hero.powerstats ? hero.powerstats.durability : existing.maxHealth;
+      const wasFullHealth = existing.currentHealth === existing.maxHealth;
+      state.rosters[uniqueId] = {
+        ...hero,
+        maxHealth,
+        currentHealth: wasFullHealth ? maxHealth : Math.min(existing.currentHealth, maxHealth)
+      };
+      const card = $(document.getElementById(`hero-${uniqueId}`));
+      if (card.length) {
+        card.find('.hero-name').text(hero.name);
+        card.find('.hero-avatar')
+        .attr(
+          'src',
+          hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50'
+        )
+        .attr('alt', hero.name);
+        card.find('.hp-text').text(
+          `${Math.ceil(state.rosters[uniqueId].currentHealth)}/${maxHealth}`
+        );
+      }
+    });
+  }
+
+  try {
+    els.status.text('LOADING MATCH DATA...');
+
+    state.match = await API.matches.get(matchId);
+
+    const allTeams = await API.teams.list(state.match.sessionId);
+    state.teamA = allTeams.find(t => t.teamId === state.match.teamA);
+    state.teamB = allTeams.find(t => t.teamId === state.match.teamB);
+
+    els.teamAName.text(state.teamA ? state.teamA.name : 'Unknown Team A');
+    els.teamBName.text(state.teamB ? state.teamB.name : 'Unknown Team B');
+
+    try {
+      const roundSpec = await API.rounds.get(state.match.roundNo, state.match.sessionId);
+      const mapType = roundSpec.mapType;
+      let bgImage = 'images/backgrounds/arena_1.png';
+
+      if (mapType === 'ARENA_2') bgImage = 'images/backgrounds/arena_2.png';
+      else if (mapType === 'COSMIC') bgImage = 'images/backgrounds/cosmic.png';
+
+      $('body').css({
+        'background-image': `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('${bgImage}')`,
+        'background-size': 'cover',
+        'background-position': 'center',
+        'background-attachment': 'fixed'
+      });
+    } catch (e) {
+      console.warn('Failed to load round spec for background', e);
     }
 
-    function hydrateHeroCards() {
-        Object.keys(state.rosters).forEach(uniqueId => {
-            const heroId = Number.parseInt(uniqueId.split('_')[1], 10);
-            const hero = state.heroes[heroId];
-            if (!hero) {
-                return;
-            }
-            const existing = state.rosters[uniqueId];
-            const maxHealth = hero.powerstats ? hero.powerstats.durability : existing.maxHealth;
-            const wasFullHealth = existing.currentHealth === existing.maxHealth;
-            state.rosters[uniqueId] = {
-                ...hero,
-                maxHealth,
-                currentHealth: wasFullHealth ? maxHealth : Math.min(existing.currentHealth, maxHealth)
-            };
-            const card = $(document.getElementById(`hero-${uniqueId}`));
-            if (card.length) {
-                card.find('.hero-name').text(hero.name);
-                card.find('.hero-avatar')
-                    .attr('src', hero.images?.sm || hero.images?.md || hero.imageUrl || 'https://via.placeholder.com/50')
-                    .attr('alt', hero.name);
-                card.find('.hp-text').text(`${Math.ceil(state.rosters[uniqueId].currentHealth)}/${maxHealth}`);
-            }
-        });
+    const roundNo = state.match.roundNo || 1;
+
+    try {
+      const subA = await API.rounds.getSubmission(roundNo, state.match.teamA);
+      subA.heroIds.forEach(id => {
+        state.teamAffiliation[id] = state.match.teamA;
+        renderHeroCard(id, els.teamARoster, state.match.teamA);
+      });
+    } catch (e) {
+      console.warn('Failed to load roster A', e);
+      els.teamARoster.html('<div class="text-red-500 text-xs">Roster hidden/failed</div>');
     }
 
     try {
-        els.status.text('LOADING MATCH DATA...');
-
-        state.match = await API.matches.get(matchId);
-
-        const allTeams = await API.teams.list(state.match.sessionId);
-        state.teamA = allTeams.find(t => t.teamId === state.match.teamA);
-        state.teamB = allTeams.find(t => t.teamId === state.match.teamB);
-
-        els.teamAName.text(state.teamA ? state.teamA.name : 'Unknown Team A');
-        els.teamBName.text(state.teamB ? state.teamB.name : 'Unknown Team B');
-
-        try {
-            const roundSpec = await API.rounds.get(state.match.roundNo, state.match.sessionId);
-            const mapType = roundSpec.mapType;
-            let bgImage = 'images/backgrounds/arena_1.png';
-
-            if (mapType === 'ARENA_2') bgImage = 'images/backgrounds/arena_2.png';
-            else if (mapType === 'COSMIC') bgImage = 'images/backgrounds/cosmic.png';
-
-            $('body').css({
-                'background-image': `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.8)), url('${bgImage}')`,
-                'background-size': 'cover',
-                'background-position': 'center',
-                'background-attachment': 'fixed'
-            });
-
-        } catch (e) {
-            console.warn('Failed to load round spec for background', e);
-        }
-
-        const roundNo = state.match.roundNo || 1;
-
-        try {
-            const subA = await API.rounds.getSubmission(roundNo, state.match.teamA);
-            subA.heroIds.forEach(id => {
-                state.teamAffiliation[id] = state.match.teamA;
-                renderHeroCard(id, els.teamARoster, state.match.teamA);
-            });
-        } catch (e) {
-            console.warn('Failed to load roster A', e);
-            els.teamARoster.html('<div class="text-red-500 text-xs">Roster hidden/failed</div>');
-        }
-
-        try {
-            const subB = await API.rounds.getSubmission(roundNo, state.match.teamB);
-            subB.heroIds.forEach(id => {
-                state.teamAffiliation[id] = state.match.teamB;
-                renderHeroCard(id, els.teamBRoster, state.match.teamB);
-            });
-        } catch (e) {
-            console.warn('Failed to load roster B', e);
-            els.teamBRoster.html('<div class="text-red-500 text-xs">Roster hidden/failed</div>');
-        }
-
-        els.status.text('Connecting Stream...');
-        evtSource = API.matches.eventsStream(matchId);
-
-        evtSource.onmessage = function (e) {
-            const event = JSON.parse(e.data);
-            processEvent(event);
-        };
-
-        evtSource.onerror = function () {
-            els.status.text('REPLAY COMPLETE').removeClass('animate-pulse');
-            if (evtSource) {
-                evtSource.close();
-            }
-        };
-
-        els.status.text('LIVE REPLAY');
-
-        API.teams.getHeroes().then(function (heroesList) {
-            state.heroes = heroesList.reduce((acc, h) => ({ ...acc, [h.id]: h }), {});
-            hydrateHeroCards();
-        }).catch(function (e) {
-            console.warn('Failed to load full hero metadata', e);
-        });
-
-    } catch (err) {
-        alert('Failed to initialize battle: ' + err.message);
+      const subB = await API.rounds.getSubmission(roundNo, state.match.teamB);
+      subB.heroIds.forEach(id => {
+        state.teamAffiliation[id] = state.match.teamB;
+        renderHeroCard(id, els.teamBRoster, state.match.teamB);
+      });
+    } catch (e) {
+      console.warn('Failed to load roster B', e);
+      els.teamBRoster.html('<div class="text-red-500 text-xs">Roster hidden/failed</div>');
     }
 
-    // Event Processor
-    function processEvent(event) {
-        const { type, description, actorId, targetId, value } = event;
+    els.status.text('Connecting Stream...');
+    evtSource = API.matches.eventsStream(matchId);
 
-        switch (type) {
-            case 'MATCH_START':
-                log('🏁 ====== MATCH START ======', 'special');
-                break;
-            // Backend emits TURN_START (not ROUND_START)
-            case 'TURN_START':
-            case 'ROUND_START':
-                log(`🔄 --- Turn ${value} ---`, 'special');
-                $('#roundIndicator').text(`TURN ${value}`).removeClass('hidden');
-                break;
-            case 'ROUND_END':
-                log(`🏆 --- Round ${value} End ---`, 'special');
-                break;
-            case 'ATTACK_PERFORMED':
-                handleAttack(actorId, targetId, value, description);
-                break;
-            // Backend emits KO (not HERO_KNOCKED_OUT)
-            case 'KO':
-            case 'HERO_KNOCKED_OUT':
-                handleKO(targetId);
-                log('☠️ ' + description, 'damage');
-                break;
-            case 'MATCH_END':
-                handleWin();
-                break;
-            case 'HIT': // Fallthrough or explicit
-                handleAttack(actorId, targetId, value, description);
-                break;
-            case 'CRITICAL_HIT':
-                handleAttack(actorId, targetId, value, description, '💫 ', true);
-                break;
-            case 'DODGE':
-                handleDodge(actorId, targetId, description);
-                break;
-            case 'HEALTH_CHANGED':
-                if (targetId) {
-                    if (typeof value === 'number') {
-                        updateHealth(targetId, value, true);
-                        if (description) log(description);
-                    } else {
-                        console.warn(`HEALTH_CHANGED event for target ${targetId} has invalid or missing health value:`, value);
-                    }
-                } else {
-                    console.warn('HEALTH_CHANGED event missing targetId');
-                }
-                break;
-            default:
-                log(description);
-        }
-    }
+    evtSource.onmessage = function (e) {
+      const event = JSON.parse(e.data);
+      processEvent(event);
+    };
 
-    function handleAttack(actorId, targetId, damage, desc, prefix = '💥 ', isCritical = false) {
-        const actorCard = $(document.getElementById(`hero-${actorId}`));
-        const targetCard = $(document.getElementById(`hero-${targetId}`));
+    evtSource.onerror = function () {
+      els.status.text('REPLAY COMPLETE').removeClass('animate-pulse');
+      if (evtSource) {
+        evtSource.close();
+      }
+    };
 
-        const actorTeamId = actorId.split('_')[0];
-        const isTeamA = actorTeamId === state.match.teamA;
+    els.status.text('LIVE REPLAY');
 
-        if (actorCard.length) {
-            actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
-            setTimeout(() => {
-                actorCard.removeClass('attacking-right attacking-left');
-            }, 500);
-        }
+    API.teams.getHeroes().then(function (heroesList) {
+      state.heroes = heroesList.reduce((acc, h) => ({ ...acc, [h.id]: h }), {});
+      hydrateHeroCards();
+    }).catch(function (e) {
+      console.warn('Failed to load full hero metadata', e);
+    });
+  } catch (err) {
+    alert('Failed to initialize battle: ' + err.message);
+  }
 
-        if (targetCard.length) {
-            const targetClass = isCritical ? 'crit-target' : 'target shake';
-            targetCard.addClass(targetClass);
-            setTimeout(() => {
-                targetCard.removeClass(targetClass);
-            }, isCritical ? 600 : 500);
+  // Event Processor
+  function processEvent(event) {
+    const { type, description, actorId, targetId, value } = event;
 
-            const dmgText = isCritical ? `⚡ CRIT -${damage}` : `-${damage}`;
-            const dmgClass = isCritical ? 'damage-number crit' : 'damage-number';
-            const dmgEl = $(`<div class="${dmgClass}">${dmgText}</div>`);
-            targetCard.append(dmgEl);
-            setTimeout(() => dmgEl.remove(), isCritical ? 1200 : 1000);
+    switch (type) {
+      case 'MATCH_START':
+      log('🏁 ====== MATCH START ======', 'special');
+      break;
+      // Backend emits TURN_START (not ROUND_START)
+      case 'TURN_START':
+      case 'ROUND_START':
+      log(`🔄 --- Turn ${value} ---`, 'special');
+      $('#roundIndicator').text(`TURN ${value}`).removeClass('hidden');
+      break;
+      case 'ROUND_END':
+      log(`🏆 --- Round ${value} End ---`, 'special');
+      break;
+      case 'ATTACK_PERFORMED':
+      handleAttack(actorId, targetId, value, description);
+      break;
+      // Backend emits KO (not HERO_KNOCKED_OUT)
+      case 'KO':
+      case 'HERO_KNOCKED_OUT':
+      handleKO(targetId);
+      log('☠️ ' + description, 'damage');
+      break;
+      case 'MATCH_END':
+      handleWin();
+      break;
+      case 'HIT': // Fallthrough or explicit
+      handleAttack(actorId, targetId, value, description);
+      break;
+      case 'CRITICAL_HIT':
+      handleAttack(actorId, targetId, value, description, '💫 ', true);
+      break;
+      case 'DODGE':
+      handleDodge(actorId, targetId, description);
+      break;
+      case 'HEALTH_CHANGED':
+      if (targetId) {
+        if (typeof value === 'number') {
+          updateHealth(targetId, value, true);
+          if (description) log(description);
         } else {
-            console.warn(`Target card not found for ID: hero-${targetId}`);
+          console.warn(
+            `HEALTH_CHANGED event for target ${targetId} has invalid or missing health value:`,
+            value
+          );
         }
+      } else {
+        console.warn('HEALTH_CHANGED event missing targetId');
+      }
+      break;
+      default:
+      log(description);
+    }
+  }
 
-        updateHealth(targetId, -damage);
+  function handleAttack(actorId, targetId, damage, desc, prefix = '💥 ', isCritical = false) {
+    const actorCard = $(document.getElementById(`hero-${actorId}`));
+    const targetCard = $(document.getElementById(`hero-${targetId}`));
 
-        log(prefix + desc);
+    const actorTeamId = actorId.split('_')[0];
+    const isTeamA = actorTeamId === state.match.teamA;
+
+    if (actorCard.length) {
+      actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
+      setTimeout(() => {
+        actorCard.removeClass('attacking-right attacking-left');
+      }, 500);
     }
 
-    function handleDodge(actorId, targetId, desc) {
-        const actorCard = $(document.getElementById(`hero-${actorId}`));
-        const targetCard = $(document.getElementById(`hero-${targetId}`));
+    if (targetCard.length) {
+      const targetClass = isCritical ? 'crit-target' : 'target shake';
+      targetCard.addClass(targetClass);
+      setTimeout(() => {
+        targetCard.removeClass(targetClass);
+      }, isCritical ? 600 : 500);
 
-        const actorTeamId = actorId.split('_')[0];
-        const isTeamA = actorTeamId === state.match.teamA;
-
-        if (actorCard.length) {
-            actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
-            setTimeout(() => {
-                actorCard.removeClass('attacking-right attacking-left');
-            }, 500);
-        }
-
-        if (targetCard.length) {
-            targetCard.addClass('dodge');
-            setTimeout(() => {
-                targetCard.removeClass('dodge');
-            }, 500);
-
-            const dmgEl = $(`<div class="damage-number text-slate-300">Miss</div>`);
-            targetCard.append(dmgEl);
-            setTimeout(() => dmgEl.remove(), 1000);
-        }
-
-        log('💨 ' + desc);
+      const dmgText = isCritical ? `⚡ CRIT -${damage}` : `-${damage}`;
+      const dmgClass = isCritical ? 'damage-number crit' : 'damage-number';
+      const dmgEl = $(`<div class="${dmgClass}">${dmgText}</div>`);
+      targetCard.append(dmgEl);
+      setTimeout(() => dmgEl.remove(), isCritical ? 1200 : 1000);
+    } else {
+      console.warn(`Target card not found for ID: hero-${targetId}`);
     }
 
-    function updateHealth(uniqueId, deltaOrExact, isExact = false) {
-        const heroData = state.rosters[uniqueId];
-        if (!heroData) {
-            console.warn(`Health update failed: No hero data for ${uniqueId}`);
-            return;
-        }
+    updateHealth(targetId, -damage);
 
-        const oldHp = heroData.currentHealth;
-        if (isExact) {
-            heroData.currentHealth = deltaOrExact;
-        } else {
-            heroData.currentHealth += deltaOrExact;
-        }
-        if (heroData.currentHealth < 0) heroData.currentHealth = 0;
+    log(prefix + desc);
+  }
 
-        console.debug(`Updated Health for ${heroData.name} (${uniqueId}): ${oldHp} -> ${heroData.currentHealth} (Max: ${heroData.maxHealth})`);
+  function handleDodge(actorId, targetId, desc) {
+    const actorCard = $(document.getElementById(`hero-${actorId}`));
+    const targetCard = $(document.getElementById(`hero-${targetId}`));
 
-        // Update UI
-        const pct = Math.max(0, Math.min(100, (heroData.currentHealth / heroData.maxHealth) * 100));
-        const card = $(document.getElementById(`hero-${uniqueId}`));
+    const actorTeamId = actorId.split('_')[0];
+    const isTeamA = actorTeamId === state.match.teamA;
 
-        if (card.length) {
-            let statusClass;
-            if (pct > 50) {
-                statusClass = 'bg-green-500';
-            } else if (pct > 20) {
-                statusClass = 'bg-yellow-500';
-            } else {
-                statusClass = 'bg-red-500';
-            }
-
-            card.find('.hp-bar')
-                .css('width', `${pct}%`)
-                .removeClass('bg-green-500 bg-yellow-500 bg-red-500')
-                .addClass(statusClass);
-
-            card.find('.hp-text').text(`${Math.ceil(heroData.currentHealth)}/${heroData.maxHealth}`);
-        } else {
-            console.warn(`UI update skipped: Card #hero-${uniqueId} not found`);
-        }
+    if (actorCard.length) {
+      actorCard.addClass(isTeamA ? 'attacking-right' : 'attacking-left');
+      setTimeout(() => {
+        actorCard.removeClass('attacking-right attacking-left');
+      }, 500);
     }
 
-    function handleKO(uniqueId) {
-        const card = $(document.getElementById(`hero-${uniqueId}`));
-        card.addClass('ko');
-        updateHealth(uniqueId, 0, true);
+    if (targetCard.length) {
+      targetCard.addClass('dodge');
+      setTimeout(() => {
+        targetCard.removeClass('dodge');
+      }, 500);
+
+      const dmgEl = $(`<div class="damage-number text-slate-300">Miss</div>`);
+      targetCard.append(dmgEl);
+      setTimeout(() => dmgEl.remove(), 1000);
     }
 
-    function renderWinnerDetails(matchData) {
-        const winnerTeamId = matchData.winnerTeam;
-        const winner = (winnerTeamId === matchData.teamA) ? state.teamA : state.teamB;
-        if (winner && winnerTeamId) {
-            els.winnerName.text(winner.name);
-            if (winner.members && winner.members.length > 0) {
-                els.winnerMembers.text('by ' + winner.members.join(' & '));
-            } else {
-                els.winnerMembers.text('');
-            }
-            $(`[id^="hero-${winnerTeamId}_"]`).addClass('victory-glow');
-        } else {
-            els.winnerName.text('Draw!');
-            els.winnerMembers.text('');
-        }
+    log('💨 ' + desc);
+  }
+
+  function updateHealth(uniqueId, deltaOrExact, isExact = false) {
+    const heroData = state.rosters[uniqueId];
+    if (!heroData) {
+      console.warn(`Health update failed: No hero data for ${uniqueId}`);
+      return;
     }
 
-    function handleWin() {
-        if (evtSource) {
-            evtSource.close();
-        }
-        els.status.text('REPLAY COMPLETE').removeClass('animate-pulse');
-        log('🏆 Match Ended!', 'special');
-        $('#winnerModal').removeClass('hidden').addClass('flex');
+    const oldHp = heroData.currentHealth;
+    if (isExact) {
+      heroData.currentHealth = deltaOrExact;
+    } else {
+      heroData.currentHealth += deltaOrExact;
+    }
+    if (heroData.currentHealth < 0) heroData.currentHealth = 0;
 
-        if (state.match && state.match.status === 'COMPLETED') {
-            renderWinnerDetails(state.match);
-            return;
-        }
+    console.debug(
+      `Updated Health for ${heroData.name} (${uniqueId}): ${oldHp} -> ${heroData.currentHealth} (Max: ${heroData.maxHealth})`
+    );
 
-        API.matches.get(matchId).then(function (updatedMatch) {
-            state.match = updatedMatch;
-            renderWinnerDetails(updatedMatch);
-        }).fail(function () {
-            els.winnerName.text('Match Complete');
-            els.winnerMembers.text('');
-        });
+    // Update UI
+    const pct = Math.max(0, Math.min(100, (heroData.currentHealth / heroData.maxHealth) * 100));
+    const card = $(document.getElementById(`hero-${uniqueId}`));
+
+    if (card.length) {
+      let statusClass;
+      if (pct > 50) {
+        statusClass = 'bg-green-500';
+      } else if (pct > 20) {
+        statusClass = 'bg-yellow-500';
+      } else {
+        statusClass = 'bg-red-500';
+      }
+
+      card.find('.hp-bar')
+      .css('width', `${pct}%`)
+      .removeClass('bg-green-500 bg-yellow-500 bg-red-500')
+      .addClass(statusClass);
+
+      card.find('.hp-text').text(`${Math.ceil(heroData.currentHealth)}/${heroData.maxHealth}`);
+    } else {
+      console.warn(`UI update skipped: Card #hero-${uniqueId} not found`);
+    }
+  }
+
+  function handleKO(uniqueId) {
+    const card = $(document.getElementById(`hero-${uniqueId}`));
+    card.addClass('ko');
+    updateHealth(uniqueId, 0, true);
+  }
+
+  function renderWinnerDetails(matchData) {
+    const winnerTeamId = matchData.winnerTeam;
+    const winner = (winnerTeamId === matchData.teamA) ? state.teamA : state.teamB;
+    if (winner && winnerTeamId) {
+      els.winnerName.text(winner.name);
+      if (winner.members && winner.members.length > 0) {
+        els.winnerMembers.text('by ' + winner.members.join(' & '));
+      } else {
+        els.winnerMembers.text('');
+      }
+      $(`[id^="hero-${winnerTeamId}_"]`).addClass('victory-glow');
+    } else {
+      els.winnerName.text('Draw!');
+      els.winnerMembers.text('');
+    }
+  }
+
+  function handleWin() {
+    if (evtSource) {
+      evtSource.close();
+    }
+    els.status.text('REPLAY COMPLETE').removeClass('animate-pulse');
+    log('🏆 Match Ended!', 'special');
+    $('#winnerModal').removeClass('hidden').addClass('flex');
+
+    if (state.match && state.match.status === 'COMPLETED') {
+      renderWinnerDetails(state.match);
+      return;
     }
 
+    API.matches.get(matchId).then(function (updatedMatch) {
+      state.match = updatedMatch;
+      renderWinnerDetails(updatedMatch);
+    }).fail(function () {
+      els.winnerName.text('Match Complete');
+      els.winnerMembers.text('');
+    });
+  }
 });

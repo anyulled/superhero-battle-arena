@@ -18,50 +18,61 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/heroes")
 @Tag(name = "Heroes", description = "API for browsing and searching superheroes")
 public class HeroController {
+    private final RosterUseCase rosterUseCase;
 
-  private final RosterUseCase rosterUseCase;
+    public HeroController(RosterUseCase rosterUseCase) {
+        this.rosterUseCase = rosterUseCase;
+    }
 
-  public HeroController(RosterUseCase rosterUseCase) {
-    this.rosterUseCase = rosterUseCase;
-  }
+    @GetMapping
+    @Operation(
+            summary = "List all heroes",
+            description = "Get a list of all available heroes with pagination support"
+    )
+    public List<HeroDto> getAllHeroes(
+            @Parameter(description = "Page number (0-based)") @RequestParam(
+                    defaultValue = "0"
+            ) int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size
+    ) {
+        return rosterUseCase.getAllHeroes(page, size).stream().map(HeroDto::from).toList();
+    }
 
-  @GetMapping
-  @Operation(
-      summary = "List all heroes",
-      description = "Get a list of all available heroes with pagination support")
-  public List<HeroDto> getAllHeroes(
-      @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
-      @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size) {
-    return rosterUseCase.getAllHeroes(page, size).stream().map(HeroDto::from).toList();
-  }
+    @GetMapping("/{id}")
+    @Operation(
+            summary = "Get hero by ID",
+            description = "Get detailed information about a specific hero"
+    )
+    @ApiResponse(responseCode = "200", description = "Hero found")
+    @ApiResponse(responseCode = "404", description = "Hero not found")
+    public ResponseEntity<HeroDto> getHeroById(@PathVariable int id) {
+        return rosterUseCase
+                .getHero(id)
+                .map(HeroDto::from)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
-  @GetMapping("/{id}")
-  @Operation(
-      summary = "Get hero by ID",
-      description = "Get detailed information about a specific hero")
-  @ApiResponse(responseCode = "200", description = "Hero found")
-  @ApiResponse(responseCode = "404", description = "Hero not found")
-  public ResponseEntity<HeroDto> getHeroById(@PathVariable int id) {
-    return rosterUseCase
-        .getHero(id)
-        .map(HeroDto::from)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
-  }
+    @GetMapping("/search")
+    @Operation(
+            summary = "Search heroes",
+            description = "Search heroes by name (case-insensitive substring match)"
+    )
+    public List<HeroDto> searchHeroes(@RequestParam String q) {
+        return rosterUseCase.searchHeroes(q).stream().map(HeroDto::from).toList();
+    }
 
-  @GetMapping("/search")
-  @Operation(
-      summary = "Search heroes",
-      description = "Search heroes by name (case-insensitive substring match)")
-  public List<HeroDto> searchHeroes(@RequestParam String q) {
-    return rosterUseCase.searchHeroes(q).stream().map(HeroDto::from).toList();
-  }
-
-  @GetMapping("/filter")
-  @Operation(summary = "Filter heroes", description = "Filter heroes by alignment and/or publisher")
-  public List<HeroDto> filterHeroes(
-      @RequestParam(required = false) String alignment,
-      @RequestParam(required = false) String publisher) {
-    return rosterUseCase.filterHeroes(alignment, publisher).stream().map(HeroDto::from).toList();
-  }
+    @GetMapping("/filter")
+    @Operation(
+            summary = "Filter heroes",
+            description = "Filter heroes by alignment and/or publisher"
+    )
+    public List<HeroDto> filterHeroes(
+            @RequestParam(required = false) String alignment,
+            @RequestParam(required = false) String publisher
+    ) {
+        return rosterUseCase.filterHeroes(alignment, publisher).stream().map(
+                HeroDto::from
+        ).toList();
+    }
 }

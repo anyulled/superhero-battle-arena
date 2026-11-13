@@ -8,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.barcelonajug.superherobattlearena.testconfig.PostgresTestContainerConfig;
+import org.barcelonajug.superherobattlearena.testconfig.AbstractPostgresTestContainerConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -17,48 +17,49 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @AutoConfigureMockMvc
-class AdminRoundConstraintOptionsIT extends PostgresTestContainerConfig {
+class AdminRoundConstraintOptionsIT extends AbstractPostgresTestContainerConfig {
+    private static final String ADMIN_USER = "admin";
+    private static final String ADMIN_PASS = "test";
 
-  private static final String ADMIN_USER = "admin";
-  private static final String ADMIN_PASS = "test";
+    @Autowired private MockMvc mockMvc;
 
-  @Autowired private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+    @Test
+    void shouldExposeConstraintOptionsFromHeroDataset() throws Exception {
+        createSession();
 
-  @Test
-  void shouldExposeConstraintOptionsFromHeroDataset() throws Exception {
-    createSession();
+        MvcResult result =
+                mockMvc
+                        .perform(
+                                get("/api/admin/round-constraints/options")
+                                        .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                        )
+                        .andExpect(status().isOk())
+                        .andReturn();
 
-    MvcResult result =
+        JsonNode response = objectMapper.readTree(result.getResponse().getContentAsString());
+        assertThat(response.get("roles")).isNotNull();
+        assertThat(response.get("genders")).isNotNull();
+        assertThat(response.get("races")).isNotNull();
+        assertThat(response.get("publishers")).isNotNull();
+        assertThat(response.get("alignments")).isNotNull();
+        assertThat(response.get("roles").toString()).contains("Fighter");
+        assertThat(response.get("roles").toString()).contains("Tank");
+        assertThat(response.get("genders").toString()).contains("Male");
+        assertThat(response.get("races").toString()).contains("Human");
+        assertThat(response.get("publishers").toString()).contains("Marvel Comics");
+        assertThat(response.get("alignments").toString()).contains("good");
+    }
+
+    private void createSession() throws Exception {
         mockMvc
-            .perform(
-                get("/api/admin/round-constraints/options")
-                    .with(httpBasic(ADMIN_USER, ADMIN_PASS))
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andReturn();
-
-    JsonNode response = objectMapper.readTree(result.getResponse().getContentAsString());
-    assertThat(response.get("roles")).isNotNull();
-    assertThat(response.get("genders")).isNotNull();
-    assertThat(response.get("races")).isNotNull();
-    assertThat(response.get("publishers")).isNotNull();
-    assertThat(response.get("alignments")).isNotNull();
-    assertThat(response.get("roles").toString()).contains("Fighter");
-    assertThat(response.get("roles").toString()).contains("Tank");
-    assertThat(response.get("genders").toString()).contains("Male");
-    assertThat(response.get("races").toString()).contains("Human");
-    assertThat(response.get("publishers").toString()).contains("Marvel Comics");
-    assertThat(response.get("alignments").toString()).contains("good");
-  }
-
-  private void createSession() throws Exception {
-    mockMvc
-        .perform(
-            post("/api/admin/sessions/start")
-                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
-                .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk());
-  }
+                .perform(
+                        post("/api/admin/sessions/start")
+                                .with(httpBasic(ADMIN_USER, ADMIN_PASS))
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isOk());
+    }
 }

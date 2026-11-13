@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface RoundMapper {
-  @Nullable Round toDomain(RoundEntity entity);
+    @Nullable Round toDomain(RoundEntity entity);
 
-  @Nullable RoundEntity toEntity(Round domain);
+    @Nullable RoundEntity toEntity(Round domain);
 }

@@ -16,68 +16,67 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SessionUseCase {
+    private static final Logger log = LoggerFactory.getLogger(SessionUseCase.class);
+    private static final String SESSION_ID_KEY = "sessionId";
 
-  private static final Logger log = LoggerFactory.getLogger(SessionUseCase.class);
-  private static final String SESSION_ID_KEY = "sessionId";
+    private final SessionRepositoryPort sessionRepository;
 
-  private final SessionRepositoryPort sessionRepository;
-
-  public SessionUseCase(SessionRepositoryPort sessionRepository) {
-    this.sessionRepository = sessionRepository;
-  }
-
-  @Transactional
-  public Session createSession() {
-    log.info("Creating new session");
-    return startSession(null);
-  }
-
-  @Transactional(readOnly = true)
-  public Optional<Session> getActiveSession() {
-    Optional<Session> activeSession = sessionRepository.findByActiveTrue();
-    activeSession.ifPresentOrElse(
-        session -> log.debug("Found active session: {}", session.getSessionId()),
-        () -> log.debug("No active session found"));
-    return activeSession;
-  }
-
-  @Transactional(readOnly = true)
-  public List<Session> listSessions() {
-    return sessionRepository.findAll();
-  }
-
-  @Transactional
-  public Session startSession(@Nullable UUID sessionId) {
-    UUID id;
-    if (sessionId != null) {
-      id = sessionId;
-    } else {
-      id = UUID.randomUUID();
+    public SessionUseCase(SessionRepositoryPort sessionRepository) {
+        this.sessionRepository = sessionRepository;
     }
-    MDC.put(SESSION_ID_KEY, id.toString());
 
-    try {
-      log.info("Starting session - sessionId={}", id);
-      sessionRepository.findAll().stream()
-          .filter(Session::isActive)
-          .forEach(
-              existingSession -> {
-                log.info("Deactivating previous session: {}", existingSession.getSessionId());
-                existingSession.setActive(false);
-                sessionRepository.save(existingSession);
-              });
-
-      Session session = new Session(id, OffsetDateTime.now(ZoneOffset.UTC), true);
-      Session savedSession = sessionRepository.save(session);
-      log.info("Session started successfully - sessionId={}", id);
-      return savedSession;
-    } finally {
-      MDC.remove(SESSION_ID_KEY);
+    @Transactional
+    public Session createSession() {
+        log.info("Creating new session");
+        return startSession(null);
     }
-  }
 
-  @Transactional(readOnly = true)
-  public Optional<Session> getSession(UUID sessionId) {
-    return sessionRepository.findById(sessionId);
-  }
+    @Transactional(readOnly = true)
+    public Optional<Session> getActiveSession() {
+        Optional<Session> activeSession = sessionRepository.findByActiveTrue();
+        activeSession.ifPresentOrElse(
+                session -> log.debug("Found active session: {}", session.getSessionId()),
+                () -> log.debug("No active session found")
+        );
+        return activeSession;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Session> listSessions() {
+        return sessionRepository.findAll();
+    }
+
+    @Transactional
+    public Session startSession(@Nullable UUID sessionId) {
+        UUID id = sessionId == null ? UUID.randomUUID() : sessionId;
+        MDC.put(SESSION_ID_KEY, id.toString());
+
+        try {
+            log.info("Starting session - sessionId={}", id);
+            sessionRepository.findAll().stream()
+                    .filter(Session::isActive)
+                    .forEach(
+                            existingSession -> {
+                                log.info(
+                                        "Deactivating previous session: {}",
+                                        existingSession.getSessionId()
+                                );
+                                existingSession.setActive(false);
+                                sessionRepository.save(existingSession);
+                            }
+                    );
+
+            Session session = new Session(id, OffsetDateTime.now(ZoneOffset.UTC), true);
+            Session savedSession = sessionRepository.save(session);
+            log.info("Session started successfully - sessionId={}", id);
+            return savedSession;
+        } finally {
+            MDC.remove(SESSION_ID_KEY);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Session> getSession(UUID sessionId) {
+        return sessionRepository.findById(sessionId);
+    }
 }
