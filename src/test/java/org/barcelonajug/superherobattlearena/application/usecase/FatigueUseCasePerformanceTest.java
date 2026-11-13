@@ -20,113 +20,118 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class FatigueUseCasePerformanceTest {
+    private HeroUsageRepositoryPort heroUsageRepository;
+    private FatigueUseCase fatigueService;
 
-  private HeroUsageRepositoryPort heroUsageRepository;
-  private FatigueUseCase fatigueService;
-
-  @BeforeEach
-  void setUp() {
-    heroUsageRepository = mock(HeroUsageRepositoryPort.class);
-    fatigueService = new FatigueUseCase(heroUsageRepository);
-  }
-
-  @Test
-  void redundantCalls() {
-    UUID teamId = UUID.randomUUID();
-    int teamSize = 5;
-    List<Hero> heroes =
-        IntStream.range(0, teamSize)
-            .mapToObj(
-                i ->
-                    new Hero(
-                        i,
-                        "Hero" + i,
-                        "hero-" + i,
-                        new Hero.PowerStats(100, 10, 10, 10, 10, 10),
-                        "Fighter",
-                        10,
-                        "good",
-                        "Marvel",
-                        null,
-                        null,
-                        emptyList(),
-                        new Hero.Images(null, null, null, null)))
-            .toList();
-
-    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
-
-    for (Hero hero : heroes) {
-      fatigueService.applyFatigue(teamId, hero, 1);
+    @BeforeEach
+    void setUp() {
+        heroUsageRepository = mock(HeroUsageRepositoryPort.class);
+        fatigueService = new FatigueUseCase(heroUsageRepository);
     }
 
-    verify(heroUsageRepository, times(teamSize)).findByTeamIdAndRoundNo(any(), anyInt());
-  }
+    @Test
+    void redundantCalls() {
+        UUID teamId = UUID.randomUUID();
+        int teamSize = 5;
+        List<Hero> heroes =
+                IntStream.range(0, teamSize)
+                        .mapToObj(
+                                i ->
+                                        new Hero(
+                                                i,
+                                                "Hero" + i,
+                                                "hero-" + i,
+                                                new Hero.PowerStats(100, 10, 10, 10, 10, 10),
+                                                "Fighter",
+                                                10,
+                                                "good",
+                                                "Marvel",
+                                                null,
+                                                null,
+                                                emptyList(),
+                                                new Hero.Images(null, null, null, null)
+                                        )
+                        )
+                        .toList();
 
-  @Test
-  void optimizedCall() {
-    UUID teamId = UUID.randomUUID();
-    int teamSize = 5;
-    List<Hero> heroes =
-        IntStream.range(0, teamSize)
-            .mapToObj(
-                i ->
-                    new Hero(
-                        i,
-                        "Hero" + i,
-                        "hero-" + i,
-                        new Hero.PowerStats(100, 10, 10, 10, 10, 10),
-                        "Fighter",
-                        10,
-                        "good",
-                        "Marvel",
-                        null,
-                        null,
-                        emptyList(),
-                        new Hero.Images(null, null, null, null)))
-            .toList();
+        when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
-    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
+        for (Hero hero : heroes) {
+            fatigueService.applyFatigue(teamId, hero, 1);
+        }
 
-    fatigueService.applyFatigue(teamId, heroes, 1);
-
-    verify(heroUsageRepository).findByTeamIdAndRoundNo(any(), anyInt());
-  }
-
-  @Test
-  void recordUsageIndividualCallsNPlusOne() {
-    int teamCount = 20;
-    int roundNo = 1;
-    List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
-    List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
-
-    when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
-
-    long startTime = System.nanoTime();
-    for (UUID teamId : teams) {
-      fatigueService.recordUsage(teamId, roundNo, heroIds);
+        verify(heroUsageRepository, times(teamSize)).findByTeamIdAndRoundNo(any(), anyInt());
     }
-    long duration = System.nanoTime() - startTime;
 
-    verify(heroUsageRepository, times(teamCount)).findByTeamIdAndRoundNo(any(), anyInt());
-    assertThat(duration).isPositive();
-  }
+    @Test
+    void optimizedCall() {
+        UUID teamId = UUID.randomUUID();
+        int teamSize = 5;
+        List<Hero> heroes =
+                IntStream.range(0, teamSize)
+                        .mapToObj(
+                                i ->
+                                        new Hero(
+                                                i,
+                                                "Hero" + i,
+                                                "hero-" + i,
+                                                new Hero.PowerStats(100, 10, 10, 10, 10, 10),
+                                                "Fighter",
+                                                10,
+                                                "good",
+                                                "Marvel",
+                                                null,
+                                                null,
+                                                emptyList(),
+                                                new Hero.Images(null, null, null, null)
+                                        )
+                        )
+                        .toList();
 
-  @Test
-  void recordUsageBatchCalls() {
-    int teamCount = 20;
-    int roundNo = 1;
-    List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
-    List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
+        when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
 
-    Map<UUID, List<Integer>> teamHeroUsageMap = teams.stream().collect(toMap(t -> t, t -> heroIds));
+        fatigueService.applyFatigue(teamId, heroes, 1);
 
-    when(heroUsageRepository.findByTeamIdInAndRoundNo(any(), anyInt())).thenReturn(emptyList());
+        verify(heroUsageRepository).findByTeamIdAndRoundNo(any(), anyInt());
+    }
 
-    long startTime = System.nanoTime();
-    fatigueService.recordUsage(teamHeroUsageMap, roundNo);
-    long duration = System.nanoTime() - startTime;
+    @Test
+    void recordUsageIndividualCallsNPlusOne() {
+        int teamCount = 20;
+        int roundNo = 1;
+        List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
+        List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
 
-    verify(heroUsageRepository).findByTeamIdInAndRoundNo(any(), anyInt());
-    assertThat(duration).isPositive();
-  }
+        when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
+
+        long startTime = System.nanoTime();
+        for (UUID teamId : teams) {
+            fatigueService.recordUsage(teamId, roundNo, heroIds);
+        }
+        long duration = System.nanoTime() - startTime;
+
+        verify(heroUsageRepository, times(teamCount)).findByTeamIdAndRoundNo(any(), anyInt());
+        assertThat(duration).isPositive();
+    }
+
+    @Test
+    void recordUsageBatchCalls() {
+        int teamCount = 20;
+        int roundNo = 1;
+        List<UUID> teams = IntStream.range(0, teamCount).mapToObj(i -> UUID.randomUUID()).toList();
+        List<Integer> heroIds = List.of(1, 2, 3, 4, 5);
+
+        Map<UUID, List<Integer>> teamHeroUsageMap = teams.stream().collect(
+                toMap(t -> t, t -> heroIds)
+        );
+
+        when(heroUsageRepository.findByTeamIdInAndRoundNo(any(), anyInt())).thenReturn(emptyList());
+
+        long startTime = System.nanoTime();
+        fatigueService.recordUsage(teamHeroUsageMap, roundNo);
+        long duration = System.nanoTime() - startTime;
+
+        verify(heroUsageRepository).findByTeamIdInAndRoundNo(any(), anyInt());
+        assertThat(duration).isPositive();
+    }
 }

@@ -16,104 +16,109 @@ import org.barcelonajug.superherobattlearena.domain.Hero;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 
 class BattleEngineUseCasePropertyTest {
+    private final BattleEngineUseCase battleEngine = new BattleEngineUseCase();
 
-  private final BattleEngineUseCase battleEngine = new BattleEngineUseCase();
+    @Property
+    void damageIsAlwaysAtLeastOne(
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker,
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase target,
+            @ForAll("roundSpecs") RoundSpec roundSpec,
+            @ForAll boolean isCrit
+    ) {
+        int damage = battleEngine.calculateDamage(attacker, target, roundSpec, isCrit);
 
-  @Property
-  void damageIsAlwaysAtLeastOne(
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker,
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase target,
-      @ForAll("roundSpecs") RoundSpec roundSpec,
-      @ForAll boolean isCrit) {
+        assertThat(damage).isPositive();
+    }
 
-    int damage = battleEngine.calculateDamage(attacker, target, roundSpec, isCrit);
+    @Property
+    void criticalHitNeverDealsLessDamageThanRegularHit(
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker,
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase target,
+            @ForAll("roundSpecs") RoundSpec roundSpec
+    ) {
+        int regularDamage = battleEngine.calculateDamage(attacker, target, roundSpec, false);
+        int criticalDamage = battleEngine.calculateDamage(attacker, target, roundSpec, true);
 
-    assertThat(damage).isPositive();
-  }
+        assertThat(criticalDamage).isGreaterThanOrEqualTo(regularDamage);
+    }
 
-  @Property
-  void criticalHitNeverDealsLessDamageThanRegularHit(
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker,
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase target,
-      @ForAll("roundSpecs") RoundSpec roundSpec) {
+    @Property
+    void dodgeChanceIsBetweenZeroAndFiftyPercent(
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker,
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase target
+    ) {
+        double dodgeChance = battleEngine.calculateDodgeChance(attacker, target);
 
-    int regularDamage = battleEngine.calculateDamage(attacker, target, roundSpec, false);
-    int criticalDamage = battleEngine.calculateDamage(attacker, target, roundSpec, true);
+        assertThat(dodgeChance).isGreaterThanOrEqualTo(0.0).isLessThanOrEqualTo(0.5);
+    }
 
-    assertThat(criticalDamage).isGreaterThanOrEqualTo(regularDamage);
-  }
+    @Property
+    void criticalHitChanceIsBetweenZeroAndFiftyPercent(
+            @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker
+    ) {
+        double critChance = battleEngine.calculateCriticalHitChance(attacker);
 
-  @Property
-  void dodgeChanceIsBetweenZeroAndFiftyPercent(
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker,
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase target) {
+        assertThat(critChance).isGreaterThanOrEqualTo(0.0).isLessThanOrEqualTo(0.5);
+    }
 
-    double dodgeChance = battleEngine.calculateDodgeChance(attacker, target);
+    @Provide
+    Arbitrary<BattleEngineUseCase.BattleHeroUseCase> battleHeroes() {
+        Arbitrary<Hero.PowerStats> powerStatsArbitrary =
+                Combinators.combine(
+                        Arbitraries.integers(),
+                        Arbitraries.integers(),
+                        Arbitraries.integers(),
+                        Arbitraries.integers(),
+                        Arbitraries.integers(),
+                        Arbitraries.integers()
+                )
+                        .as(
+                                (dur, str, pow, spd, intel, cbt) ->
+                                        Hero.PowerStats.builder()
+                                                .durability(dur)
+                                                .strength(str)
+                                                .power(pow)
+                                                .speed(spd)
+                                                .intelligence(intel)
+                                                .combat(cbt)
+                                                .build()
+                        );
 
-    assertThat(dodgeChance).isGreaterThanOrEqualTo(0.0).isLessThanOrEqualTo(0.5);
-  }
+        return powerStatsArbitrary.map(
+                stats ->
+                        new BattleEngineUseCase.BattleHeroUseCase(
+                                Hero.builder()
+                                        .id(1)
+                                        .name("Hero")
+                                        .slug("hero")
+                                        .role("Fighter")
+                                        .powerstats(stats)
+                                        .build(),
+                                UUID.randomUUID()
+                        )
+        );
+    }
 
-  @Property
-  void criticalHitChanceIsBetweenZeroAndFiftyPercent(
-      @ForAll("battleHeroes") BattleEngineUseCase.BattleHeroUseCase attacker) {
-
-    double critChance = battleEngine.calculateCriticalHitChance(attacker);
-
-    assertThat(critChance).isGreaterThanOrEqualTo(0.0).isLessThanOrEqualTo(0.5);
-  }
-
-  @Provide
-  Arbitrary<BattleEngineUseCase.BattleHeroUseCase> battleHeroes() {
-    Arbitrary<Hero.PowerStats> powerStatsArbitrary =
-        Combinators.combine(
-                Arbitraries.integers(),
-                Arbitraries.integers(),
-                Arbitraries.integers(),
-                Arbitraries.integers(),
-                Arbitraries.integers(),
-                Arbitraries.integers())
-            .as(
-                (dur, str, pow, spd, intel, cbt) ->
-                    Hero.PowerStats.builder()
-                        .durability(dur)
-                        .strength(str)
-                        .power(pow)
-                        .speed(spd)
-                        .intelligence(intel)
-                        .combat(cbt)
-                        .build());
-
-    return powerStatsArbitrary.map(
-        stats ->
-            new BattleEngineUseCase.BattleHeroUseCase(
-                Hero.builder()
-                    .id(1)
-                    .name("Hero")
-                    .slug("hero")
-                    .role("Fighter")
-                    .powerstats(stats)
-                    .build(),
-                UUID.randomUUID()));
-  }
-
-  @Provide
-  Arbitrary<RoundSpec> roundSpecs() {
-    Arbitrary<Double> modifiers = Arbitraries.doubles().between(0.5, 2.0);
-    return modifiers.map(
-        m ->
-            new RoundSpec(
-                "Test Round",
-                5,
-                1000,
-                emptyMap(),
-                emptyMap(),
-                emptyList(),
-                Map.of("TECH", m, "MAGIC", m),
-                "ARENA",
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList(),
-                emptyList()));
-  }
+    @Provide
+    Arbitrary<RoundSpec> roundSpecs() {
+        Arbitrary<Double> modifiers = Arbitraries.doubles().between(0.5, 2.0);
+        return modifiers.map(
+                m ->
+                        new RoundSpec(
+                                "Test Round",
+                                5,
+                                1000,
+                                emptyMap(),
+                                emptyMap(),
+                                emptyList(),
+                                Map.of("TECH", m, "MAGIC", m),
+                                "ARENA",
+                                emptyList(),
+                                emptyList(),
+                                emptyList(),
+                                emptyList(),
+                                emptyList()
+                        )
+        );
+    }
 }

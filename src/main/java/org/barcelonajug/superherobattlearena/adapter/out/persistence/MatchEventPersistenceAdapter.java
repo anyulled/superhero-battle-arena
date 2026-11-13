@@ -14,58 +14,60 @@ import org.springframework.stereotype.Component;
 /** Persistence adapter for match events. */
 @Component
 public final class MatchEventPersistenceAdapter implements MatchEventRepositoryPort {
+    /** The repository. */
+    private final SpringDataMatchEventRepository repository;
 
-  /** The repository. */
-  private final SpringDataMatchEventRepository repository;
+    /** The mapper. */
+    private final MatchEventMapper mapper;
 
-  /** The mapper. */
-  private final MatchEventMapper mapper;
-
-  /**
+    /**
    * Constructor.
    *
    * @param repo the repository
    * @param map the mapper
    */
-  public MatchEventPersistenceAdapter(
-      final SpringDataMatchEventRepository repo, final MatchEventMapper map) {
-    this.repository = repo;
-    this.mapper = map;
-  }
+    public MatchEventPersistenceAdapter(
+            final SpringDataMatchEventRepository repo,
+            final MatchEventMapper map
+    ) {
+        this.repository = repo;
+        this.mapper = map;
+    }
 
-  @Override
-  public MatchEvent save(final MatchEvent matchEvent) {
-    return requireNonNull(
-        mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(matchEvent)))));
-  }
+    @Override
+    public MatchEvent save(final MatchEvent matchEvent) {
+        return requireNonNull(
+                mapper.toDomain(repository.save(requireNonNull(mapper.toEntity(matchEvent))))
+        );
+    }
 
-  @Override
-  public List<MatchEvent> saveAll(final List<MatchEvent> matchEvents) {
-    var entities =
-        matchEvents.stream()
-            .map(mapper::toEntity)
-            .filter(Objects::nonNull)
-            .map(Objects::requireNonNull)
-            .toList();
-    return repository.saveAll(entities).stream()
-        .map(mapper::toDomain)
-        .filter(Objects::nonNull)
-        .map(Objects::requireNonNull)
-        .toList();
-  }
+    @Override
+    public List<MatchEvent> saveAll(final List<MatchEvent> matchEvents) {
+        var entities =
+                matchEvents.stream()
+                        .map(mapper::toEntity)
+                        .filter(Objects::nonNull)
+                        .map(Objects::requireNonNull)
+                        .toList();
+        return repository.saveAll(entities).stream()
+                .map(mapper::toDomain)
+                .filter(Objects::nonNull)
+                .map(Objects::requireNonNull)
+                .toList();
+    }
 
-  @Override
-  public List<MatchEvent> findByMatchId(final UUID matchId) {
-    var entities = repository.findByMatchIdOrderBySeqAsc(matchId);
-    return entities.stream()
-        .map(mapper::toDomain)
-        .filter(Objects::nonNull)
-        .map(Objects::requireNonNull)
-        .toList();
-  }
+    @Override
+    public List<MatchEvent> findByMatchId(final UUID matchId) {
+        var entities = repository.findByMatchIdOrderBySeqAsc(matchId);
+        return entities.stream()
+                .map(mapper::toDomain)
+                .filter(Objects::nonNull)
+                .map(Objects::requireNonNull)
+                .toList();
+    }
 
-  @Override
-  public void deleteAll() {
-    repository.deleteAll();
-  }
+    @Override
+    public void deleteAll() {
+        repository.deleteAll();
+    }
 }

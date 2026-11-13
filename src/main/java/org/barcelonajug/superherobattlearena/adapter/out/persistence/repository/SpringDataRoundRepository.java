@@ -10,10 +10,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataRoundRepository extends JpaRepository<RoundEntity, UUID> {
-  List<RoundEntity> findBySessionId(UUID sessionId);
+    List<RoundEntity> findBySessionId(UUID sessionId);
 
-  Optional<RoundEntity> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo);
+    Optional<RoundEntity> findBySessionIdAndRoundNo(UUID sessionId, Integer roundNo);
 
-  @Query("SELECT MAX(r.roundNo) FROM RoundEntity r WHERE r.sessionId = :sessionId")
-  Optional<Integer> findMaxRoundNo(UUID sessionId);
+    @Query("SELECT MAX(r.roundNo) FROM RoundEntity r WHERE r.sessionId = :sessionId")
+    Optional<Integer> findMaxRoundNo(UUID sessionId);
 }

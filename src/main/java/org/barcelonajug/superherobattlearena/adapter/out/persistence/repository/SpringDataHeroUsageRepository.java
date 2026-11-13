@@ -9,10 +9,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataHeroUsageRepository
-    extends JpaRepository<HeroUsageEntity, HeroUsageEntity.HeroUsageId> {
-  List<HeroUsageEntity> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
+        extends JpaRepository<HeroUsageEntity, HeroUsageEntity.HeroUsageId> {
+    List<HeroUsageEntity> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
 
-  List<HeroUsageEntity> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo);
+    List<HeroUsageEntity> findByTeamIdInAndRoundNo(Collection<UUID> teamIds, Integer roundNo);
 
-  List<HeroUsageEntity> findByTeamId(UUID teamId);
+    List<HeroUsageEntity> findByTeamId(UUID teamId);
 }

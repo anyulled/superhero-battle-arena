@@ -9,26 +9,28 @@ import org.jspecify.annotations.Nullable;
 
 @Schema(name = "Submission")
 public record SubmissionDto(
-    UUID teamId,
-    Integer roundNo,
-    @Nullable DraftSubmissionDto submissionJson,
-    Boolean accepted,
-    @Nullable String rejectedReason,
-    @Nullable OffsetDateTime submittedAt) {
-  public static SubmissionDto from(Submission value) {
-    return new SubmissionDto(
-        value.getTeamId(),
-        value.getRoundNo(),
-        nestedFrom(value.getSubmissionJson()),
-        value.getAccepted(),
-        value.getRejectedReason(),
-        value.getSubmittedAt());
-  }
-
-  private static @Nullable DraftSubmissionDto nestedFrom(@Nullable DraftSubmission value) {
-    if (value == null) {
-      return null;
+        UUID teamId,
+        Integer roundNo,
+        @Nullable DraftSubmissionDto submissionJson,
+        Boolean accepted,
+        @Nullable String rejectedReason,
+        @Nullable OffsetDateTime submittedAt
+) {
+    public static SubmissionDto from(Submission value) {
+        return new SubmissionDto(
+                value.getTeamId(),
+                value.getRoundNo(),
+                nestedFrom(value.getSubmissionJson()),
+                value.getAccepted(),
+                value.getRejectedReason(),
+                value.getSubmittedAt()
+        );
     }
-    return DraftSubmissionDto.from(value);
-  }
+
+    private static @Nullable DraftSubmissionDto nestedFrom(@Nullable DraftSubmission value) {
+        if (value == null) {
+            return null;
+        }
+        return DraftSubmissionDto.from(value);
+    }
 }

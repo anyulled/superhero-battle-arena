@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class HeroModelAssembler
-    implements RepresentationModelAssembler<Hero, EntityModel<HeroDto>> {
-
-  @Override
-  public EntityModel<HeroDto> toModel(Hero hero) {
-    return EntityModel.of(
-        HeroDto.from(hero),
-        linkTo(methodOn(HeroController.class).getHeroById(hero.id())).withSelfRel(),
-        linkTo(methodOn(HeroController.class).getAllHeroes(0, 20)).withRel("heroes"));
-  }
+        implements RepresentationModelAssembler<Hero, EntityModel<HeroDto>> {
+    @Override
+    public EntityModel<HeroDto> toModel(Hero hero) {
+        return EntityModel.of(
+                HeroDto.from(hero),
+                linkTo(methodOn(HeroController.class).getHeroById(hero.id())).withSelfRel(),
+                linkTo(methodOn(HeroController.class).getAllHeroes(0, 20)).withRel("heroes")
+        );
+    }
 }

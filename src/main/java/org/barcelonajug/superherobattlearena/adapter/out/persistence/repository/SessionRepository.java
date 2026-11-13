@@ -6,5 +6,5 @@ import org.barcelonajug.superherobattlearena.adapter.out.persistence.entity.Sess
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SessionRepository extends JpaRepository<SessionEntity, UUID> {
-  Optional<SessionEntity> findByActiveTrue();
+    Optional<SessionEntity> findByActiveTrue();
 }

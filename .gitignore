@@ -42,3 +42,12 @@ test-results/
 playwright-report/
 .harness/
 .cifuzz-corpus/
+
+# ward-owned: gitignore v1 begin
+.ward/cache/
+# ward-owned: gitignore v1 end
+ward-macos-aarch64/
+ward-macos-aarch64.tar.gz
+ward-report.json
+ward-rules-list.txt
+*.ward.json

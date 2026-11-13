@@ -1,0 +1,72 @@
+# managed-by: ward
+version = 1
+
+[select]
+preset = "standard"
+languages = ["java"]
+exclude = [
+  # Line length
+  "java.line-length",
+
+  # Documentation / Javadocs (conflicts with self-documenting code rule)
+  "java.missing-javadoc",
+  "java.missing-javadoc-type",
+  "java.javadoc-method",
+  "java.javadoc-leading-asterisk-align",
+  "java.summary-javadoc",
+  "java.javadoc-paragraph",
+
+  # BDD snake_case test method naming (should_do_x_when_y)
+  "java.google-method-name",
+  "java.method-name",
+  "java.identifier-name",
+
+  # Local variable type inference (var usage)
+  "java.use-explicit-types",
+
+  # Law of Demeter (flags fluent streams, Optional chains, and builders)
+  "java.law-of-demeter",
+
+  # Generic 'throws Exception' in test method signatures
+  "java.throws-method-throws-clause-basic-exception",
+  "java.signature-declare-throws-exception",
+
+  # CLI / script utility rules (System.out, System.exit, and missing packages in scripts/)
+  "java.system-println",
+  "java.dm-exit",
+  "java.system-exit-outside-main",
+  "java.no-package",
+  "java.package-declaration",
+
+  # Naming: allow standard acronyms (DTO, IT, UUID, URL) and domain fields (teamAId, teamBId)
+  "java.abbreviation-as-word-in-name",
+
+  # False positive on annotated package-info.java (@NullMarked)
+  "java.package-case",
+
+  # Style: False positives and Spring/JPA/JSpecify conflicts
+  "java.modifier-order",
+  "java.linguistic-naming",
+  "java.unnecessary-warning-suppression",
+  "java.uwf-field-not-initialized-in-constructor",
+  "java.unit-test-should-include-assert",
+  "java.too-many-static-imports",
+  "java.variable-declaration-usage-distance",
+  "java.implicit-functional-interface",
+  "java.use-varargs",
+  "java.illegal-catch",
+  "java.bc-unconfirmed-cast-of-return-value",
+  "java.preserve-stack-trace",
+  "java.abstract-class-without-abstract-method",
+  "java.overload-methods-declaration-order",
+  "java.custom-import-order"
+]
+
+[rules.java.cyclomatic-complexity]
+max = 20
+
+[rules.java.cognitive-complexity]
+max = 22
+
+[rules.java.constant-name]
+pattern = "^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|[a-z][a-zA-Z0-9_]*|log|logger|serialVersionUID|serialPersistentFields)$"

@@ -8,11 +8,11 @@ const attributePattern = /([\w:-]+)="([^"]*)"/g;
 
 function decodeXml(value) {
   return value
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .replaceAll('&quot;', '"')
-    .replaceAll('&apos;', "'")
-    .replaceAll('&amp;', '&');
+  .replaceAll('&lt;', '<')
+  .replaceAll('&gt;', '>')
+  .replaceAll('&quot;', '"')
+  .replaceAll('&apos;', "'")
+  .replaceAll('&amp;', '&');
 }
 
 function attributes(fragment) {
@@ -36,7 +36,9 @@ function counters(methodBody) {
 }
 
 function isMethodIncluded(method) {
-  return method.name !== '<init>' && method.name !== '<clinit>' && !method.name.startsWith('lambda$');
+  return method.name !== '<init>' && method.name !== '<clinit>' && !method.name.startsWith(
+    'lambda$'
+  );
 }
 
 function methodMetric(classAttributes, methodAttributes, methodCounters) {
@@ -79,7 +81,11 @@ export function parseReport(xml) {
       }
     }
   }
-  return metrics.sort((left, right) => right.crap - left.crap || left.className.localeCompare(right.className) || left.line - right.line);
+  return metrics.sort(
+    (left, right) => right.crap - left.crap || left.className.localeCompare(
+      right.className
+    ) || left.line - right.line
+  );
 }
 
 function formatMetric(metric) {
@@ -111,7 +117,11 @@ function reportPath(argumentsList) {
   throw new Error(usage());
 }
 
-export async function run(argumentsList = process.argv.slice(2), output = process.stdout, errors = process.stderr) {
+export async function run(
+  argumentsList = process.argv.slice(2),
+  output = process.stdout,
+  errors = process.stderr
+) {
   let file;
   try {
     file = reportPath(argumentsList);
@@ -131,12 +141,18 @@ export async function run(argumentsList = process.argv.slice(2), output = proces
   const report = formatReport(parseReport(xml));
   output.write(`${report.text}\n`);
   if (report.maximum > CRAP_THRESHOLD) {
-    errors.write(`CRAP threshold exceeded: ${report.maximum.toFixed(2)} > ${CRAP_THRESHOLD.toFixed(1)}\n`);
+    errors.write(
+      `CRAP threshold exceeded: ${report.maximum.toFixed(2)} > ${CRAP_THRESHOLD.toFixed(1)}\n`
+    );
     return 2;
   }
   return 0;
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
+if (
+  process.argv[1] && path.resolve(process.argv[1]) === path.resolve(
+    new URL(import.meta.url).pathname
+  )
+) {
   process.exitCode = await run();
 }

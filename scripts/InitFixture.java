@@ -36,7 +36,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -44,1280 +43,1406 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
 @Command(
-    name = "InitFixture",
-    mixinStandardHelpOptions = true,
-    version = "2.0",
-    description = "Initialize or advance fixture data for the Superhero Battle Arena")
+        name = "InitFixture",
+        mixinStandardHelpOptions = true,
+        version = "2.0",
+        description = "Initialize or advance fixture data for the Superhero Battle Arena"
+)
 class InitFixture implements Callable<Integer> {
-  private static final String DEFAULT_BASE_URL = "http://localhost:8080";
-  private static final String DEFAULT_HEROES_FILE = "src/main/resources/all-superheroes.json";
-  private static final int DEFAULT_TEAM_COUNT = 20;
-  private static final int DEFAULT_TEAM_SIZE = 5;
-  private static final int DEFAULT_BUDGET_CAP = 1000;
-  private static final String DEFAULT_MAP_TYPE = "ARENA_1";
-  private static final Logger logger = LoggerFactory.getLogger(InitFixture.class);
-  private static final List<String> DEFAULT_TEAM_NAMES =
-      List.of(
-          "Cosmic Defenders",
-          "Shadow Warriors",
-          "Quantum Squad",
-          "Mystic Alliance",
-          "Tech Titans",
-          "Emerald Knights",
-          "Thunder Legion",
-          "Phantom Force",
-          "Velocity Vanguard",
-          "Crimson Crusaders",
-          "Arctic Avengers",
-          "Inferno Brigade",
-          "Stealth Syndicate",
-          "Psionic Protectors",
-          "Aquatic Armada",
-          "Savage Squad",
-          "Celestial Champions",
-          "Dark Dimension",
-          "Speedster Alliance",
-          "Ultimate Warriors");
-  private static final List<String> STRATEGIES =
-      List.of("AGGRESSIVE", "DEFENSIVE", "BALANCED");
+    private static final String DEFAULT_BASE_URL = "http://localhost:8080";
+    private static final String DEFAULT_HEROES_FILE = "src/main/resources/all-superheroes.json";
+    private static final int DEFAULT_TEAM_COUNT = 20;
+    private static final int DEFAULT_TEAM_SIZE = 5;
+    private static final int DEFAULT_BUDGET_CAP = 1000;
+    private static final String DEFAULT_MAP_TYPE = "ARENA_1";
+    private static final Logger logger = LoggerFactory.getLogger(InitFixture.class);
+    private static final List<String> DEFAULT_TEAM_NAMES =
+            List.of(
+                    "Cosmic Defenders",
+                    "Shadow Warriors",
+                    "Quantum Squad",
+                    "Mystic Alliance",
+                    "Tech Titans",
+                    "Emerald Knights",
+                    "Thunder Legion",
+                    "Phantom Force",
+                    "Velocity Vanguard",
+                    "Crimson Crusaders",
+                    "Arctic Avengers",
+                    "Inferno Brigade",
+                    "Stealth Syndicate",
+                    "Psionic Protectors",
+                    "Aquatic Armada",
+                    "Savage Squad",
+                    "Celestial Champions",
+                    "Dark Dimension",
+                    "Speedster Alliance",
+                    "Ultimate Warriors"
+            );
+    private static final List<String> STRATEGIES =
+            List.of("AGGRESSIVE", "DEFENSIVE", "BALANCED");
 
-  @Option(
-      names = {"-s", "--session-id"},
-      description = "Session ID to create or verify")
-  private UUID sessionId;
+    @Option(names = {"-s", "--session-id"}, description = "Session ID to create or verify")
+    private UUID sessionId;
 
-  @Option(
-      names = {"-r", "--round-no"},
-      description = "Existing round number to target when reusing data")
-  private Integer requestedRoundNo;
+    @Option(
+            names = {"-r", "--round-no"},
+            description = "Existing round number to target when reusing data"
+    )
+    private Integer requestedRoundNo;
 
-  @Option(
-      names = {"-t", "--teams"},
-      description = "Number of teams to register or target",
-      defaultValue = "" + DEFAULT_TEAM_COUNT)
-  private int teamCount;
+    @Option(
+            names = {"-t", "--teams"},
+            description = "Number of teams to register or target",
+            defaultValue = "" + DEFAULT_TEAM_COUNT
+    )
+    private int teamCount;
 
-  @Option(
-      names = {"-u", "--url"},
-      description = "Base URL",
-      defaultValue = DEFAULT_BASE_URL)
-  private String baseUrl;
+    @Option(names = {"-u", "--url"}, description = "Base URL", defaultValue = DEFAULT_BASE_URL)
+    private String baseUrl;
 
-  @Option(
-      names = {"-f", "--file"},
-      description = "Heroes JSON fallback file",
-      defaultValue = DEFAULT_HEROES_FILE)
-  private String heroesFile;
+    @Option(
+            names = {"-f", "--file"},
+            description = "Heroes JSON fallback file",
+            defaultValue = DEFAULT_HEROES_FILE
+    )
+    private String heroesFile;
 
-  @Option(
-      names = {"--reset"},
-      description = "Reset tournament data before running the flow")
-  private boolean reset;
+    @Option(names = {"--reset"}, description = "Reset tournament data before running the flow")
+    private boolean reset;
 
-  @Option(
-      names = {"--world-cup"},
-      description = "Run a full 4-round World Cup tournament (Initial Round -> QF -> SF -> Finals & 3rd Place)")
-  private boolean worldCup;
+    @Option(
+            names = {"--world-cup"},
+            description = "Run a full 4-round World Cup tournament (Initial Round -> QF -> SF -> Finals & 3rd Place)"
+    )
+    private boolean worldCup;
 
-  @Option(
-      names = {"--skip-session"},
-      description = "Skip session creation and verify the active session")
-  private boolean skipSession;
+    @Option(
+            names = {"--skip-session"},
+            description = "Skip session creation and verify the active session"
+    )
+    private boolean skipSession;
 
-  @Option(
-      names = {"--skip-round"},
-      description = "Skip round creation and verify an existing round")
-  private boolean skipRound;
+    @Option(
+            names = {"--skip-round"},
+            description = "Skip round creation and verify an existing round"
+    )
+    private boolean skipRound;
 
-  @Option(
-      names = {"--skip-teams"},
-      description = "Skip team registration and reuse existing teams from the session")
-  private boolean skipTeams;
+    @Option(
+            names = {"--skip-teams"},
+            description = "Skip team registration and reuse existing teams from the session"
+    )
+    private boolean skipTeams;
 
-  @Option(
-      names = {"--skip-squads"},
-      description = "Skip squad submission and reuse existing submissions")
-  private boolean skipSquads;
+    @Option(
+            names = {"--skip-squads"},
+            description = "Skip squad submission and reuse existing submissions"
+    )
+    private boolean skipSquads;
 
-  @Option(
-      names = {"--skip-matchmaking"},
-      description = "Skip admin auto-match")
-  private boolean skipMatchmaking;
+    @Option(names = {"--skip-matchmaking"}, description = "Skip admin auto-match")
+    private boolean skipMatchmaking;
 
-  @Option(
-      names = {"--skip-battles"},
-      description = "Skip admin run-all battles")
-  private boolean skipBattles;
+    @Option(names = {"--skip-battles"}, description = "Skip admin run-all battles")
+    private boolean skipBattles;
 
-  @Option(
-      names = {"--allow-hero-reuse"},
-      description = "Allow the same hero to appear in multiple team submissions")
-  private boolean allowHeroReuse;
+    @Option(
+            names = {"--allow-hero-reuse"},
+            description = "Allow the same hero to appear in multiple team submissions"
+    )
+    private boolean allowHeroReuse;
 
-  @Option(
-      names = {"--round-description"},
-      description = "Round description",
-      defaultValue = "Fixture Round")
-  private String roundDescription;
+    @Option(
+            names = {"--round-description"},
+            description = "Round description",
+            defaultValue = "Fixture Round"
+    )
+    private String roundDescription;
 
-  @Option(
-      names = {"--team-size"},
-      description = "Round team size",
-      defaultValue = "" + DEFAULT_TEAM_SIZE)
-  private int teamSize;
+    @Option(
+            names = {"--team-size"},
+            description = "Round team size",
+            defaultValue = "" + DEFAULT_TEAM_SIZE
+    )
+    private int teamSize;
 
-  @Option(
-      names = {"--budget-cap"},
-      description = "Round budget cap",
-      defaultValue = "" + DEFAULT_BUDGET_CAP)
-  private int budgetCap;
+    @Option(
+            names = {"--budget-cap"},
+            description = "Round budget cap",
+            defaultValue = "" + DEFAULT_BUDGET_CAP
+    )
+    private int budgetCap;
 
-  @Option(
-      names = {"--map-type"},
-      description = "Round map type",
-      defaultValue = DEFAULT_MAP_TYPE)
-  private String mapType;
+    @Option(names = {"--map-type"}, description = "Round map type", defaultValue = DEFAULT_MAP_TYPE)
+    private String mapType;
 
-  @Option(
-      names = {"--allowed-role"},
-      split = ",",
-      description = "Allowed roles for the round")
-  private List<String> allowedRoles = new ArrayList<>();
+    @Option(names = {"--allowed-role"}, split = ",", description = "Allowed roles for the round")
+    private List<String> allowedRoles = new ArrayList<>();
 
-  @Option(
-      names = {"--allowed-gender"},
-      split = ",",
-      description = "Allowed genders for the round")
-  private List<String> allowedGenders = new ArrayList<>();
+    @Option(
+            names = {"--allowed-gender"},
+            split = ",",
+            description = "Allowed genders for the round"
+    )
+    private List<String> allowedGenders = new ArrayList<>();
 
-  @Option(
-      names = {"--allowed-race"},
-      split = ",",
-      description = "Allowed races for the round")
-  private List<String> allowedRaces = new ArrayList<>();
+    @Option(names = {"--allowed-race"}, split = ",", description = "Allowed races for the round")
+    private List<String> allowedRaces = new ArrayList<>();
 
-  @Option(
-      names = {"--allowed-publisher"},
-      split = ",",
-      description = "Allowed publishers for the round")
-  private List<String> allowedPublishers = new ArrayList<>();
+    @Option(
+            names = {"--allowed-publisher"},
+            split = ",",
+            description = "Allowed publishers for the round"
+    )
+    private List<String> allowedPublishers = new ArrayList<>();
 
-  @Option(
-      names = {"--allowed-alignment"},
-      split = ",",
-      description = "Allowed alignments for the round")
-  private List<String> allowedAlignments = new ArrayList<>();
+    @Option(
+            names = {"--allowed-alignment"},
+            split = ",",
+            description = "Allowed alignments for the round"
+    )
+    private List<String> allowedAlignments = new ArrayList<>();
 
-  @Option(
-      names = {"--banned-tag"},
-      split = ",",
-      description = "Banned tags for the round")
-  private List<String> bannedTags = new ArrayList<>();
+    @Option(names = {"--banned-tag"}, split = ",", description = "Banned tags for the round")
+    private List<String> bannedTags = new ArrayList<>();
 
-  private HttpClient httpClient;
-  private ObjectMapper objectMapper;
-  private Faker faker;
-  private String authHeader;
-  private int activeRoundNo;
-  private RoundSpecState activeRoundSpec;
-  private Map<Integer, String> roundStatusesByNo = Map.of();
+    private HttpClient httpClient;
+    private ObjectMapper objectMapper;
+    private Faker faker;
+    private String authHeader;
+    private int activeRoundNo;
+    private RoundSpecState activeRoundSpec;
+    private Map<Integer, String> roundStatusesByNo = Map.of();
 
-  public static void main(String[] args) {
-    int exitCode = new CommandLine(new InitFixture()).execute(args);
-    System.exit(exitCode);
-  }
-
-  @Override
-  public Integer call() throws Exception {
-    httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
-    objectMapper = new ObjectMapper();
-    faker = new Faker();
-
-    Dotenv dotenv =
-        Dotenv.configure().ignoreIfMissing().filename(".env.local").load();
-
-    String adminUser = dotenv.get("ADMIN_USERNAME", "admin");
-    String adminPass = dotenv.get("ADMIN_PASSWORD", "1234");
-    authHeader =
-        "Basic "
-            + Base64.getEncoder()
-                .encodeToString((adminUser + ":" + adminPass).getBytes(StandardCharsets.UTF_8));
-
-    runFixture();
-    return 0;
-  }
-
-  private void runFixture() throws Exception {
-    if (worldCup) {
-      runWorldCupTournament();
-      return;
+    public static void main(String[] args) {
+        int exitCode = new CommandLine(new InitFixture()).execute(args);
+        System.exit(exitCode);
     }
 
-    printHeader("Initializing Fixture Data");
+    @Override
+    public Integer call() throws Exception {
+        httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+        objectMapper = new ObjectMapper();
+        faker = new Faker();
 
-    if (reset) {
-      resetDatabase();
+        Dotenv dotenv =
+                Dotenv.configure().ignoreIfMissing().filename(".env.local").load();
+
+        String adminUser = dotenv.get("ADMIN_USERNAME", "admin");
+        String adminPass = dotenv.get("ADMIN_PASSWORD", "1234");
+        authHeader =
+                "Basic "
+                        + Base64.getEncoder()
+                                .encodeToString(
+                                        (adminUser + ":" + adminPass).getBytes(
+                                                StandardCharsets.UTF_8
+                                        )
+                                );
+
+        runFixture();
+        return 0;
     }
 
-    initializeOrVerifySession();
-    initializeOrVerifyRound();
+    private void runFixture() throws Exception {
+        if (worldCup) {
+            runWorldCupTournament();
+            return;
+        }
 
-    List<TeamState> teams = resolveTeams();
+        printHeader("Initializing Fixture Data");
 
-    if (!skipSquads) {
-      submitSquads(teams);
-    } else {
-      logger.info("Skipping squad submission (--skip-squads)");
+        if (reset) {
+            resetDatabase();
+        }
+
+        initializeOrVerifySession();
+        initializeOrVerifyRound();
+
+        List<TeamState> teams = resolveTeams();
+
+        if (skipSquads) {
+            logger.info("Skipping squad submission (--skip-squads)");
+        } else {
+            submitSquads(teams);
+        }
+
+        if (skipMatchmaking) {
+            logger.info("Skipping auto-match (--skip-matchmaking)");
+        } else {
+            autoMatch(teams);
+        }
+
+        if (skipBattles) {
+            logger.info("Skipping battle simulation (--skip-battles)");
+        } else {
+            runAllBattles();
+        }
+
+        printSuccess(teams);
     }
 
-    if (!skipMatchmaking) {
-      autoMatch(teams);
-    } else {
-      logger.info("Skipping auto-match (--skip-matchmaking)");
+    private void resetDatabase() throws Exception {
+        printHeader("Resetting Database");
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/api/admin/reset"))
+                        .header("Authorization", authHeader)
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
+        sendExpecting(request, 200, "Failed to reset database");
     }
 
-    if (!skipBattles) {
-      runAllBattles();
-    } else {
-      logger.info("Skipping battle simulation (--skip-battles)");
+    private void initializeOrVerifySession() throws Exception {
+        if (!skipSession) {
+            initializeSession();
+            return;
+        }
+
+        logger.info("Skipping session creation (--skip-session)");
+        verifySession();
     }
 
-    printSuccess(teams);
-  }
+    private void initializeSession() throws Exception {
+        if (sessionId == null) {
+            logger.info("Creating session with server-generated ID");
+        } else {
+            logger.info("Creating session {}", sessionId);
+        }
 
-  private void resetDatabase() throws Exception {
-    printHeader("Resetting Database");
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/admin/reset"))
-            .header("Authorization", authHeader)
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
-    sendExpecting(request, 200, "Failed to reset database");
-  }
+        String url = baseUrl + "/api/admin/sessions/start";
+        if (sessionId != null) {
+            url += "?sessionId=" + sessionId;
+        }
 
-  private void initializeOrVerifySession() throws Exception {
-    if (!skipSession) {
-      initializeSession();
-      return;
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Authorization", authHeader)
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
+
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to create session");
+        sessionId = objectMapper.readValue(response.body(), UUID.class);
+        logger.info("Using session {}", sessionId);
     }
 
-    logger.info("Skipping session creation (--skip-session)");
-    verifySession();
-  }
+    private void verifySession() throws Exception {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/api/sessions/active"))
+                        .GET()
+                        .build();
 
-  private void initializeSession() throws Exception {
-    if (sessionId == null) {
-      logger.info("Creating session with server-generated ID");
-    } else {
-      logger.info("Creating session {}", sessionId);
+        HttpResponse<String> response =
+                sendExpecting(request, 200, "Failed to retrieve the active session");
+        JsonNode body = objectMapper.readTree(response.body());
+        UUID activeSessionId = UUID.fromString(body.path("sessionId").asText());
+
+        if (sessionId != null && !sessionId.equals(activeSessionId)) {
+            throw new IllegalStateException(
+                    "Requested session "
+                            + sessionId
+                            + " is not the active session "
+                            + activeSessionId
+            );
+        }
+
+        sessionId = activeSessionId;
+        logger.info("Using active session {}", sessionId);
     }
 
-    String url = baseUrl + "/api/admin/sessions/start";
-    if (sessionId != null) {
-      url += "?sessionId=" + sessionId;
+    private void initializeOrVerifyRound() throws Exception {
+        if (!skipRound) {
+            createRound();
+            return;
+        }
+
+        logger.info("Skipping round creation (--skip-round)");
+        verifyRound();
     }
 
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", authHeader)
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
+    private void createRound() throws Exception {
+        printHeader("Creating Round");
 
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to create session");
-    sessionId = objectMapper.readValue(response.body(), UUID.class);
-    logger.info("Using session {}", sessionId);
-  }
+        Map<String, Object> requestBody = new LinkedHashMap<>();
+        requestBody.put("sessionId", sessionId);
+        requestBody.put("spec", buildRoundSpecPayload());
 
-  private void verifySession() throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/sessions/active"))
-            .GET()
-            .build();
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/api/admin/rounds/create"))
+                        .header("Authorization", authHeader)
+                        .header("Content-Type", "application/json")
+                        .POST(
+                                HttpRequest.BodyPublishers.ofString(
+                                        objectMapper.writeValueAsString(requestBody)
+                                )
+                        )
+                        .build();
 
-    HttpResponse<String> response =
-        sendExpecting(request, 200, "Failed to retrieve the active session");
-    JsonNode body = objectMapper.readTree(response.body());
-    UUID activeSessionId = UUID.fromString(body.path("sessionId").asText());
-
-    if (sessionId != null && !sessionId.equals(activeSessionId)) {
-      throw new IllegalStateException(
-          "Requested session "
-              + sessionId
-              + " is not the active session "
-              + activeSessionId);
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to create round");
+        activeRoundNo = Integer.parseInt(response.body().trim());
+        refreshRoundState();
+        logger.info("Created round {} for session {}", activeRoundNo, sessionId);
     }
 
-    sessionId = activeSessionId;
-    logger.info("Using active session {}", sessionId);
-  }
-
-  private void initializeOrVerifyRound() throws Exception {
-    if (!skipRound) {
-      createRound();
-      return;
+    private Map<String, Object> buildRoundSpecPayload() {
+        Map<String, Object> spec = new LinkedHashMap<>();
+        spec.put("description", roundDescription);
+        spec.put("teamSize", teamSize);
+        spec.put("budgetCap", budgetCap);
+        spec.put("requiredRoles", Map.of());
+        spec.put("maxSameRole", Map.of());
+        spec.put("bannedTags", normalizedValues(bannedTags));
+        spec.put("tagModifiers", Map.of());
+        spec.put("mapType", mapType);
+        spec.put("allowedRoles", normalizedValues(allowedRoles));
+        spec.put("allowedGenders", normalizedValues(allowedGenders));
+        spec.put("allowedRaces", normalizedValues(allowedRaces));
+        spec.put("allowedPublishers", normalizedValues(allowedPublishers));
+        spec.put("allowedAlignments", normalizedValues(allowedAlignments));
+        return spec;
     }
 
-    logger.info("Skipping round creation (--skip-round)");
-    verifyRound();
-  }
+    private void verifyRound() throws Exception {
+        List<RoundState> rounds = listRounds();
+        if (rounds.isEmpty()) {
+            throw new IllegalStateException(
+                    "No rounds found for session " + sessionId + ". Cannot continue with --skip-round."
+            );
+        }
 
-  private void createRound() throws Exception {
-    printHeader("Creating Round");
-
-    Map<String, Object> requestBody = new LinkedHashMap<>();
-    requestBody.put("sessionId", sessionId);
-    requestBody.put("spec", buildRoundSpecPayload());
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/admin/rounds/create"))
-            .header("Authorization", authHeader)
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to create round");
-    activeRoundNo = Integer.parseInt(response.body().trim());
-    refreshRoundState();
-    logger.info("Created round {} for session {}", activeRoundNo, sessionId);
-  }
-
-  private Map<String, Object> buildRoundSpecPayload() {
-    Map<String, Object> spec = new LinkedHashMap<>();
-    spec.put("description", roundDescription);
-    spec.put("teamSize", teamSize);
-    spec.put("budgetCap", budgetCap);
-    spec.put("requiredRoles", Map.of());
-    spec.put("maxSameRole", Map.of());
-    spec.put("bannedTags", normalizedValues(bannedTags));
-    spec.put("tagModifiers", Map.of());
-    spec.put("mapType", mapType);
-    spec.put("allowedRoles", normalizedValues(allowedRoles));
-    spec.put("allowedGenders", normalizedValues(allowedGenders));
-    spec.put("allowedRaces", normalizedValues(allowedRaces));
-    spec.put("allowedPublishers", normalizedValues(allowedPublishers));
-    spec.put("allowedAlignments", normalizedValues(allowedAlignments));
-    return spec;
-  }
-
-  private void verifyRound() throws Exception {
-    List<RoundState> rounds = listRounds();
-    if (rounds.isEmpty()) {
-      throw new IllegalStateException(
-          "No rounds found for session " + sessionId + ". Cannot continue with --skip-round.");
+        RoundState selectedRound = selectRound(rounds);
+        roundStatusesByNo = toRoundStatusMap(rounds);
+        activeRoundNo = selectedRound.roundNo();
+        activeRoundSpec = fetchRoundSpec(activeRoundNo);
+        logger.info("Using round {} with status {}", activeRoundNo, selectedRound.status());
     }
 
-    RoundState selectedRound = selectRound(rounds);
-    roundStatusesByNo = toRoundStatusMap(rounds);
-    activeRoundNo = selectedRound.roundNo();
-    activeRoundSpec = fetchRoundSpec(activeRoundNo);
-    logger.info(
-        "Using round {} with status {}",
-        activeRoundNo,
-        selectedRound.status());
-  }
+    private RoundState selectRound(List<RoundState> rounds) {
+        if (requestedRoundNo != null) {
+            return rounds.stream()
+                    .filter(round -> round.roundNo() == requestedRoundNo)
+                    .findFirst()
+                    .orElseThrow(
+                            () ->
+                                    new IllegalStateException(
+                                            "Round "
+                                                    + requestedRoundNo
+                                                    + " does not exist in session "
+                                                    + sessionId
+                                    )
+                    );
+        }
 
-  private RoundState selectRound(List<RoundState> rounds) {
-    if (requestedRoundNo != null) {
-      return rounds.stream()
-          .filter(round -> round.roundNo() == requestedRoundNo)
-          .findFirst()
-          .orElseThrow(
-              () ->
-                  new IllegalStateException(
-                      "Round "
-                          + requestedRoundNo
-                          + " does not exist in session "
-                          + sessionId));
+        return rounds.stream()
+                .filter(round -> "OPEN".equalsIgnoreCase(round.status()))
+                .max(Comparator.comparingInt(RoundState::roundNo))
+                .orElseGet(
+                        () ->
+                                rounds.stream()
+                                        .max(Comparator.comparingInt(RoundState::roundNo))
+                                        .orElseThrow()
+                );
     }
 
-    return rounds.stream()
-        .filter(round -> "OPEN".equalsIgnoreCase(round.status()))
-        .max(Comparator.comparingInt(RoundState::roundNo))
-        .orElseGet(
-            () ->
-                rounds.stream()
-                    .max(Comparator.comparingInt(RoundState::roundNo))
-                    .orElseThrow());
-  }
+    private List<TeamState> resolveTeams() throws Exception {
+        List<TeamState> existingTeams = fetchTeams();
+        if (skipTeams) {
+            if (existingTeams.isEmpty()) {
+                throw new IllegalStateException(
+                        "No teams found for session " + sessionId + ". Cannot continue with --skip-teams."
+                );
+            }
+            logger.info("Using {} existing teams", existingTeams.size());
+            return existingTeams;
+        }
 
-  private List<TeamState> resolveTeams() throws Exception {
-    List<TeamState> existingTeams = fetchTeams();
-    if (skipTeams) {
-      if (existingTeams.isEmpty()) {
-        throw new IllegalStateException(
-            "No teams found for session " + sessionId + ". Cannot continue with --skip-teams.");
-      }
-      logger.info("Using {} existing teams", existingTeams.size());
-      return existingTeams;
+        printHeader("Registering Teams");
+
+        Map<String, TeamState> existingByName =
+                existingTeams.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        TeamState::name,
+                                        team -> team,
+                                        (left, right) -> left
+                                )
+                        );
+
+        List<TeamState> managedTeams = new ArrayList<>();
+
+        for (int index = 0; index < teamCount; index++) {
+            TeamConfig config = createTeamConfig(index);
+            TeamState existing = existingByName.get(config.name());
+            if (existing != null) {
+                logger.info(
+                        "[{}/{}] Reusing team '{}' ({})",
+                        index + 1,
+                        teamCount,
+                        existing.name(),
+                        existing.teamId()
+                );
+                managedTeams.add(existing);
+                continue;
+            }
+
+            UUID teamId = registerTeam(config);
+            TeamState created = new TeamState(teamId, config.name());
+            managedTeams.add(created);
+            logger.info(
+                    "[{}/{}] Registered '{}' ({})",
+                    index + 1,
+                    teamCount,
+                    config.name(),
+                    teamId
+            );
+        }
+
+        return managedTeams;
     }
 
-    printHeader("Registering Teams");
+    private TeamConfig createTeamConfig(int index) {
+        String name =
+                index < DEFAULT_TEAM_NAMES.size()
+                        ? DEFAULT_TEAM_NAMES.get(index)
+                        : faker.team().name() + " " + (index + 1);
+        int memberCount = faker.number().numberBetween(2, 6);
+        List<String> members = generateUniqueMembers(memberCount);
+        return new TeamConfig(name, members);
+    }
 
-    Map<String, TeamState> existingByName =
-        existingTeams.stream()
-            .collect(Collectors.toMap(TeamState::name, team -> team, (left, right) -> left));
+    private UUID registerTeam(TeamConfig config) throws Exception {
+        String encodedName = URLEncoder.encode(config.name(), StandardCharsets.UTF_8);
+        String encodedMembers =
+                config.members().stream()
+                        .map(member -> URLEncoder.encode(member, StandardCharsets.UTF_8))
+                        .collect(Collectors.joining(","));
+        String url =
+                String.format(
+                        "%s/api/teams/register?name=%s&members=%s&sessionId=%s",
+                        baseUrl,
+                        encodedName,
+                        encodedMembers,
+                        sessionId
+                );
 
-    List<TeamState> managedTeams = new ArrayList<>();
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
 
-    for (int index = 0; index < teamCount; index++) {
-      TeamConfig config = createTeamConfig(index);
-      TeamState existing = existingByName.get(config.name());
-      if (existing != null) {
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to register team");
+        return objectMapper.readValue(response.body(), UUID.class);
+    }
+
+    private List<String> generateUniqueMembers(int count) {
+        Set<String> members = new LinkedHashSet<>();
+        while (members.size() < count) {
+            members.add(faker.name().firstName() + " " + faker.name().lastName());
+        }
+        return List.copyOf(members);
+    }
+
+    private void submitSquads(List<TeamState> teams) throws Exception {
+        if (!"OPEN".equalsIgnoreCase(activeRoundSpec.status())) {
+            throw new IllegalStateException(
+                    "Round " + activeRoundNo + " is not OPEN. Cannot submit squads."
+            );
+        }
+
+        printHeader("Submitting Squads");
+
+        List<HeroProfile> heroes = loadHeroes();
+        Set<Integer> globallyUsedHeroIds = new HashSet<>();
+
+        for (int index = 0; index < teams.size(); index++) {
+            TeamState team = teams.get(index);
+            Optional<SubmissionState> existingSubmission = getSubmission(team.teamId());
+            if (existingSubmission.isPresent()) {
+                globallyUsedHeroIds.addAll(existingSubmission.get().heroIds());
+                logger.info(
+                        "[{}/{}] Team '{}' already has a submission. Reusing it.",
+                        index + 1,
+                        teams.size(),
+                        team.name()
+                );
+                continue;
+            }
+
+            String strategy = STRATEGIES.get(index % STRATEGIES.size());
+            List<Integer> heroIds =
+                    buildRosterForTeam(team, heroes, globallyUsedHeroIds)
+                            .stream()
+                            .map(HeroProfile::id)
+                            .toList();
+
+            submitRoster(team.teamId(), heroIds, strategy);
+            globallyUsedHeroIds.addAll(heroIds);
+            logger.info(
+                    "[{}/{}] Submitted {} heroes for '{}' using {}",
+                    index + 1,
+                    teams.size(),
+                    heroIds.size(),
+                    team.name(),
+                    strategy
+            );
+        }
+    }
+
+    private List<HeroProfile> buildRosterForTeam(
+            TeamState team,
+            List<HeroProfile> heroes,
+            Set<Integer> globallyUsedHeroIds
+    ) {
+        List<HeroProfile> eligibleHeroes = filterEligibleHeroes(heroes);
+        if (eligibleHeroes.size() < activeRoundSpec.teamSize()) {
+            throw new IllegalStateException(
+                    "Only "
+                            + eligibleHeroes.size()
+                            + " heroes satisfy the round constraints, but "
+                            + activeRoundSpec.teamSize()
+                            + " are required."
+            );
+        }
+
+        List<HeroProfile> uniquePool =
+                eligibleHeroes.stream()
+                        .filter(hero -> allowHeroReuse || !globallyUsedHeroIds.contains(hero.id()))
+                        .toList();
+
+        Optional<List<HeroProfile>> uniqueRoster = findValidRoster(uniquePool, team.name());
+        if (uniqueRoster.isPresent()) {
+            return uniqueRoster.get();
+        }
+
+        if (!allowHeroReuse) {
+            logger.warn(
+                    "No unique roster found for '{}'. Retrying with cross-team hero reuse.",
+                    team.name()
+            );
+        }
+
+        return findValidRoster(eligibleHeroes, team.name())
+                .orElseThrow(
+                        () ->
+                                new IllegalStateException(
+                                        "Could not find a valid roster for team '" + team.name() + "'."
+                                )
+                );
+    }
+
+    private List<HeroProfile> filterEligibleHeroes(List<HeroProfile> heroes) {
+        return heroes.stream()
+                .filter(hero -> matchesAllowed(activeRoundSpec.allowedRoles(), hero.role()))
+                .filter(hero -> matchesAllowed(activeRoundSpec.allowedGenders(), hero.gender()))
+                .filter(hero -> matchesAllowed(activeRoundSpec.allowedRaces(), hero.race()))
+                .filter(
+                        hero -> matchesAllowed(
+                                activeRoundSpec.allowedPublishers(),
+                                hero.publisher()
+                        )
+                )
+                .filter(
+                        hero -> matchesAllowed(
+                                activeRoundSpec.allowedAlignments(),
+                                hero.alignment()
+                        )
+                )
+                .filter(
+                        hero ->
+                                hero.tags().stream()
+                                        .noneMatch(
+                                                tag -> activeRoundSpec.bannedTags().contains(
+                                                        normalize(tag)
+                                                )
+                                        )
+                )
+                .sorted(Comparator.comparingInt(HeroProfile::cost).thenComparing(HeroProfile::name))
+                .toList();
+    }
+
+    private boolean matchesAllowed(Set<String> allowedValues, String actualValue) {
+        return allowedValues.isEmpty() || allowedValues.contains(normalize(actualValue));
+    }
+
+    private Optional<List<HeroProfile>> findValidRoster(
+            List<HeroProfile> candidates,
+            String teamName
+    ) {
+        if (candidates.size() < activeRoundSpec.teamSize()) {
+            return Optional.empty();
+        }
+
+        List<HeroProfile> shuffledCandidates = new ArrayList<>(candidates);
+        Collections.shuffle(shuffledCandidates);
+
+        logger.debug(
+                "Trying to build roster for '{}' from {} eligible heroes",
+                teamName,
+                shuffledCandidates.size()
+        );
+
+        return findValidRoster(shuffledCandidates, 0, new ArrayList<>(), new HashMap<>(), 0);
+    }
+
+    private Optional<List<HeroProfile>> findValidRoster(
+            List<HeroProfile> candidates,
+            int startIndex,
+            List<HeroProfile> selectedHeroes,
+            Map<String,
+            Integer> roleCounts,
+            int totalCost
+    ) {
+        if (selectedHeroes.size() == activeRoundSpec.teamSize()) {
+            return satisfiesRequiredRoles(roleCounts)
+                    ? Optional.of(List.copyOf(selectedHeroes))
+                    : Optional.empty();
+        }
+
+        for (int index = startIndex; index < candidates.size(); index++) {
+            HeroProfile candidate = candidates.get(index);
+            int updatedCost = totalCost + candidate.cost();
+            if (updatedCost > activeRoundSpec.budgetCap()) {
+                continue;
+            }
+
+            String normalizedRole = normalize(candidate.role());
+            int updatedRoleCount = roleCounts.getOrDefault(normalizedRole, 0) + 1;
+            int maxSameRole = activeRoundSpec.maxSameRole().getOrDefault(
+                    normalizedRole,
+                    Integer.MAX_VALUE
+            );
+            if (updatedRoleCount > maxSameRole) {
+                continue;
+            }
+
+            selectedHeroes.add(candidate);
+            roleCounts.put(normalizedRole, updatedRoleCount);
+
+            Optional<List<HeroProfile>> result =
+                    findValidRoster(candidates, index + 1, selectedHeroes, roleCounts, updatedCost);
+            if (result.isPresent()) {
+                return result;
+            }
+
+            selectedHeroes.remove(selectedHeroes.size() - 1);
+            if (updatedRoleCount == 1) {
+                roleCounts.remove(normalizedRole);
+            } else {
+                roleCounts.put(normalizedRole, updatedRoleCount - 1);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private boolean satisfiesRequiredRoles(Map<String, Integer> roleCounts) {
+        return activeRoundSpec.requiredRoles().entrySet().stream()
+                .allMatch(entry -> roleCounts.getOrDefault(entry.getKey(), 0) >= entry.getValue());
+    }
+
+    private void submitRoster(
+            UUID teamId,
+            List<Integer> heroIds,
+            String strategy
+    ) throws Exception {
+        String url = baseUrl + "/api/rounds/" + activeRoundNo + "/submit?teamId=" + teamId;
+        Map<String, Object> requestBody = Map.of("heroIds", heroIds, "strategy", strategy);
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Content-Type", "application/json")
+                        .POST(
+                                HttpRequest.BodyPublishers.ofString(
+                                        objectMapper.writeValueAsString(requestBody)
+                                )
+                        )
+                        .build();
+
+        sendExpecting(request, 200, "Failed to submit roster for team " + teamId);
+    }
+
+    private void autoMatch(List<TeamState> teams) throws Exception {
+        printHeader("Auto-Matching Teams");
+
+        if (teams.size() < 2) {
+            logger.warn("Need at least two teams to auto-match.");
+            return;
+        }
+
+        String url =
+                String.format(
+                        "%s/api/admin/matches/auto-match?sessionId=%s&roundNo=%d",
+                        baseUrl,
+                        sessionId,
+                        activeRoundNo
+                );
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Authorization", authHeader)
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
+
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to auto-match teams");
+        List<UUID> matchIds = objectMapper.readValue(response.body(), new TypeReference<>() {});
+        logger.info("Auto-match returned {} match(es)", matchIds.size());
+    }
+
+    private void runAllBattles() throws Exception {
+        printHeader("Running Battles");
+
+        String url =
+                String.format(
+                        "%s/api/admin/matches/run-all?roundNo=%d&sessionId=%s",
+                        baseUrl,
+                        activeRoundNo,
+                        sessionId
+                );
+
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Authorization", authHeader)
+                        .POST(HttpRequest.BodyPublishers.noBody())
+                        .build();
+
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to run all battles");
+        JsonNode result = objectMapper.readTree(response.body());
+        refreshRoundState();
         logger.info(
-            "[{}/{}] Reusing team '{}' ({})",
-            index + 1,
-            teamCount,
-            existing.name(),
-            existing.teamId());
-        managedTeams.add(existing);
-        continue;
-      }
-
-      UUID teamId = registerTeam(config);
-      TeamState created = new TeamState(teamId, config.name());
-      managedTeams.add(created);
-      logger.info("[{}/{}] Registered '{}' ({})", index + 1, teamCount, config.name(), teamId);
+                "Simulated {} of {} match(es)",
+                result.path("successfulSimulations").asInt(),
+                result.path("totalMatches").asInt()
+        );
     }
 
-    return managedTeams;
-  }
+    private List<HeroProfile> loadHeroes() throws Exception {
+        Optional<List<HeroProfile>> heroesFromApi = loadHeroesFromApi();
+        if (heroesFromApi.isPresent() && !heroesFromApi.get().isEmpty()) {
+            logger.info("Loaded {} heroes from /api/teams/heroes", heroesFromApi.get().size());
+            return heroesFromApi.get();
+        }
 
-  private TeamConfig createTeamConfig(int index) {
-    String name =
-        index < DEFAULT_TEAM_NAMES.size()
-            ? DEFAULT_TEAM_NAMES.get(index)
-            : faker.team().name() + " " + (index + 1);
-    int memberCount = faker.number().numberBetween(2, 6);
-    List<String> members = generateUniqueMembers(memberCount);
-    return new TeamConfig(name, members);
-  }
-
-  private UUID registerTeam(TeamConfig config) throws Exception {
-    String encodedName = URLEncoder.encode(config.name(), StandardCharsets.UTF_8);
-    String encodedMembers =
-        config.members().stream()
-            .map(member -> URLEncoder.encode(member, StandardCharsets.UTF_8))
-            .collect(Collectors.joining(","));
-    String url =
-        String.format(
-            "%s/api/teams/register?name=%s&members=%s&sessionId=%s",
-            baseUrl,
-            encodedName,
-            encodedMembers,
-            sessionId);
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to register team");
-    return objectMapper.readValue(response.body(), UUID.class);
-  }
-
-  private List<String> generateUniqueMembers(int count) {
-    Set<String> members = new LinkedHashSet<>();
-    while (members.size() < count) {
-      members.add(faker.name().firstName() + " " + faker.name().lastName());
-    }
-    return List.copyOf(members);
-  }
-
-  private void submitSquads(List<TeamState> teams) throws Exception {
-    if (!"OPEN".equalsIgnoreCase(activeRoundSpec.status())) {
-      throw new IllegalStateException(
-          "Round " + activeRoundNo + " is not OPEN. Cannot submit squads.");
+        List<HeroProfile> heroesFromFile = loadHeroesFromFile();
+        logger.info("Loaded {} heroes from {}", heroesFromFile.size(), heroesFile);
+        return heroesFromFile;
     }
 
-    printHeader("Submitting Squads");
+    private Optional<List<HeroProfile>> loadHeroesFromApi() throws Exception {
+        HttpRequest request =
+                HttpRequest.newBuilder().uri(
+                        URI.create(baseUrl + "/api/teams/heroes")
+                ).GET().build();
+        HttpResponse<String> response =
+                sendWithLogging(request, Set.of(200, 401, 403, 404, 429, 500, 502, 503, 504));
+        if (response.statusCode() != 200) {
+            logger.warn(
+                    "Falling back to {} because /api/teams/heroes returned status {}",
+                    heroesFile,
+                    response.statusCode()
+            );
+            return Optional.empty();
+        }
 
-    List<HeroProfile> heroes = loadHeroes();
-    Set<Integer> globallyUsedHeroIds = new HashSet<>();
+        JsonNode body = objectMapper.readTree(response.body());
+        if (!body.isArray()) {
+            logger.warn(
+                    "Falling back to {} because /api/teams/heroes returned a non-array payload",
+                    heroesFile
+            );
+            return Optional.empty();
+        }
 
-    for (int index = 0; index < teams.size(); index++) {
-      TeamState team = teams.get(index);
-      Optional<SubmissionState> existingSubmission = getSubmission(team.teamId());
-      if (existingSubmission.isPresent()) {
-        globallyUsedHeroIds.addAll(existingSubmission.get().heroIds());
+        List<HeroProfile> heroes = new ArrayList<>();
+        for (JsonNode heroNode : body) {
+            heroes.add(readHero(heroNode));
+        }
+        return Optional.of(List.copyOf(heroes));
+    }
+
+    private List<HeroProfile> loadHeroesFromFile() throws IOException {
+        JsonNode body = objectMapper.readTree(new File(heroesFile));
+        List<HeroProfile> heroes = new ArrayList<>();
+        for (JsonNode heroNode : body) {
+            heroes.add(readHero(heroNode));
+        }
+        return List.copyOf(heroes);
+    }
+
+    private HeroProfile readHero(JsonNode heroNode) {
+        int id = heroNode.path("id").asInt();
+        String name = heroNode.path("name").asText("hero-" + id);
+        String role = heroNode.path("role").asText("Fighter");
+        int cost = heroNode.path("cost").asInt(10);
+        String gender = textValue(heroNode.path("appearance").path("gender"));
+        String race = textValue(heroNode.path("appearance").path("race"));
+        String publisher =
+                firstNonBlank(
+                        textValue(heroNode.path("publisher")),
+                        textValue(heroNode.path("biography").path("publisher"))
+                );
+        String alignment =
+                firstNonBlank(
+                        textValue(heroNode.path("alignment")),
+                        textValue(heroNode.path("biography").path("alignment"))
+                );
+        List<String> tags = new ArrayList<>();
+        if (heroNode.path("tags").isArray()) {
+            heroNode.path("tags").forEach(tagNode -> tags.add(tagNode.asText()));
+        }
+
+        return new HeroProfile(
+                id,
+                name,
+                role,
+                cost,
+                gender,
+                race,
+                publisher,
+                alignment,
+                List.copyOf(tags)
+        );
+    }
+
+    private String textValue(JsonNode node) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        String value = node.asText();
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private String firstNonBlank(String first, String second) {
+        return first != null && !first.isBlank() ? first : second;
+    }
+
+    private Optional<SubmissionState> getSubmission(UUID teamId) throws Exception {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(
+                                URI.create(
+                                        baseUrl + "/api/rounds/" + activeRoundNo + "/submission?teamId=" + teamId
+                                )
+                        )
+                        .GET()
+                        .build();
+
+        HttpResponse<String> response = sendWithLogging(request, Set.of(200, 404));
+        if (response.statusCode() == 404) {
+            logger.debug("No existing submission for team {} in round {}", teamId, activeRoundNo);
+            return Optional.empty();
+        }
+        if (response.statusCode() != 200) {
+            throw failure(
+                    "Failed to retrieve submission for team " + teamId,
+                    response.statusCode(),
+                    response.body()
+            );
+        }
+
+        JsonNode body = objectMapper.readTree(response.body());
+        List<Integer> heroIds = new ArrayList<>();
+        body.path("heroIds").forEach(node -> heroIds.add(node.asInt()));
+        return Optional.of(new SubmissionState(heroIds));
+    }
+
+    private List<TeamState> fetchTeams() throws Exception {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/api/teams?sessionId=" + sessionId))
+                        .GET()
+                        .build();
+
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to list teams");
+        JsonNode body = objectMapper.readTree(response.body());
+        List<TeamState> teams = new ArrayList<>();
+        for (JsonNode teamNode : body) {
+            teams.add(
+                    new TeamState(
+                            UUID.fromString(teamNode.path("teamId").asText()),
+                            teamNode.path("name").asText()
+                    )
+            );
+        }
+        return List.copyOf(teams);
+    }
+
+    private List<RoundState> listRounds() throws Exception {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/api/rounds?sessionId=" + sessionId))
+                        .GET()
+                        .build();
+
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to list rounds");
+        JsonNode body = objectMapper.readTree(response.body());
+        List<RoundState> rounds = new ArrayList<>();
+        for (JsonNode roundNode : body) {
+            rounds.add(
+                    new RoundState(
+                            roundNode.path("roundNo").asInt(),
+                            roundNode.path("status").asText("UNKNOWN")
+                    )
+            );
+        }
+        List<RoundState> immutableRounds = List.copyOf(rounds);
+        roundStatusesByNo = toRoundStatusMap(immutableRounds);
+        return immutableRounds;
+    }
+
+    private RoundSpecState fetchRoundSpec(int roundNo) throws Exception {
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(
+                                URI.create(
+                                        baseUrl + "/api/rounds/" + roundNo + "?sessionId=" + sessionId
+                                )
+                        )
+                        .GET()
+                        .build();
+
+        HttpResponse<String> response =
+                sendExpecting(request, 200, "Failed to retrieve round spec for round " + roundNo);
+        JsonNode body = objectMapper.readTree(response.body());
+
+        return new RoundSpecState(
+                roundNo,
+                resolveRoundStatus(roundNo),
+                body.path("teamSize").asInt(DEFAULT_TEAM_SIZE),
+                body.path("budgetCap").asInt(DEFAULT_BUDGET_CAP),
+                normalizedSet(body.path("allowedRoles")),
+                normalizedSet(body.path("allowedGenders")),
+                normalizedSet(body.path("allowedRaces")),
+                normalizedSet(body.path("allowedPublishers")),
+                normalizedSet(body.path("allowedAlignments")),
+                normalizedSet(body.path("bannedTags")),
+                normalizedIntMap(body.path("requiredRoles")),
+                normalizedIntMap(body.path("maxSameRole"))
+        );
+    }
+
+    private String resolveRoundStatus(int roundNo) throws Exception {
+        if (roundStatusesByNo.containsKey(roundNo)) {
+            return roundStatusesByNo.get(roundNo);
+        }
+        listRounds();
+        return roundStatusesByNo.getOrDefault(roundNo, "UNKNOWN");
+    }
+
+    private void refreshRoundState() throws Exception {
+        listRounds();
+        activeRoundSpec = fetchRoundSpec(activeRoundNo);
+    }
+
+    private Map<Integer, String> toRoundStatusMap(List<RoundState> rounds) {
+        return rounds.stream()
+                .collect(
+                        Collectors.toUnmodifiableMap(
+                                RoundState::roundNo,
+                                RoundState::status,
+                                (left, right) -> right
+                        )
+                );
+    }
+
+    private Set<String> normalizedSet(JsonNode node) {
+        if (node == null || !node.isArray()) {
+            return Set.of();
+        }
+        Set<String> values = new LinkedHashSet<>();
+        node.forEach(item -> values.add(normalize(item.asText())));
+        return Set.copyOf(values);
+    }
+
+    private Map<String, Integer> normalizedIntMap(JsonNode node) {
+        if (node == null || !node.isObject()) {
+            return Map.of();
+        }
+        Map<String, Integer> values = new LinkedHashMap<>();
+        node.fields().forEachRemaining(
+                entry -> values.put(normalize(entry.getKey()), entry.getValue().asInt())
+        );
+        return Map.copyOf(values);
+    }
+
+    private List<String> normalizedValues(List<String> values) {
+        return values == null ? List.of() : values.stream().filter(
+                value -> value != null && !value.isBlank()
+        ).toList();
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private HttpResponse<String> sendExpecting(
+            HttpRequest request,
+            int expectedStatus,
+            String errorMessage
+    )
+            throws Exception {
+        HttpResponse<String> response = sendWithLogging(request, Set.of(expectedStatus));
+        if (response.statusCode() != expectedStatus) {
+            throw failure(errorMessage, response.statusCode(), response.body());
+        }
+        return response;
+    }
+
+    private HttpResponse<String> sendWithLogging(HttpRequest request, Set<Integer> expectedStatuses)
+            throws Exception {
+        try {
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString()
+            );
+            int statusCode = response.statusCode();
+            if (expectedStatuses.contains(statusCode)) {
+                logger.debug("HTTP {} {} -> {}", request.method(), request.uri(), statusCode);
+            } else if (statusCode >= 500) {
+                logger.error(
+                        "HTTP {} {} -> {} {}",
+                        request.method(),
+                        request.uri(),
+                        statusCode,
+                        formatProblem(response.body())
+                );
+            } else if (statusCode >= 400) {
+                logger.warn(
+                        "HTTP {} {} -> {} {}",
+                        request.method(),
+                        request.uri(),
+                        statusCode,
+                        formatProblem(response.body())
+                );
+            } else {
+                logger.debug("HTTP {} {} -> {}", request.method(), request.uri(), statusCode);
+            }
+            return response;
+        } catch (HttpTimeoutException exception) {
+            logger.error(
+                    "HTTP {} {} timed out after {}",
+                    request.method(),
+                    request.uri(),
+                    request.timeout().orElse(Duration.ofSeconds(10))
+            );
+            throw exception;
+        } catch (Exception exception) {
+            logger.error(
+                    "HTTP {} {} failed: {}",
+                    request.method(),
+                    request.uri(),
+                    exception.getMessage()
+            );
+            throw exception;
+        }
+    }
+
+    private RuntimeException failure(String message, int statusCode, String body) {
+        return new IllegalStateException(
+                message + " (status=" + statusCode + ", body=" + formatProblem(body) + ")"
+        );
+    }
+
+    private String formatProblem(String body) {
+        if (body == null || body.isBlank()) {
+            return "<empty>";
+        }
+        try {
+            JsonNode json = objectMapper.readTree(body);
+            if (json.hasNonNull("detail")) {
+                return json.path("title").asText("Problem") + ": " + json.path("detail").asText();
+            }
+        } catch (Exception ignored) {
+            return abbreviate(body);
+        }
+        return abbreviate(body);
+    }
+
+    private String abbreviate(String value) {
+        return value.length() <= 240 ? value : value.substring(0, 240) + "...";
+    }
+
+    private void printHeader(String message) {
+        logger.info("=========================================");
+        logger.info(message);
+        logger.info("=========================================");
+    }
+
+    /** Runs the sixteen-team tournament through the championship and third-place matches. */
+    private void runWorldCupTournament() throws Exception {
+        printHeader("Starting World Cup Championship Tournament (October 27th Hackathon)");
+
+        if (reset) {
+            resetDatabase();
+        }
+
+        initializeOrVerifySession();
+
+        int targetTeamCount = 16;
+        teamCount = targetTeamCount;
+        List<TeamState> allTeams = resolveTeams();
+        if (allTeams.size() < targetTeamCount) {
+            throw new IllegalStateException(
+                    "World Cup format requires at least " + targetTeamCount + " registered teams."
+            );
+        }
+        List<TeamState> currentTeams = new ArrayList<>(allTeams.subList(0, targetTeamCount));
+
+        Map<String, Object> r1Spec = new LinkedHashMap<>();
+        r1Spec.put("description", "Stage 1: Initial Round (Classified Teams)");
+        r1Spec.put("teamSize", 5);
+        r1Spec.put("budgetCap", 1200);
+        r1Spec.put("mapType", "ARENA_1");
+        r1Spec.put("allowedRoles", List.of());
+        r1Spec.put("allowedAlignments", List.of());
+
+        executeTournamentRound(1, r1Spec, currentTeams);
+        List<MatchState> r1Matches = fetchMatchesForRound(1);
+        currentTeams = extractWinners(r1Matches, currentTeams);
+        logger.info("Stage 1 complete. {} winners advance to Quarter Finals.", currentTeams.size());
+
+        Map<String, Object> r2Spec = new LinkedHashMap<>();
+        r2Spec.put("description", "Stage 2: Quarter Finals (8 Teams)");
+        r2Spec.put("teamSize", 4);
+        r2Spec.put("budgetCap", 1000);
+        r2Spec.put("mapType", "ARENA_2");
+        r2Spec.put("allowedRoles", List.of());
+        r2Spec.put("allowedAlignments", List.of());
+
+        executeTournamentRound(2, r2Spec, currentTeams);
+        List<MatchState> r2Matches = fetchMatchesForRound(2);
+        currentTeams = extractWinners(r2Matches, currentTeams);
         logger.info(
-            "[{}/{}] Team '{}' already has a submission. Reusing it.",
-            index + 1,
-            teams.size(),
-            team.name());
-        continue;
-      }
+                "Stage 2 complete. {} winners advance to Semifinals (Prize Winners locked!).",
+                currentTeams.size()
+        );
 
-      String strategy = STRATEGIES.get(index % STRATEGIES.size());
-      List<Integer> heroIds =
-          buildRosterForTeam(team, heroes, globallyUsedHeroIds)
-              .stream()
-              .map(HeroProfile::id)
-              .toList();
+        Map<String, Object> r3Spec = new LinkedHashMap<>();
+        r3Spec.put("description", "Stage 3: Semifinals (Top 4 Prize Winners)");
+        r3Spec.put("teamSize", 3);
+        r3Spec.put("budgetCap", 800);
+        r3Spec.put("mapType", "CITY");
+        r3Spec.put("allowedRoles", List.of());
+        r3Spec.put("allowedAlignments", List.of());
 
-      submitRoster(team.teamId(), heroIds, strategy);
-      globallyUsedHeroIds.addAll(heroIds);
-      logger.info(
-          "[{}/{}] Submitted {} heroes for '{}' using {}",
-          index + 1,
-          teams.size(),
-          heroIds.size(),
-          team.name(),
-          strategy);
-    }
-  }
+        executeTournamentRound(3, r3Spec, currentTeams);
+        List<MatchState> r3Matches = fetchMatchesForRound(3);
 
-  private List<HeroProfile> buildRosterForTeam(
-      TeamState team,
-      List<HeroProfile> heroes,
-      Set<Integer> globallyUsedHeroIds) {
-    List<HeroProfile> eligibleHeroes = filterEligibleHeroes(heroes);
-    if (eligibleHeroes.size() < activeRoundSpec.teamSize()) {
-      throw new IllegalStateException(
-          "Only "
-              + eligibleHeroes.size()
-              + " heroes satisfy the round constraints, but "
-              + activeRoundSpec.teamSize()
-              + " are required.");
-    }
+        List<TeamState> sfWinners = new ArrayList<>();
+        List<TeamState> sfLosers = new ArrayList<>();
+        Map<UUID, TeamState> teamMap = allTeams.stream().collect(
+                Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a)
+        );
 
-    List<HeroProfile> uniquePool =
-        eligibleHeroes.stream()
-            .filter(hero -> allowHeroReuse || !globallyUsedHeroIds.contains(hero.id()))
-            .toList();
+        for (MatchState m : r3Matches) {
+            if (m.winnerTeam() != null) {
+                sfWinners.add(teamMap.get(m.winnerTeam()));
+                UUID loserId = m.winnerTeam().equals(m.teamA()) ? m.teamB() : m.teamA();
+                sfLosers.add(teamMap.get(loserId));
+            }
+        }
 
-    Optional<List<HeroProfile>> uniqueRoster = findValidRoster(uniquePool, team.name());
-    if (uniqueRoster.isPresent()) {
-      return uniqueRoster.get();
-    }
+        logger.info("Semifinals complete: 2 Finalists and 2 Bronze contenders identified.");
 
-    if (!allowHeroReuse) {
-      logger.warn(
-          "No unique roster found for '{}'. Retrying with cross-team hero reuse.",
-          team.name());
+        Map<String, Object> r4Spec = new LinkedHashMap<>();
+        r4Spec.put("description", "Stage 4: Grand Final & 3rd Place Match");
+        r4Spec.put("teamSize", 3);
+        r4Spec.put("budgetCap", 700);
+        r4Spec.put("mapType", "COLOSSEUM");
+        r4Spec.put("allowedRoles", List.of());
+        r4Spec.put("allowedAlignments", List.of());
+
+        createCustomRound(4, r4Spec);
+        List<TeamState> r4Teams = new ArrayList<>();
+        r4Teams.addAll(sfWinners);
+        r4Teams.addAll(sfLosers);
+        submitSquads(r4Teams);
+        autoMatch(r4Teams);
+        runAllBattles();
+
+        printWorldCupSummary(4);
     }
 
-    return findValidRoster(eligibleHeroes, team.name())
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Could not find a valid roster for team '" + team.name() + "'."));
-  }
-
-  private List<HeroProfile> filterEligibleHeroes(List<HeroProfile> heroes) {
-    return heroes.stream()
-        .filter(hero -> matchesAllowed(activeRoundSpec.allowedRoles(), hero.role()))
-        .filter(hero -> matchesAllowed(activeRoundSpec.allowedGenders(), hero.gender()))
-        .filter(hero -> matchesAllowed(activeRoundSpec.allowedRaces(), hero.race()))
-        .filter(hero -> matchesAllowed(activeRoundSpec.allowedPublishers(), hero.publisher()))
-        .filter(hero -> matchesAllowed(activeRoundSpec.allowedAlignments(), hero.alignment()))
-        .filter(
-            hero ->
-                hero.tags().stream()
-                    .noneMatch(tag -> activeRoundSpec.bannedTags().contains(normalize(tag))))
-        .sorted(Comparator.comparingInt(HeroProfile::cost).thenComparing(HeroProfile::name))
-        .toList();
-  }
-
-  private boolean matchesAllowed(Set<String> allowedValues, String actualValue) {
-    return allowedValues.isEmpty() || allowedValues.contains(normalize(actualValue));
-  }
-
-  private Optional<List<HeroProfile>> findValidRoster(List<HeroProfile> candidates, String teamName) {
-    if (candidates.size() < activeRoundSpec.teamSize()) {
-      return Optional.empty();
+    private void executeTournamentRound(
+            int roundNo,
+            Map<String,
+            Object> spec,
+            List<TeamState> teams
+    ) throws Exception {
+        createCustomRound(roundNo, spec);
+        submitSquads(teams);
+        autoMatch(teams);
+        runAllBattles();
     }
 
-    List<HeroProfile> shuffledCandidates = new ArrayList<>(candidates);
-    Collections.shuffle(shuffledCandidates);
+    private void createCustomRound(int roundNo, Map<String, Object> spec) throws Exception {
+        printHeader("Configuring Round " + roundNo);
 
-    logger.debug(
-        "Trying to build roster for '{}' from {} eligible heroes",
-        teamName,
-        shuffledCandidates.size());
+        Map<String, Object> specPayload = new LinkedHashMap<>();
+        specPayload.put("description", spec.getOrDefault("description", "Round " + roundNo));
+        specPayload.put("teamSize", spec.getOrDefault("teamSize", 5));
+        specPayload.put("budgetCap", spec.getOrDefault("budgetCap", 1000));
+        specPayload.put("requiredRoles", Map.of());
+        specPayload.put("maxSameRole", Map.of());
+        specPayload.put("bannedTags", List.of());
+        specPayload.put("tagModifiers", Map.of());
+        specPayload.put("mapType", spec.getOrDefault("mapType", "ARENA_1"));
+        specPayload.put("allowedRoles", spec.getOrDefault("allowedRoles", List.of()));
+        specPayload.put("allowedGenders", List.of());
+        specPayload.put("allowedRaces", List.of());
+        specPayload.put("allowedPublishers", List.of());
+        specPayload.put("allowedAlignments", spec.getOrDefault("allowedAlignments", List.of()));
 
-    return findValidRoster(
-        shuffledCandidates,
-        0,
-        new ArrayList<>(),
-        new HashMap<>(),
-        0);
-  }
+        Map<String, Object> requestBody = new LinkedHashMap<>();
+        requestBody.put("sessionId", sessionId);
+        requestBody.put("spec", specPayload);
 
-  private Optional<List<HeroProfile>> findValidRoster(
-      List<HeroProfile> candidates,
-      int startIndex,
-      List<HeroProfile> selectedHeroes,
-      Map<String, Integer> roleCounts,
-      int totalCost) {
-    if (selectedHeroes.size() == activeRoundSpec.teamSize()) {
-      return satisfiesRequiredRoles(roleCounts)
-          ? Optional.of(List.copyOf(selectedHeroes))
-          : Optional.empty();
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(baseUrl + "/api/admin/rounds/create"))
+                        .header("Authorization", authHeader)
+                        .header("Content-Type", "application/json")
+                        .POST(
+                                HttpRequest.BodyPublishers.ofString(
+                                        objectMapper.writeValueAsString(requestBody)
+                                )
+                        )
+                        .build();
+
+        HttpResponse<String> response = sendExpecting(
+                request,
+                200,
+                "Failed to create round " + roundNo
+        );
+        activeRoundNo = Integer.parseInt(response.body().trim());
+        refreshRoundState();
+        logger.info(
+                "Created round {} with constraints: budgetCap={}, teamSize={}, map={}",
+                activeRoundNo,
+                specPayload.get("budgetCap"),
+                specPayload.get("teamSize"),
+                specPayload.get("mapType")
+        );
     }
 
-    for (int index = startIndex; index < candidates.size(); index++) {
-      HeroProfile candidate = candidates.get(index);
-      int updatedCost = totalCost + candidate.cost();
-      if (updatedCost > activeRoundSpec.budgetCap()) {
-        continue;
-      }
-
-      String normalizedRole = normalize(candidate.role());
-      int updatedRoleCount = roleCounts.getOrDefault(normalizedRole, 0) + 1;
-      int maxSameRole = activeRoundSpec.maxSameRole().getOrDefault(normalizedRole, Integer.MAX_VALUE);
-      if (updatedRoleCount > maxSameRole) {
-        continue;
-      }
-
-      selectedHeroes.add(candidate);
-      roleCounts.put(normalizedRole, updatedRoleCount);
-
-      Optional<List<HeroProfile>> result =
-          findValidRoster(candidates, index + 1, selectedHeroes, roleCounts, updatedCost);
-      if (result.isPresent()) {
-        return result;
-      }
-
-      selectedHeroes.remove(selectedHeroes.size() - 1);
-      if (updatedRoleCount == 1) {
-        roleCounts.remove(normalizedRole);
-      } else {
-        roleCounts.put(normalizedRole, updatedRoleCount - 1);
-      }
+    private List<MatchState> fetchMatchesForRound(int roundNo) throws Exception {
+        HttpRequest request = HttpRequest.newBuilder().uri(
+                URI.create(baseUrl + "/api/matches")
+        ).GET().build();
+        HttpResponse<String> response = sendExpecting(request, 200, "Failed to retrieve matches");
+        JsonNode body = objectMapper.readTree(response.body());
+        List<MatchState> matches = new ArrayList<>();
+        for (JsonNode node : body) {
+            int matchRound = node.path("roundNo").asInt(-1);
+            String matchSession = node.path("sessionId").asText(null);
+            if (matchRound == roundNo && (sessionId == null || sessionId.toString().equalsIgnoreCase(
+                    matchSession
+            ))) {
+                matches.add(
+                        new MatchState(
+                                UUID.fromString(node.path("matchId").asText()),
+                                UUID.fromString(node.path("teamA").asText()),
+                                UUID.fromString(node.path("teamB").asText()),
+                                node.hasNonNull("winnerTeam") ? UUID.fromString(
+                                        node.path("winnerTeam").asText()
+                                ) : null,
+                                node.path("status").asText()
+                        )
+                );
+            }
+        }
+        return matches;
     }
 
-    return Optional.empty();
-  }
-
-  private boolean satisfiesRequiredRoles(Map<String, Integer> roleCounts) {
-    return activeRoundSpec.requiredRoles().entrySet().stream()
-        .allMatch(
-            entry -> roleCounts.getOrDefault(entry.getKey(), 0) >= entry.getValue());
-  }
-
-  private void submitRoster(UUID teamId, List<Integer> heroIds, String strategy) throws Exception {
-    String url = baseUrl + "/api/rounds/" + activeRoundNo + "/submit?teamId=" + teamId;
-    Map<String, Object> requestBody = Map.of("heroIds", heroIds, "strategy", strategy);
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
-            .build();
-
-    sendExpecting(request, 200, "Failed to submit roster for team " + teamId);
-  }
-
-  private void autoMatch(List<TeamState> teams) throws Exception {
-    printHeader("Auto-Matching Teams");
-
-    if (teams.size() < 2) {
-      logger.warn("Need at least two teams to auto-match.");
-      return;
+    private List<TeamState> extractWinners(List<MatchState> matches, List<TeamState> teams) {
+        Map<UUID, TeamState> map = teams.stream().collect(
+                Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a)
+        );
+        List<TeamState> winners = new ArrayList<>();
+        for (MatchState m : matches) {
+            if (m.winnerTeam() != null && map.containsKey(m.winnerTeam())) {
+                winners.add(map.get(m.winnerTeam()));
+            }
+        }
+        return winners;
     }
 
-    String url =
-        String.format(
-            "%s/api/admin/matches/auto-match?sessionId=%s&roundNo=%d",
-            baseUrl,
-            sessionId,
-            activeRoundNo);
+    private void printWorldCupSummary(int finalRoundNo) throws Exception {
+        printHeader("World Cup Championship Complete!");
+        List<MatchState> finalMatches = fetchMatchesForRound(finalRoundNo);
+        List<TeamState> allTeams = fetchTeams();
+        Map<UUID, TeamState> map = allTeams.stream().collect(
+                Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a)
+        );
 
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", authHeader)
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to auto-match teams");
-    List<UUID> matchIds = objectMapper.readValue(response.body(), new TypeReference<>() {});
-    logger.info("Auto-match returned {} match(es)", matchIds.size());
-  }
-
-  private void runAllBattles() throws Exception {
-    printHeader("Running Battles");
-
-    String url =
-        String.format(
-            "%s/api/admin/matches/run-all?roundNo=%d&sessionId=%s",
-            baseUrl,
-            activeRoundNo,
-            sessionId);
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", authHeader)
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to run all battles");
-    JsonNode result = objectMapper.readTree(response.body());
-    refreshRoundState();
-    logger.info(
-        "Simulated {} of {} match(es)",
-        result.path("successfulSimulations").asInt(),
-        result.path("totalMatches").asInt());
-  }
-
-  private List<HeroProfile> loadHeroes() throws Exception {
-    Optional<List<HeroProfile>> heroesFromApi = loadHeroesFromApi();
-    if (heroesFromApi.isPresent() && !heroesFromApi.get().isEmpty()) {
-      logger.info("Loaded {} heroes from /api/teams/heroes", heroesFromApi.get().size());
-      return heroesFromApi.get();
+        for (MatchState m : finalMatches) {
+            TeamState winner = map.get(m.winnerTeam());
+            UUID loserId = m.winnerTeam().equals(m.teamA()) ? m.teamB() : m.teamA();
+            TeamState runnerUp = map.get(loserId);
+            logger.info(
+                    "Match Outcome: Winner '{}', Runner-up '{}'",
+                    winner != null ? winner.name() : "TBD",
+                    runnerUp != null ? runnerUp.name() : "TBD"
+            );
+        }
     }
 
-    List<HeroProfile> heroesFromFile = loadHeroesFromFile();
-    logger.info("Loaded {} heroes from {}", heroesFromFile.size(), heroesFile);
-    return heroesFromFile;
-  }
-
-  private Optional<List<HeroProfile>> loadHeroesFromApi() throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder().uri(URI.create(baseUrl + "/api/teams/heroes")).GET().build();
-    HttpResponse<String> response =
-        sendWithLogging(request, Set.of(200, 401, 403, 404, 429, 500, 502, 503, 504));
-    if (response.statusCode() != 200) {
-      logger.warn(
-          "Falling back to {} because /api/teams/heroes returned status {}",
-          heroesFile,
-          response.statusCode());
-      return Optional.empty();
+    private void printSuccess(List<TeamState> teams) {
+        printHeader("Fixture Data Initialized Successfully");
+        logger.info("Session ID: {}", sessionId);
+        logger.info("Round: {}", activeRoundNo);
+        logger.info("Round Status: {}", activeRoundSpec.status());
+        logger.info("Teams Targeted: {}", teams.size());
     }
 
-    JsonNode body = objectMapper.readTree(response.body());
-    if (!body.isArray()) {
-      logger.warn("Falling back to {} because /api/teams/heroes returned a non-array payload", heroesFile);
-      return Optional.empty();
-    }
-
-    List<HeroProfile> heroes = new ArrayList<>();
-    for (JsonNode heroNode : body) {
-      heroes.add(readHero(heroNode));
-    }
-    return Optional.of(List.copyOf(heroes));
-  }
-
-  private List<HeroProfile> loadHeroesFromFile() throws IOException {
-    JsonNode body = objectMapper.readTree(new File(heroesFile));
-    List<HeroProfile> heroes = new ArrayList<>();
-    for (JsonNode heroNode : body) {
-      heroes.add(readHero(heroNode));
-    }
-    return List.copyOf(heroes);
-  }
-
-  private HeroProfile readHero(JsonNode heroNode) {
-    int id = heroNode.path("id").asInt();
-    String name = heroNode.path("name").asText("hero-" + id);
-    String role = heroNode.path("role").asText("Fighter");
-    int cost = heroNode.path("cost").asInt(10);
-    String gender = textValue(heroNode.path("appearance").path("gender"));
-    String race = textValue(heroNode.path("appearance").path("race"));
-    String publisher =
-        firstNonBlank(
-            textValue(heroNode.path("publisher")),
-            textValue(heroNode.path("biography").path("publisher")));
-    String alignment =
-        firstNonBlank(
-            textValue(heroNode.path("alignment")),
-            textValue(heroNode.path("biography").path("alignment")));
-    List<String> tags = new ArrayList<>();
-    if (heroNode.path("tags").isArray()) {
-      heroNode.path("tags").forEach(tagNode -> tags.add(tagNode.asText()));
-    }
-
-    return new HeroProfile(id, name, role, cost, gender, race, publisher, alignment, List.copyOf(tags));
-  }
-
-  private String textValue(JsonNode node) {
-    if (node == null || node.isMissingNode() || node.isNull()) {
-      return null;
-    }
-    String value = node.asText();
-    return value == null || value.isBlank() ? null : value;
-  }
-
-  private String firstNonBlank(String first, String second) {
-    return first != null && !first.isBlank() ? first : second;
-  }
-
-  private Optional<SubmissionState> getSubmission(UUID teamId) throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(
-                URI.create(
-                    baseUrl + "/api/rounds/" + activeRoundNo + "/submission?teamId=" + teamId))
-            .GET()
-            .build();
-
-    HttpResponse<String> response = sendWithLogging(request, Set.of(200, 404));
-    if (response.statusCode() == 404) {
-      logger.debug("No existing submission for team {} in round {}", teamId, activeRoundNo);
-      return Optional.empty();
-    }
-    if (response.statusCode() != 200) {
-      throw failure(
-          "Failed to retrieve submission for team " + teamId,
-          response.statusCode(),
-          response.body());
-    }
-
-    JsonNode body = objectMapper.readTree(response.body());
-    List<Integer> heroIds = new ArrayList<>();
-    body.path("heroIds").forEach(node -> heroIds.add(node.asInt()));
-    return Optional.of(new SubmissionState(heroIds));
-  }
-
-  private List<TeamState> fetchTeams() throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/teams?sessionId=" + sessionId))
-            .GET()
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to list teams");
-    JsonNode body = objectMapper.readTree(response.body());
-    List<TeamState> teams = new ArrayList<>();
-    for (JsonNode teamNode : body) {
-      teams.add(
-          new TeamState(
-              UUID.fromString(teamNode.path("teamId").asText()),
-              teamNode.path("name").asText()));
-    }
-    return List.copyOf(teams);
-  }
-
-  private List<RoundState> listRounds() throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/rounds?sessionId=" + sessionId))
-            .GET()
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to list rounds");
-    JsonNode body = objectMapper.readTree(response.body());
-    List<RoundState> rounds = new ArrayList<>();
-    for (JsonNode roundNode : body) {
-      rounds.add(
-          new RoundState(
-              roundNode.path("roundNo").asInt(),
-              roundNode.path("status").asText("UNKNOWN")));
-    }
-    List<RoundState> immutableRounds = List.copyOf(rounds);
-    roundStatusesByNo = toRoundStatusMap(immutableRounds);
-    return immutableRounds;
-  }
-
-  private RoundSpecState fetchRoundSpec(int roundNo) throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/rounds/" + roundNo + "?sessionId=" + sessionId))
-            .GET()
-            .build();
-
-    HttpResponse<String> response =
-        sendExpecting(request, 200, "Failed to retrieve round spec for round " + roundNo);
-    JsonNode body = objectMapper.readTree(response.body());
-
-    return new RoundSpecState(
-        roundNo,
-        resolveRoundStatus(roundNo),
-        body.path("teamSize").asInt(DEFAULT_TEAM_SIZE),
-        body.path("budgetCap").asInt(DEFAULT_BUDGET_CAP),
-        normalizedSet(body.path("allowedRoles")),
-        normalizedSet(body.path("allowedGenders")),
-        normalizedSet(body.path("allowedRaces")),
-        normalizedSet(body.path("allowedPublishers")),
-        normalizedSet(body.path("allowedAlignments")),
-        normalizedSet(body.path("bannedTags")),
-        normalizedIntMap(body.path("requiredRoles")),
-        normalizedIntMap(body.path("maxSameRole")));
-  }
-
-  private String resolveRoundStatus(int roundNo) throws Exception {
-    if (roundStatusesByNo.containsKey(roundNo)) {
-      return roundStatusesByNo.get(roundNo);
-    }
-    listRounds();
-    return roundStatusesByNo.getOrDefault(roundNo, "UNKNOWN");
-  }
-
-  private void refreshRoundState() throws Exception {
-    listRounds();
-    activeRoundSpec = fetchRoundSpec(activeRoundNo);
-  }
-
-  private Map<Integer, String> toRoundStatusMap(List<RoundState> rounds) {
-    return rounds.stream()
-        .collect(Collectors.toUnmodifiableMap(RoundState::roundNo, RoundState::status, (left, right) -> right));
-  }
-
-  private Set<String> normalizedSet(JsonNode node) {
-    if (node == null || !node.isArray()) {
-      return Set.of();
-    }
-    Set<String> values = new LinkedHashSet<>();
-    node.forEach(item -> values.add(normalize(item.asText())));
-    return Set.copyOf(values);
-  }
-
-  private Map<String, Integer> normalizedIntMap(JsonNode node) {
-    if (node == null || !node.isObject()) {
-      return Map.of();
-    }
-    Map<String, Integer> values = new LinkedHashMap<>();
-    node.fields().forEachRemaining(entry -> values.put(normalize(entry.getKey()), entry.getValue().asInt()));
-    return Map.copyOf(values);
-  }
-
-  private List<String> normalizedValues(List<String> values) {
-    return values == null ? List.of() : values.stream().filter(value -> value != null && !value.isBlank()).toList();
-  }
-
-  private String normalize(String value) {
-    return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
-  }
-
-  private HttpResponse<String> sendExpecting(HttpRequest request, int expectedStatus, String errorMessage)
-      throws Exception {
-    HttpResponse<String> response = sendWithLogging(request, Set.of(expectedStatus));
-    if (response.statusCode() != expectedStatus) {
-      throw failure(errorMessage, response.statusCode(), response.body());
-    }
-    return response;
-  }
-
-  private HttpResponse<String> sendWithLogging(HttpRequest request, Set<Integer> expectedStatuses)
-      throws Exception {
-    try {
-      HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-      int statusCode = response.statusCode();
-      if (expectedStatuses.contains(statusCode)) {
-        logger.debug("HTTP {} {} -> {}", request.method(), request.uri(), statusCode);
-      } else if (statusCode >= 500) {
-        logger.error(
-            "HTTP {} {} -> {} {}",
-            request.method(),
-            request.uri(),
-            statusCode,
-            formatProblem(response.body()));
-      } else if (statusCode >= 400) {
-        logger.warn(
-            "HTTP {} {} -> {} {}",
-            request.method(),
-            request.uri(),
-            statusCode,
-            formatProblem(response.body()));
-      } else {
-        logger.debug("HTTP {} {} -> {}", request.method(), request.uri(), statusCode);
-      }
-      return response;
-    } catch (HttpTimeoutException exception) {
-      logger.error(
-          "HTTP {} {} timed out after {}",
-          request.method(),
-          request.uri(),
-          request.timeout().orElse(Duration.ofSeconds(10)));
-      throw exception;
-    } catch (Exception exception) {
-      logger.error(
-          "HTTP {} {} failed: {}",
-          request.method(),
-          request.uri(),
-          exception.getMessage());
-      throw exception;
-    }
-  }
-
-  private RuntimeException failure(String message, int statusCode, String body) {
-    return new IllegalStateException(message + " (status=" + statusCode + ", body=" + formatProblem(body) + ")");
-  }
-
-  private String formatProblem(String body) {
-    if (body == null || body.isBlank()) {
-      return "<empty>";
-    }
-    try {
-      JsonNode json = objectMapper.readTree(body);
-      if (json.hasNonNull("detail")) {
-        return json.path("title").asText("Problem") + ": " + json.path("detail").asText();
-      }
-    } catch (Exception ignored) {
-      return abbreviate(body);
-    }
-    return abbreviate(body);
-  }
-
-  private String abbreviate(String value) {
-    return value.length() <= 240 ? value : value.substring(0, 240) + "...";
-  }
-
-  private void printHeader(String message) {
-    logger.info("=========================================");
-    logger.info(message);
-    logger.info("=========================================");
-  }
-
-  /** Runs the sixteen-team tournament through the championship and third-place matches. */
-  private void runWorldCupTournament() throws Exception {
-    printHeader("Starting World Cup Championship Tournament (October 27th Hackathon)");
-
-    if (reset) {
-      resetDatabase();
-    }
-
-    initializeOrVerifySession();
-
-    int targetTeamCount = 16;
-    teamCount = targetTeamCount;
-    List<TeamState> allTeams = resolveTeams();
-    if (allTeams.size() < targetTeamCount) {
-      throw new IllegalStateException("World Cup format requires at least " + targetTeamCount + " registered teams.");
-    }
-    List<TeamState> currentTeams = new ArrayList<>(allTeams.subList(0, targetTeamCount));
-
-    Map<String, Object> r1Spec = new LinkedHashMap<>();
-    r1Spec.put("description", "Stage 1: Initial Round (Classified Teams)");
-    r1Spec.put("teamSize", 5);
-    r1Spec.put("budgetCap", 1200);
-    r1Spec.put("mapType", "ARENA_1");
-    r1Spec.put("allowedRoles", List.of());
-    r1Spec.put("allowedAlignments", List.of());
-
-    executeTournamentRound(1, r1Spec, currentTeams);
-    List<MatchState> r1Matches = fetchMatchesForRound(1);
-    currentTeams = extractWinners(r1Matches, currentTeams);
-    logger.info("Stage 1 complete. {} winners advance to Quarter Finals.", currentTeams.size());
-
-    Map<String, Object> r2Spec = new LinkedHashMap<>();
-    r2Spec.put("description", "Stage 2: Quarter Finals (8 Teams)");
-    r2Spec.put("teamSize", 4);
-    r2Spec.put("budgetCap", 1000);
-    r2Spec.put("mapType", "ARENA_2");
-    r2Spec.put("allowedRoles", List.of());
-    r2Spec.put("allowedAlignments", List.of());
-
-    executeTournamentRound(2, r2Spec, currentTeams);
-    List<MatchState> r2Matches = fetchMatchesForRound(2);
-    currentTeams = extractWinners(r2Matches, currentTeams);
-    logger.info("Stage 2 complete. {} winners advance to Semifinals (Prize Winners locked!).", currentTeams.size());
-
-    Map<String, Object> r3Spec = new LinkedHashMap<>();
-    r3Spec.put("description", "Stage 3: Semifinals (Top 4 Prize Winners)");
-    r3Spec.put("teamSize", 3);
-    r3Spec.put("budgetCap", 800);
-    r3Spec.put("mapType", "CITY");
-    r3Spec.put("allowedRoles", List.of());
-    r3Spec.put("allowedAlignments", List.of());
-
-    executeTournamentRound(3, r3Spec, currentTeams);
-    List<MatchState> r3Matches = fetchMatchesForRound(3);
-
-    List<TeamState> sfWinners = new ArrayList<>();
-    List<TeamState> sfLosers = new ArrayList<>();
-    Map<UUID, TeamState> teamMap = allTeams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
-
-    for (MatchState m : r3Matches) {
-      if (m.winnerTeam() != null) {
-        sfWinners.add(teamMap.get(m.winnerTeam()));
-        UUID loserId = m.winnerTeam().equals(m.teamA()) ? m.teamB() : m.teamA();
-        sfLosers.add(teamMap.get(loserId));
-      }
-    }
-
-    logger.info("Semifinals complete: 2 Finalists and 2 Bronze contenders identified.");
-
-    Map<String, Object> r4Spec = new LinkedHashMap<>();
-    r4Spec.put("description", "Stage 4: Grand Final & 3rd Place Match");
-    r4Spec.put("teamSize", 3);
-    r4Spec.put("budgetCap", 700);
-    r4Spec.put("mapType", "COLOSSEUM");
-    r4Spec.put("allowedRoles", List.of());
-    r4Spec.put("allowedAlignments", List.of());
-
-    createCustomRound(4, r4Spec);
-    List<TeamState> r4Teams = new ArrayList<>();
-    r4Teams.addAll(sfWinners);
-    r4Teams.addAll(sfLosers);
-    submitSquads(r4Teams);
-    autoMatch(r4Teams);
-    runAllBattles();
-
-    printWorldCupSummary(4);
-  }
-
-  private void executeTournamentRound(int roundNo, Map<String, Object> spec, List<TeamState> teams) throws Exception {
-    createCustomRound(roundNo, spec);
-    submitSquads(teams);
-    autoMatch(teams);
-    runAllBattles();
-  }
-
-  private void createCustomRound(int roundNo, Map<String, Object> spec) throws Exception {
-    printHeader("Configuring Round " + roundNo);
-
-    Map<String, Object> specPayload = new LinkedHashMap<>();
-    specPayload.put("description", spec.getOrDefault("description", "Round " + roundNo));
-    specPayload.put("teamSize", spec.getOrDefault("teamSize", 5));
-    specPayload.put("budgetCap", spec.getOrDefault("budgetCap", 1000));
-    specPayload.put("requiredRoles", Map.of());
-    specPayload.put("maxSameRole", Map.of());
-    specPayload.put("bannedTags", List.of());
-    specPayload.put("tagModifiers", Map.of());
-    specPayload.put("mapType", spec.getOrDefault("mapType", "ARENA_1"));
-    specPayload.put("allowedRoles", spec.getOrDefault("allowedRoles", List.of()));
-    specPayload.put("allowedGenders", List.of());
-    specPayload.put("allowedRaces", List.of());
-    specPayload.put("allowedPublishers", List.of());
-    specPayload.put("allowedAlignments", spec.getOrDefault("allowedAlignments", List.of()));
-
-    Map<String, Object> requestBody = new LinkedHashMap<>();
-    requestBody.put("sessionId", sessionId);
-    requestBody.put("spec", specPayload);
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/admin/rounds/create"))
-            .header("Authorization", authHeader)
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(requestBody)))
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to create round " + roundNo);
-    activeRoundNo = Integer.parseInt(response.body().trim());
-    refreshRoundState();
-    logger.info("Created round {} with constraints: budgetCap={}, teamSize={}, map={}",
-        activeRoundNo, specPayload.get("budgetCap"), specPayload.get("teamSize"), specPayload.get("mapType"));
-  }
-
-  private UUID createDirectMatch(UUID teamA, UUID teamB, int roundNo) throws Exception {
-    String url = String.format("%s/api/admin/matches/create?teamA=%s&teamB=%s&roundNo=%d&sessionId=%s",
-        baseUrl, teamA, teamB, roundNo, sessionId);
-
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(url))
-            .header("Authorization", authHeader)
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
-
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to create direct match");
-    return objectMapper.readValue(response.body(), UUID.class);
-  }
-
-  private void runSingleMatch(UUID matchId) throws Exception {
-    HttpRequest request =
-        HttpRequest.newBuilder()
-            .uri(URI.create(baseUrl + "/api/admin/matches/" + matchId + "/run"))
-            .header("Authorization", authHeader)
-            .POST(HttpRequest.BodyPublishers.noBody())
-            .build();
-
-    sendExpecting(request, 200, "Failed to run match " + matchId);
-    logger.info("Match {} finished simulation.", matchId);
-  }
-
-  private List<MatchState> fetchMatchesForRound(int roundNo) throws Exception {
-    HttpRequest request = HttpRequest.newBuilder().uri(URI.create(baseUrl + "/api/matches")).GET().build();
-    HttpResponse<String> response = sendExpecting(request, 200, "Failed to retrieve matches");
-    JsonNode body = objectMapper.readTree(response.body());
-    List<MatchState> matches = new ArrayList<>();
-    for (JsonNode node : body) {
-      int matchRound = node.path("roundNo").asInt(-1);
-      String matchSession = node.path("sessionId").asText(null);
-      if (matchRound == roundNo && (sessionId == null || sessionId.toString().equalsIgnoreCase(matchSession))) {
-        matches.add(new MatchState(
-            UUID.fromString(node.path("matchId").asText()),
-            UUID.fromString(node.path("teamA").asText()),
-            UUID.fromString(node.path("teamB").asText()),
-            node.hasNonNull("winnerTeam") ? UUID.fromString(node.path("winnerTeam").asText()) : null,
-            node.path("status").asText()
-        ));
-      }
-    }
-    return matches;
-  }
-
-  private List<TeamState> extractWinners(List<MatchState> matches, List<TeamState> teams) {
-    Map<UUID, TeamState> map = teams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
-    List<TeamState> winners = new ArrayList<>();
-    for (MatchState m : matches) {
-      if (m.winnerTeam() != null && map.containsKey(m.winnerTeam())) {
-        winners.add(map.get(m.winnerTeam()));
-      }
-    }
-    return winners;
-  }
-
-  private void printWorldCupSummary(int finalRoundNo) throws Exception {
-    printHeader("World Cup Championship Complete!");
-    List<MatchState> finalMatches = fetchMatchesForRound(finalRoundNo);
-    List<TeamState> allTeams = fetchTeams();
-    Map<UUID, TeamState> map = allTeams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
-
-    for (MatchState m : finalMatches) {
-      TeamState winner = map.get(m.winnerTeam());
-      UUID loserId = m.winnerTeam().equals(m.teamA()) ? m.teamB() : m.teamA();
-      TeamState runnerUp = map.get(loserId);
-      logger.info("Match Outcome: Winner '{}', Runner-up '{}'",
-          winner != null ? winner.name() : "TBD",
-          runnerUp != null ? runnerUp.name() : "TBD");
-    }
-  }
-
-  private void printSuccess(List<TeamState> teams) {
-    printHeader("Fixture Data Initialized Successfully");
-    logger.info("Session ID: {}", sessionId);
-    logger.info("Round: {}", activeRoundNo);
-    logger.info("Round Status: {}", activeRoundSpec.status());
-    logger.info("Teams Targeted: {}", teams.size());
-  }
-
-  private record TeamConfig(String name, List<String> members) {}
-
-  private record TeamState(UUID teamId, String name) {}
-
-  private record RoundState(int roundNo, String status) {}
-
-  private record SubmissionState(List<Integer> heroIds) {}
-
-  private record RoundSpecState(
-      int roundNo,
-      String status,
-      int teamSize,
-      int budgetCap,
-      Set<String> allowedRoles,
-      Set<String> allowedGenders,
-      Set<String> allowedRaces,
-      Set<String> allowedPublishers,
-      Set<String> allowedAlignments,
-      Set<String> bannedTags,
-      Map<String, Integer> requiredRoles,
-      Map<String, Integer> maxSameRole) {}
-
-  private record HeroProfile(
-      int id,
-      String name,
-      String role,
-      int cost,
-      String gender,
-      String race,
-      String publisher,
-      String alignment,
-      List<String> tags) {}
-
-  private record MatchState(
-      UUID matchId,
-      UUID teamA,
-      UUID teamB,
-      UUID winnerTeam,
-      String status) {}
+    private record TeamConfig(String name, List<String> members) {}
+
+    private record TeamState(UUID teamId, String name) {}
+
+    private record RoundState(int roundNo, String status) {}
+
+    private record SubmissionState(List<Integer> heroIds) {}
+
+    private record RoundSpecState(
+            int roundNo,
+            String status,
+            int teamSize,
+            int budgetCap,
+            Set<String> allowedRoles,
+            Set<String> allowedGenders,
+            Set<String> allowedRaces,
+            Set<String> allowedPublishers,
+            Set<String> allowedAlignments,
+            Set<String> bannedTags,
+            Map<String,
+            Integer> requiredRoles,
+            Map<String,
+            Integer> maxSameRole
+    ) {}
+
+    private record HeroProfile(
+            int id,
+            String name,
+            String role,
+            int cost,
+            String gender,
+            String race,
+            String publisher,
+            String alignment,
+            List<String> tags
+    ) {}
+
+    private record MatchState(
+            UUID matchId,
+            UUID teamA,
+            UUID teamB,
+            UUID winnerTeam,
+            String status
+    ) {}
 }

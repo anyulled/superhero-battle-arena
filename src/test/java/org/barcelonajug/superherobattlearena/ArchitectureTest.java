@@ -14,108 +14,115 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.RestController;
 
 @AnalyzeClasses(
-    packages = "org.barcelonajug.superherobattlearena",
-    importOptions = ImportOption.DoNotIncludeTests.class)
+        packages = "org.barcelonajug.superherobattlearena",
+        importOptions = ImportOption.DoNotIncludeTests.class
+)
 public class ArchitectureTest {
+    private static final String DOMAIN = "org.barcelonajug.superherobattlearena.domain..";
+    private static final String APPLICATION = "org.barcelonajug.superherobattlearena.application..";
+    private static final String ADAPTER = "org.barcelonajug.superherobattlearena.adapter..";
+    private static final String CONFIG = "org.barcelonajug.superherobattlearena.config..";
 
-  private static final String DOMAIN = "org.barcelonajug.superherobattlearena.domain..";
-  private static final String APPLICATION = "org.barcelonajug.superherobattlearena.application..";
-  private static final String ADAPTER = "org.barcelonajug.superherobattlearena.adapter..";
-  private static final String CONFIG = "org.barcelonajug.superherobattlearena.config..";
+    private static final String PORT_IN =
+            "org.barcelonajug.superherobattlearena.application.port.in..";
+    private static final String PORT_OUT =
+            "org.barcelonajug.superherobattlearena.application.port.out..";
+    private static final String ADAPTER_IN_WEB =
+            "org.barcelonajug.superherobattlearena.adapter.in.web..";
+    private static final String ADAPTER_OUT_PERSISTENCE =
+            "org.barcelonajug.superherobattlearena.adapter.out.persistence..";
 
-  private static final String PORT_IN =
-      "org.barcelonajug.superherobattlearena.application.port.in..";
-  private static final String PORT_OUT =
-      "org.barcelonajug.superherobattlearena.application.port.out..";
-  private static final String ADAPTER_IN_WEB =
-      "org.barcelonajug.superherobattlearena.adapter.in.web..";
-  private static final String ADAPTER_OUT_PERSISTENCE =
-      "org.barcelonajug.superherobattlearena.adapter.out.persistence..";
+    @ArchTest
+    static final ArchRule no_cycles_between_top_level_slices =
+            slices().matching(
+                    "org.barcelonajug.superherobattlearena.(*).."
+            ).should().beFreeOfCycles();
 
-  @ArchTest
-  static final ArchRule no_cycles_between_top_level_slices =
-      slices().matching("org.barcelonajug.superherobattlearena.(*)..").should().beFreeOfCycles();
+    @ArchTest
+    static final ArchRule ports_are_interfaces =
+            classes().that().resideInAnyPackage(PORT_IN, PORT_OUT).should().beInterfaces();
 
-  @ArchTest
-  static final ArchRule ports_are_interfaces =
-      classes().that().resideInAnyPackage(PORT_IN, PORT_OUT).should().beInterfaces();
+    @ArchTest
+    static final ArchRule controllers_are_only_in_web_adapter =
+            classes()
+                    .that()
+                    .areAnnotatedWith(Controller.class)
+                    .or()
+                    .areAnnotatedWith(RestController.class)
+                    .should()
+                    .resideInAnyPackage(ADAPTER_IN_WEB);
 
-  @ArchTest
-  static final ArchRule controllers_are_only_in_web_adapter =
-      classes()
-          .that()
-          .areAnnotatedWith(Controller.class)
-          .or()
-          .areAnnotatedWith(RestController.class)
-          .should()
-          .resideInAnyPackage(ADAPTER_IN_WEB);
+    @ArchTest
+    static final ArchRule persistence_does_not_depend_on_web_or_input_ports =
+            noClasses()
+                    .that()
+                    .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE)
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(ADAPTER_IN_WEB, PORT_IN);
 
-  @ArchTest
-  static final ArchRule persistence_does_not_depend_on_web_or_input_ports =
-      noClasses()
-          .that()
-          .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE)
-          .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage(ADAPTER_IN_WEB, PORT_IN);
+    @ArchTest
+    static final ArchRule web_does_not_depend_on_persistence =
+            noClasses()
+                    .that()
+                    .resideInAPackage(ADAPTER_IN_WEB)
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage(ADAPTER_OUT_PERSISTENCE);
 
-  @ArchTest
-  static final ArchRule web_does_not_depend_on_persistence =
-      noClasses()
-          .that()
-          .resideInAPackage(ADAPTER_IN_WEB)
-          .should()
-          .dependOnClassesThat()
-          .resideInAPackage(ADAPTER_OUT_PERSISTENCE);
+    @ArchTest
+    static final ArchRule entities_are_only_in_persistence_adapter =
+            classes()
+                    .that()
+                    .areAnnotatedWith(Entity.class)
+                    .should()
+                    .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE);
 
-  @ArchTest
-  static final ArchRule entities_are_only_in_persistence_adapter =
-      classes()
-          .that()
-          .areAnnotatedWith(Entity.class)
-          .should()
-          .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE);
+    @ArchTest
+    static final ArchRule repositories_are_only_in_persistence_adapter =
+            classes()
+                    .that()
+                    .areAnnotatedWith(Repository.class)
+                    .should()
+                    .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE);
 
-  @ArchTest
-  static final ArchRule repositories_are_only_in_persistence_adapter =
-      classes()
-          .that()
-          .areAnnotatedWith(Repository.class)
-          .should()
-          .resideInAnyPackage(ADAPTER_OUT_PERSISTENCE);
+    @ArchTest
+    static final ArchRule application_does_not_depend_on_adapters_or_config =
+            noClasses()
+                    .that()
+                    .resideInAnyPackage(APPLICATION)
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(ADAPTER, CONFIG);
 
-  @ArchTest
-  static final ArchRule application_does_not_depend_on_adapters_or_config =
-      noClasses()
-          .that()
-          .resideInAnyPackage(APPLICATION)
-          .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage(ADAPTER, CONFIG);
+    @ArchTest
+    static final ArchRule domain_is_pure =
+            classes()
+                    .that()
+                    .resideInAnyPackage(DOMAIN)
+                    .should()
+                    .onlyDependOnClassesThat()
+                    .resideInAnyPackage(
+                            DOMAIN,
+                            "java..",
+                            "org.jspecify.annotations..",
+                            "org.slf4j.."
+                    );
 
-  @ArchTest
-  static final ArchRule domain_is_pure =
-      classes()
-          .that()
-          .resideInAnyPackage(DOMAIN)
-          .should()
-          .onlyDependOnClassesThat()
-          .resideInAnyPackage(DOMAIN, "java..", "org.jspecify.annotations..", "org.slf4j..");
+    @ArchTest
+    static final ArchRule web_adapters_should_not_depend_on_ports =
+            noClasses()
+                    .that()
+                    .resideInAPackage(ADAPTER_IN_WEB)
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(PORT_IN, PORT_OUT);
 
-  @ArchTest
-  static final ArchRule web_adapters_should_not_depend_on_ports =
-      noClasses()
-          .that()
-          .resideInAPackage(ADAPTER_IN_WEB)
-          .should()
-          .dependOnClassesThat()
-          .resideInAnyPackage(PORT_IN, PORT_OUT);
-
-  @ArchTest
-  static final ArchRule use_cases_should_end_with_UseCase =
-      classes()
-          .that()
-          .resideInAPackage("org.barcelonajug.superherobattlearena.application.usecase")
-          .should()
-          .haveSimpleNameEndingWith("UseCase");
+    @ArchTest
+    static final ArchRule use_cases_should_end_with_UseCase =
+            classes()
+                    .that()
+                    .resideInAPackage("org.barcelonajug.superherobattlearena.application.usecase")
+                    .should()
+                    .haveSimpleNameEndingWith("UseCase");
 }

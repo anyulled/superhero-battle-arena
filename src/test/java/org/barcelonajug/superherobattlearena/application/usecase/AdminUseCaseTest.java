@@ -49,476 +49,505 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
 class AdminUseCaseTest {
-
-  private SessionRepositoryPort sessionRepository;
-  private RoundRepositoryPort roundRepository;
-  private MatchUseCase matchUseCase;
-  private MatchRepositoryPort matchRepository;
-  private SubmissionRepositoryPort submissionRepository;
-  private MatchEventRepositoryPort matchEventRepository;
-  private BattleEngineUseCase battleEngineUseCase;
-  private FatigueUseCase fatigueUseCase;
-  private TeamRepositoryPort teamRepository;
-  private HeroUsageRepositoryPort heroUsageRepository;
-  private SessionUseCase sessionUseCase;
-  private EliminationRepositoryPort eliminationRepository;
-  private AdminUseCase adminUseCase;
-
-  /** Creates the administrative use case with isolated service and repository mocks. */
-  @BeforeEach
-  void setUp() {
-    sessionRepository = mock(SessionRepositoryPort.class);
-    roundRepository = mock(RoundRepositoryPort.class);
-    matchUseCase = mock(MatchUseCase.class);
-    matchRepository = mock(MatchRepositoryPort.class);
-    submissionRepository = mock(SubmissionRepositoryPort.class);
-    matchEventRepository = mock(MatchEventRepositoryPort.class);
-    battleEngineUseCase = mock(BattleEngineUseCase.class);
-    fatigueUseCase = mock(FatigueUseCase.class);
-    teamRepository = mock(TeamRepositoryPort.class);
-    heroUsageRepository = mock(HeroUsageRepositoryPort.class);
-    sessionUseCase = mock(SessionUseCase.class);
-    eliminationRepository = mock(EliminationRepositoryPort.class);
-
-    adminUseCase =
-        new AdminUseCase(
-            sessionRepository,
-            sessionUseCase,
-            roundRepository,
-            matchUseCase,
-            matchRepository,
-            submissionRepository,
-            matchEventRepository,
-            battleEngineUseCase,
-            fatigueUseCase,
-            teamRepository,
-            heroUsageRepository,
-            eliminationRepository);
-  }
-
-  /** Verifies that database reset deletes all tournament data in dependency order. */
-  @Test
-  void resetDatabase_shouldDeleteAllDataInCorrectOrder() {
-    // When
-    adminUseCase.resetDatabase();
-
-    // Then
-    InOrder inOrder =
-        inOrder(
-            eliminationRepository,
-            matchEventRepository,
-            matchRepository,
-            heroUsageRepository,
-            submissionRepository,
-            roundRepository,
-            teamRepository,
-            sessionRepository);
-
-    inOrder.verify(eliminationRepository).deleteAll();
-    inOrder.verify(matchEventRepository).deleteAll();
-    inOrder.verify(matchRepository).deleteAll();
-    inOrder.verify(heroUsageRepository).deleteAll();
-    inOrder.verify(submissionRepository).deleteAll();
-    inOrder.verify(roundRepository).deleteAll();
-    inOrder.verify(teamRepository).deleteAll();
-    inOrder.verify(sessionRepository).deleteAll();
-  }
-
-  @Test
-  void startSession_shouldSaveNewSession() {
-    UUID sessionId = UUID.randomUUID();
-    Session session = SessionMother.anActiveSession(sessionId);
-    when(sessionUseCase.startSession(sessionId)).thenReturn(session);
-
-    UUID result = adminUseCase.startSession(sessionId);
-
-    assertThat(result).isEqualTo(sessionId);
-    verify(sessionUseCase).startSession(sessionId);
-  }
-
-  @Test
-  @SuppressWarnings("NullAway")
-  void startSession_shouldGenerateIdWhenNull() {
-    Session session = SessionMother.anActiveSession();
-    when(sessionUseCase.startSession(null)).thenReturn(session);
-
-    UUID result = adminUseCase.startSession(null);
-
-    assertThat(result).isEqualTo(session.getSessionId());
-    verify(sessionUseCase).startSession(null);
-  }
-
-  @Test
-  void listSessions_shouldReturnAllSessions() {
-    Session session = SessionMother.anActiveSession();
-    when(sessionRepository.findAll()).thenReturn(List.of(session));
-
-    List<Session> result = adminUseCase.listSessions();
-
-    assertThat(result).containsExactly(session);
-    verify(sessionRepository).findAll();
-  }
-
-  @Test
-  void createRound_shouldSaveNewRoundWithCalculatedNumber() {
-    UUID sessionId = UUID.randomUUID();
-    RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
-    when(roundRepository.findMaxRoundNo(sessionId)).thenReturn(Optional.of(1));
-    when(sessionRepository.findById(sessionId))
-        .thenReturn(Optional.of(SessionMother.anActiveSession(sessionId)));
-
-    Integer roundId = adminUseCase.createRound(sessionId, spec);
-    assertThat(roundId).isEqualTo(2);
-
-    ArgumentCaptor<Round> captor = ArgumentCaptor.forClass(Round.class);
-    verify(roundRepository).save(captor.capture());
-    assertThat(captor.getValue().getRoundNo()).isEqualTo(2);
-    assertThat(captor.getValue().getSeed()).isNotNull();
-  }
-
-  @Test
-  void createRound_shouldThrowException_whenSessionNotFound() {
-    UUID sessionId = UUID.randomUUID();
-    when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
-    assertThatThrownBy(() -> adminUseCase.createRound(sessionId, mock(RoundSpec.class)))
-        .isInstanceOf(IllegalStateException.class);
-  }
-
-  @Test
-  void autoMatch_shouldDelegateToMatchUseCase() {
-    adminUseCase.autoMatch(UUID.randomUUID(), 1);
-    verify(matchUseCase).autoMatch(any(), anyInt());
-  }
-
-  @Test
-  void createMatch_shouldDelegateToMatchUseCase() {
-    adminUseCase.createMatch(UUID.randomUUID(), UUID.randomUUID(), 1, UUID.randomUUID());
-    verify(matchUseCase).createMatch(any(), any(), anyInt(), any());
-  }
-
-  @Test
-  void runMatch_shouldDelegateToMatchUseCase() {
-    adminUseCase.runMatch(UUID.randomUUID());
-    verify(matchUseCase).runMatch(any());
-  }
-
-  @Test
-  void runAllBattles_shouldReturnEmpty_whenNoSessionFound() {
-    Map<String, Object> result = adminUseCase.runAllBattles(1, null);
-    assertThat(result).containsEntry("total", 0);
-  }
-
-  /** Verifies that batch execution completes pending matches and records their hero usage. */
-  @Test
-  void runAllBattles_shouldExecutePendingMatches() {
-    UUID sessionId = UUID.randomUUID();
-    UUID teamA = UUID.randomUUID();
-    UUID teamB = UUID.randomUUID();
-    UUID matchId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
-    match.setMatchId(matchId);
-
-    setupBattleSimulation(sessionId, teamA, teamB, teamA);
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-
-    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
-
-    verify(matchRepository).save(match);
-    assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
-    assertThat(result)
-        .containsEntry("total", 1)
-        .containsEntry("successCount", 1)
-        .containsKey("durationMs");
-
-    Long duration = (Long) result.get("durationMs");
-    assertThat(duration).isNotNull().isNotNegative();
-
-    @SuppressWarnings("unchecked")
-    List<UUID> matchIds = (List<UUID>) result.get("matchIds");
-    assertThat(matchIds).hasSize(1).contains(matchId);
-
-    verify(fatigueUseCase).recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 1);
-  }
-
-  /** Stubs a round, both squads, and a simulation with the requested winner or draw. */
-  private void setupBattleSimulation(
-      UUID sessionId, UUID teamA, UUID teamB, @Nullable UUID winnerTeam) {
-    Round round = new Round();
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-
-    Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
-    Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(2));
-    when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
-    when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
-
-    Hero heroA =
-        Hero.builder()
-            .id(1)
-            .name("A")
-            .slug("a")
-            .powerstats(Hero.PowerStats.builder().build())
-            .role("F")
-            .build();
-    Hero heroB =
-        Hero.builder()
-            .id(2)
-            .name("B")
-            .slug("b")
-            .powerstats(Hero.PowerStats.builder().build())
-            .role("F")
-            .build();
-    when(matchUseCase.getBattleTeam(eq(teamA), any(), anyInt())).thenReturn(List.of(heroA));
-    when(matchUseCase.getBattleTeam(eq(teamB), any(), anyInt())).thenReturn(List.of(heroB));
-
-    SimulationResult simResult = new SimulationResult(winnerTeam, 10, List.of());
-    when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
-        .thenReturn(simResult);
-  }
-
-  /** Verifies that batch execution keeps semifinal losers eligible for third place. */
-  @Test
-  void runAllBattles_shouldNotEliminateLoser_whenSemifinalMatch() {
-    UUID sessionId = UUID.randomUUID();
-    UUID teamA = UUID.randomUUID();
-    UUID teamB = UUID.randomUUID();
-    UUID matchId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
-    match.setMatchId(matchId);
-    match.setMatchType(MatchType.KNOCKOUT);
-
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
-        .thenReturn(List.of(match, mock(Match.class)));
-    setupBattleSimulation(sessionId, teamA, teamB, teamA);
-
-    adminUseCase.runAllBattles(1, sessionId);
-
-    verify(eliminationRepository, times(0)).save(any(Elimination.class));
-  }
-
-  /** Verifies that batch execution records no elimination for a drawn match. */
-  @Test
-  void runAllBattles_shouldNotEliminate_whenMatchIsDraw() {
-    UUID sessionId = UUID.randomUUID();
-    UUID teamA = UUID.randomUUID();
-    UUID teamB = UUID.randomUUID();
-    UUID matchId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
-    match.setMatchId(matchId);
-
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    setupBattleSimulation(sessionId, teamA, teamB, null);
-
-    adminUseCase.runAllBattles(1, sessionId);
-
-    verify(eliminationRepository, times(0)).save(any(Elimination.class));
-  }
-
-  @Test
-  void runAllBattles_shouldHandleMissingSubmissions() {
-    UUID sessionId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
-
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    Round round = new Round();
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.empty());
-
-    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
-    assertThat(result).containsEntry("successCount", 0);
-  }
-
-  @Test
-  void runAllBattles_shouldHandleExceptionDuringSimulation() {
-    UUID sessionId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
-
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    // Internal Exception in the loop should be swallowed
-    Round round = new Round();
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(round));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt()))
-        .thenThrow(new RuntimeException("Sim Error"));
-
-    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
-    assertThat(result).containsEntry("successCount", 0);
-  }
-
-  @Test
-  void runAllBattles_shouldHandleDraw() {
-    UUID sessionId = UUID.randomUUID();
-    UUID teamA = UUID.randomUUID();
-    UUID teamB = UUID.randomUUID();
-    UUID matchId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
-    match.setMatchId(matchId);
-
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    Round round = new Round();
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-
-    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    Hero hero =
-        Hero.builder()
-            .id(1)
-            .name("H")
-            .slug("h")
-            .powerstats(Hero.PowerStats.builder().build())
-            .role("F")
-            .build();
-    when(matchUseCase.getBattleTeam(any(), any(), anyInt())).thenReturn(List.of(hero));
-
-    SimulationResult simResult = new SimulationResult(null, 10, List.of());
-    when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
-        .thenReturn(simResult);
-
-    adminUseCase.runAllBattles(1, sessionId);
-
-    MatchResult resultJson = Objects.requireNonNull(match.getResultJson());
-    assertThat(resultJson.winner()).isEqualTo("DRAW");
-  }
-
-  @Test
-  void createRound_shouldThrowException_whenSessionInactive() {
-    UUID sessionId = UUID.randomUUID();
-    when(sessionRepository.findById(sessionId))
-        .thenReturn(Optional.of(SessionMother.anInactiveSession(sessionId)));
-    assertThatThrownBy(() -> adminUseCase.createRound(sessionId, mock(RoundSpec.class)))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("not active");
-  }
-
-  @Test
-  void runAllBattles_shouldInferSessionFromPendingMatches_whenSessionIdIsNull() {
-    UUID sessionId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    // Should find sessionId from match
-
-    Round round = new Round();
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-
-    adminUseCase.runAllBattles(1, null);
-
-    verify(roundRepository).findBySessionIdAndRoundNo(sessionId, 1);
-  }
-
-  @Test
-  void runAllBattles_shouldThrowException_whenRoundNotFound() {
-    UUID sessionId = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.empty());
-
-    assertThatThrownBy(() -> adminUseCase.runAllBattles(1, sessionId))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Round not found");
-  }
-
-  @Test
-  void runAllBattles_shouldHandleException_whenHeroNotFound() {
-    UUID sessionId = UUID.randomUUID();
-    UUID teamA = UUID.randomUUID();
-    UUID teamB = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-
-    Round round = new Round();
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-
-    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
-        .thenThrow(new IllegalArgumentException("Hero not found"));
-
-    // Should be swallowed by the loop catch block and return 0 success
-    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
-    assertThat(result).containsEntry("successCount", 0);
-  }
-
-  @Test
-  void createRound_shouldCloseExistingOpenRounds_whenNewRoundCreated() {
-    UUID sessionId = UUID.randomUUID();
-    RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
-    when(roundRepository.findMaxRoundNo(sessionId)).thenReturn(Optional.of(1));
-    when(sessionRepository.findById(sessionId))
-        .thenReturn(Optional.of(SessionMother.anActiveSession(sessionId)));
-
-    Round openRound = new Round();
-    openRound.setRoundNo(1);
-    openRound.setSessionId(sessionId);
-    openRound.setStatus(RoundStatus.OPEN);
-
-    Round alreadyClosedRound = new Round();
-    alreadyClosedRound.setRoundNo(0);
-    alreadyClosedRound.setSessionId(sessionId);
-    alreadyClosedRound.setStatus(RoundStatus.CLOSED);
-
-    when(roundRepository.findBySessionId(sessionId))
-        .thenReturn(List.of(openRound, alreadyClosedRound));
-
-    Integer roundNo = adminUseCase.createRound(sessionId, spec);
-
-    assertThat(roundNo).isEqualTo(2);
-    assertThat(openRound.getStatus()).isEqualTo(RoundStatus.CLOSED);
-    assertThat(alreadyClosedRound.getStatus()).isEqualTo(RoundStatus.CLOSED);
-    verify(roundRepository).save(openRound);
-    verify(roundRepository, never()).save(alreadyClosedRound);
-  }
-
-  @Test
-  void runAllBattles_shouldNotCloseRound_whenRoundHasNoMatches() {
-    UUID sessionId = UUID.randomUUID();
-    when(matchRepository.findAll()).thenReturn(List.of());
-    Round round = new Round();
-    round.setRoundNo(1);
-    round.setSessionId(sessionId);
-    round.setStatus(RoundStatus.OPEN);
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of());
-    when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of());
-
-    Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
-
-    assertThat(result).containsEntry("total", 0);
-    assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
-    verify(roundRepository, never()).save(round);
-  }
-
-  @Test
-  void runAllBattles_shouldNotCloseRound_whenRemainingPendingMatchesExist() {
-    UUID sessionId = UUID.randomUUID();
-    UUID teamA = UUID.randomUUID();
-    UUID teamB = UUID.randomUUID();
-    Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
-    when(matchRepository.findAll()).thenReturn(List.of(match));
-
-    Round round = new Round();
-    round.setRoundNo(1);
-    round.setSessionId(sessionId);
-    round.setStatus(RoundStatus.OPEN);
-    round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
-    when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.of(round));
-
-    when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of(match));
-    when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of(match));
-
-    Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
-    when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.of(sub));
-    when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
-        .thenThrow(new IllegalArgumentException("Hero not found"));
-
-    adminUseCase.runAllBattles(1, sessionId);
-
-    assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
-    verify(roundRepository, never()).save(round);
-  }
+    private SessionRepositoryPort sessionRepository;
+    private RoundRepositoryPort roundRepository;
+    private MatchUseCase matchUseCase;
+    private MatchRepositoryPort matchRepository;
+    private SubmissionRepositoryPort submissionRepository;
+    private MatchEventRepositoryPort matchEventRepository;
+    private BattleEngineUseCase battleEngineUseCase;
+    private FatigueUseCase fatigueUseCase;
+    private TeamRepositoryPort teamRepository;
+    private HeroUsageRepositoryPort heroUsageRepository;
+    private SessionUseCase sessionUseCase;
+    private EliminationRepositoryPort eliminationRepository;
+    private AdminUseCase adminUseCase;
+
+    /** Creates the administrative use case with isolated service and repository mocks. */
+    @BeforeEach
+    void setUp() {
+        sessionRepository = mock(SessionRepositoryPort.class);
+        roundRepository = mock(RoundRepositoryPort.class);
+        matchUseCase = mock(MatchUseCase.class);
+        matchRepository = mock(MatchRepositoryPort.class);
+        submissionRepository = mock(SubmissionRepositoryPort.class);
+        matchEventRepository = mock(MatchEventRepositoryPort.class);
+        battleEngineUseCase = mock(BattleEngineUseCase.class);
+        fatigueUseCase = mock(FatigueUseCase.class);
+        teamRepository = mock(TeamRepositoryPort.class);
+        heroUsageRepository = mock(HeroUsageRepositoryPort.class);
+        sessionUseCase = mock(SessionUseCase.class);
+        eliminationRepository = mock(EliminationRepositoryPort.class);
+
+        adminUseCase =
+                new AdminUseCase(
+                        sessionRepository,
+                        sessionUseCase,
+                        roundRepository,
+                        matchUseCase,
+                        matchRepository,
+                        submissionRepository,
+                        matchEventRepository,
+                        battleEngineUseCase,
+                        fatigueUseCase,
+                        teamRepository,
+                        heroUsageRepository,
+                        eliminationRepository
+                );
+    }
+
+    /** Verifies that database reset deletes all tournament data in dependency order. */
+    @Test
+    void resetDatabase_shouldDeleteAllDataInCorrectOrder() {
+        // When
+        adminUseCase.resetDatabase();
+
+        // Then
+        InOrder inOrder =
+                inOrder(
+                        eliminationRepository,
+                        matchEventRepository,
+                        matchRepository,
+                        heroUsageRepository,
+                        submissionRepository,
+                        roundRepository,
+                        teamRepository,
+                        sessionRepository
+                );
+
+        inOrder.verify(eliminationRepository).deleteAll();
+        inOrder.verify(matchEventRepository).deleteAll();
+        inOrder.verify(matchRepository).deleteAll();
+        inOrder.verify(heroUsageRepository).deleteAll();
+        inOrder.verify(submissionRepository).deleteAll();
+        inOrder.verify(roundRepository).deleteAll();
+        inOrder.verify(teamRepository).deleteAll();
+        inOrder.verify(sessionRepository).deleteAll();
+    }
+
+    @Test
+    void startSession_shouldSaveNewSession() {
+        UUID sessionId = UUID.randomUUID();
+        Session session = SessionMother.anActiveSession(sessionId);
+        when(sessionUseCase.startSession(sessionId)).thenReturn(session);
+
+        UUID result = adminUseCase.startSession(sessionId);
+
+        assertThat(result).isEqualTo(sessionId);
+        verify(sessionUseCase).startSession(sessionId);
+    }
+
+    @Test
+    @SuppressWarnings("NullAway")
+    void startSession_shouldGenerateIdWhenNull() {
+        Session session = SessionMother.anActiveSession();
+        when(sessionUseCase.startSession(null)).thenReturn(session);
+
+        UUID result = adminUseCase.startSession(null);
+
+        assertThat(result).isEqualTo(session.getSessionId());
+        verify(sessionUseCase).startSession(null);
+    }
+
+    @Test
+    void listSessions_shouldReturnAllSessions() {
+        Session session = SessionMother.anActiveSession();
+        when(sessionRepository.findAll()).thenReturn(List.of(session));
+
+        List<Session> result = adminUseCase.listSessions();
+
+        assertThat(result).containsExactly(session);
+        verify(sessionRepository).findAll();
+    }
+
+    @Test
+    void createRound_shouldSaveNewRoundWithCalculatedNumber() {
+        UUID sessionId = UUID.randomUUID();
+        RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
+        when(roundRepository.findMaxRoundNo(sessionId)).thenReturn(Optional.of(1));
+        when(sessionRepository.findById(sessionId))
+                .thenReturn(Optional.of(SessionMother.anActiveSession(sessionId)));
+
+        Integer roundId = adminUseCase.createRound(sessionId, spec);
+        assertThat(roundId).isEqualTo(2);
+
+        ArgumentCaptor<Round> captor = ArgumentCaptor.forClass(Round.class);
+        verify(roundRepository).save(captor.capture());
+        assertThat(captor.getValue().getRoundNo()).isEqualTo(2);
+        assertThat(captor.getValue().getSeed()).isNotNull();
+    }
+
+    @Test
+    void createRound_shouldThrowException_whenSessionNotFound() {
+        UUID sessionId = UUID.randomUUID();
+        when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> adminUseCase.createRound(sessionId, mock(RoundSpec.class)))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void autoMatch_shouldDelegateToMatchUseCase() {
+        adminUseCase.autoMatch(UUID.randomUUID(), 1);
+        verify(matchUseCase).autoMatch(any(), anyInt());
+    }
+
+    @Test
+    void createMatch_shouldDelegateToMatchUseCase() {
+        adminUseCase.createMatch(UUID.randomUUID(), UUID.randomUUID(), 1, UUID.randomUUID());
+        verify(matchUseCase).createMatch(any(), any(), anyInt(), any());
+    }
+
+    @Test
+    void runMatch_shouldDelegateToMatchUseCase() {
+        adminUseCase.runMatch(UUID.randomUUID());
+        verify(matchUseCase).runMatch(any());
+    }
+
+    @Test
+    void runAllBattles_shouldReturnEmpty_whenNoSessionFound() {
+        Map<String, Object> result = adminUseCase.runAllBattles(1, null);
+        assertThat(result).containsEntry("total", 0);
+    }
+
+    /** Verifies that batch execution completes pending matches and records their hero usage. */
+    @Test
+    void runAllBattles_shouldExecutePendingMatches() {
+        UUID sessionId = UUID.randomUUID();
+        UUID teamA = UUID.randomUUID();
+        UUID teamB = UUID.randomUUID();
+        UUID matchId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+        match.setMatchId(matchId);
+
+        setupBattleSimulation(sessionId, teamA, teamB, teamA);
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+
+        Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+
+        verify(matchRepository).save(match);
+        assertThat(match.getStatus()).isEqualTo(MatchStatus.COMPLETED);
+        assertThat(result)
+                .containsEntry("total", 1)
+                .containsEntry("successCount", 1)
+                .containsKey("durationMs");
+
+        Long duration = (Long)result.get("durationMs");
+        assertThat(duration).isNotNull().isNotNegative();
+
+        @SuppressWarnings("unchecked")
+        List<UUID> matchIds = (List<UUID>)result.get("matchIds");
+        assertThat(matchIds).hasSize(1).contains(matchId);
+
+        verify(fatigueUseCase).recordUsage(Map.of(teamA, List.of(1), teamB, List.of(2)), 1);
+    }
+
+    /** Stubs a round, both squads, and a simulation with the requested winner or draw. */
+    private void setupBattleSimulation(
+            UUID sessionId,
+            UUID teamA,
+            UUID teamB,
+            @Nullable UUID winnerTeam
+    ) {
+        Round round = new Round();
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+
+        Submission subA = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+        Submission subB = SubmissionMother.aSubmission(teamB, 1, List.of(2));
+        when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1)).thenReturn(Optional.of(subA));
+        when(submissionRepository.findByTeamIdAndRoundNo(teamB, 1)).thenReturn(Optional.of(subB));
+
+        Hero heroA =
+                Hero.builder()
+                        .id(1)
+                        .name("A")
+                        .slug("a")
+                        .powerstats(Hero.PowerStats.builder().build())
+                        .role("F")
+                        .build();
+        Hero heroB =
+                Hero.builder()
+                        .id(2)
+                        .name("B")
+                        .slug("b")
+                        .powerstats(Hero.PowerStats.builder().build())
+                        .role("F")
+                        .build();
+        when(matchUseCase.getBattleTeam(eq(teamA), any(), anyInt())).thenReturn(List.of(heroA));
+        when(matchUseCase.getBattleTeam(eq(teamB), any(), anyInt())).thenReturn(List.of(heroB));
+
+        SimulationResult simResult = new SimulationResult(winnerTeam, 10, List.of());
+        when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
+                .thenReturn(simResult);
+    }
+
+    /** Verifies that batch execution keeps semifinal losers eligible for third place. */
+    @Test
+    void runAllBattles_shouldNotEliminateLoser_whenSemifinalMatch() {
+        UUID sessionId = UUID.randomUUID();
+        UUID teamA = UUID.randomUUID();
+        UUID teamB = UUID.randomUUID();
+        UUID matchId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+        match.setMatchId(matchId);
+        match.setMatchType(MatchType.KNOCKOUT);
+
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
+                .thenReturn(List.of(match, mock(Match.class)));
+        setupBattleSimulation(sessionId, teamA, teamB, teamA);
+
+        adminUseCase.runAllBattles(1, sessionId);
+
+        verify(eliminationRepository, times(0)).save(any(Elimination.class));
+    }
+
+    /** Verifies that batch execution records no elimination for a drawn match. */
+    @Test
+    void runAllBattles_shouldNotEliminate_whenMatchIsDraw() {
+        UUID sessionId = UUID.randomUUID();
+        UUID teamA = UUID.randomUUID();
+        UUID teamB = UUID.randomUUID();
+        UUID matchId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+        match.setMatchId(matchId);
+
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        setupBattleSimulation(sessionId, teamA, teamB, null);
+
+        adminUseCase.runAllBattles(1, sessionId);
+
+        verify(eliminationRepository, times(0)).save(any(Elimination.class));
+    }
+
+    @Test
+    void runAllBattles_shouldHandleMissingSubmissions() {
+        UUID sessionId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
+
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        Round round = new Round();
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+        when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(
+                Optional.empty()
+        );
+
+        Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+        assertThat(result).containsEntry("successCount", 0);
+    }
+
+    @Test
+    void runAllBattles_shouldHandleExceptionDuringSimulation() {
+        UUID sessionId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
+
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        // Internal Exception in the loop should be swallowed
+        Round round = new Round();
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(any(), anyInt())).thenReturn(
+                Optional.of(round)
+        );
+        when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt()))
+                .thenThrow(new RuntimeException("Sim Error"));
+
+        Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+        assertThat(result).containsEntry("successCount", 0);
+    }
+
+    @Test
+    void runAllBattles_shouldHandleDraw() {
+        UUID sessionId = UUID.randomUUID();
+        UUID teamA = UUID.randomUUID();
+        UUID teamB = UUID.randomUUID();
+        UUID matchId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+        match.setMatchId(matchId);
+
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        Round round = new Round();
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+
+        Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+        when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(
+                Optional.of(sub)
+        );
+        Hero hero =
+                Hero.builder()
+                        .id(1)
+                        .name("H")
+                        .slug("h")
+                        .powerstats(Hero.PowerStats.builder().build())
+                        .role("F")
+                        .build();
+        when(matchUseCase.getBattleTeam(any(), any(), anyInt())).thenReturn(List.of(hero));
+
+        SimulationResult simResult = new SimulationResult(null, 10, List.of());
+        when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
+                .thenReturn(simResult);
+
+        adminUseCase.runAllBattles(1, sessionId);
+
+        MatchResult resultJson = Objects.requireNonNull(match.getResultJson());
+        assertThat(resultJson.winner()).isEqualTo("DRAW");
+    }
+
+    @Test
+    void createRound_shouldThrowException_whenSessionInactive() {
+        UUID sessionId = UUID.randomUUID();
+        when(sessionRepository.findById(sessionId))
+                .thenReturn(Optional.of(SessionMother.anInactiveSession(sessionId)));
+        assertThatThrownBy(() -> adminUseCase.createRound(sessionId, mock(RoundSpec.class)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("not active");
+    }
+
+    @Test
+    void runAllBattles_shouldInferSessionFromPendingMatches_whenSessionIdIsNull() {
+        UUID sessionId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        // Should find sessionId from match
+
+        Round round = new Round();
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+
+        adminUseCase.runAllBattles(1, null);
+
+        verify(roundRepository).findBySessionIdAndRoundNo(sessionId, 1);
+    }
+
+    @Test
+    void runAllBattles_shouldThrowException_whenRoundNotFound() {
+        UUID sessionId = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, UUID.randomUUID(), UUID.randomUUID());
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> adminUseCase.runAllBattles(1, sessionId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Round not found");
+    }
+
+    @Test
+    void runAllBattles_shouldHandleException_whenHeroNotFound() {
+        UUID sessionId = UUID.randomUUID();
+        UUID teamA = UUID.randomUUID();
+        UUID teamB = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+
+        Round round = new Round();
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+
+        Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+        when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(
+                Optional.of(sub)
+        );
+        when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
+                .thenThrow(new IllegalArgumentException("Hero not found"));
+
+        // Should be swallowed by the loop catch block and return 0 success
+        Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+        assertThat(result).containsEntry("successCount", 0);
+    }
+
+    @Test
+    void createRound_shouldCloseExistingOpenRounds_whenNewRoundCreated() {
+        UUID sessionId = UUID.randomUUID();
+        RoundSpec spec = RoundSpecMother.aStandardRoundSpec();
+        when(roundRepository.findMaxRoundNo(sessionId)).thenReturn(Optional.of(1));
+        when(sessionRepository.findById(sessionId))
+                .thenReturn(Optional.of(SessionMother.anActiveSession(sessionId)));
+
+        Round openRound = new Round();
+        openRound.setRoundNo(1);
+        openRound.setSessionId(sessionId);
+        openRound.setStatus(RoundStatus.OPEN);
+
+        Round alreadyClosedRound = new Round();
+        alreadyClosedRound.setRoundNo(0);
+        alreadyClosedRound.setSessionId(sessionId);
+        alreadyClosedRound.setStatus(RoundStatus.CLOSED);
+
+        when(roundRepository.findBySessionId(sessionId))
+                .thenReturn(List.of(openRound, alreadyClosedRound));
+
+        Integer roundNo = adminUseCase.createRound(sessionId, spec);
+
+        assertThat(roundNo).isEqualTo(2);
+        assertThat(openRound.getStatus()).isEqualTo(RoundStatus.CLOSED);
+        assertThat(alreadyClosedRound.getStatus()).isEqualTo(RoundStatus.CLOSED);
+        verify(roundRepository).save(openRound);
+        verify(roundRepository, never()).save(alreadyClosedRound);
+    }
+
+    @Test
+    void runAllBattles_shouldNotCloseRound_whenRoundHasNoMatches() {
+        UUID sessionId = UUID.randomUUID();
+        when(matchRepository.findAll()).thenReturn(List.of());
+        Round round = new Round();
+        round.setRoundNo(1);
+        round.setSessionId(sessionId);
+        round.setStatus(RoundStatus.OPEN);
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+        when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of());
+        when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of());
+
+        Map<String, Object> result = adminUseCase.runAllBattles(1, sessionId);
+
+        assertThat(result).containsEntry("total", 0);
+        assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
+        verify(roundRepository, never()).save(round);
+    }
+
+    @Test
+    void runAllBattles_shouldNotCloseRound_whenRemainingPendingMatchesExist() {
+        UUID sessionId = UUID.randomUUID();
+        UUID teamA = UUID.randomUUID();
+        UUID teamB = UUID.randomUUID();
+        Match match = MatchMother.aPendingMatch(sessionId, 1, teamA, teamB);
+        when(matchRepository.findAll()).thenReturn(List.of(match));
+
+        Round round = new Round();
+        round.setRoundNo(1);
+        round.setSessionId(sessionId);
+        round.setStatus(RoundStatus.OPEN);
+        round.setSpecJson(RoundSpecMother.aStandardRoundSpec());
+        when(roundRepository.findBySessionIdAndRoundNo(sessionId, 1)).thenReturn(
+                Optional.of(round)
+        );
+
+        when(matchRepository.findByRoundNoAndSessionId(1, sessionId)).thenReturn(List.of(match));
+        when(matchRepository.findPendingMatches(1, sessionId)).thenReturn(List.of(match));
+
+        Submission sub = SubmissionMother.aSubmission(teamA, 1, List.of(1));
+        when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(
+                Optional.of(sub)
+        );
+        when(matchUseCase.getBattleTeam(any(), any(), anyInt()))
+                .thenThrow(new IllegalArgumentException("Hero not found"));
+
+        adminUseCase.runAllBattles(1, sessionId);
+
+        assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
+        verify(roundRepository, never()).save(round);
+    }
 }

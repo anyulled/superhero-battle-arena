@@ -53,15 +53,25 @@ async function start() {
   if (stopping) return;
   await mkdir('test-results', { recursive: true });
   if (stopping) return;
-  databaseStartup = execute('docker', [
-    'run', '--detach', '--rm',
-    '--label', 'org.barcelonajug.harness=browser',
-    '--publish', '127.0.0.1::5432',
-    '--env', 'POSTGRES_DB=arena_browser',
-    '--env', 'POSTGRES_USER=arena_browser',
-    '--env', `POSTGRES_PASSWORD=${databasePassword}`,
-    'postgres:16',
-  ]);
+  databaseStartup = execute(
+    'docker',
+    [
+      'run',
+      '--detach',
+      '--rm',
+      '--label',
+      'org.barcelonajug.harness=browser',
+      '--publish',
+      '127.0.0.1::5432',
+      '--env',
+      'POSTGRES_DB=arena_browser',
+      '--env',
+      'POSTGRES_USER=arena_browser',
+      '--env',
+      `POSTGRES_PASSWORD=${databasePassword}`,
+      'postgres:16',
+    ]
+  );
   const started = await databaseStartup;
   containerId = started.stdout.trim();
   if (stopping) return;
@@ -70,7 +80,20 @@ async function start() {
   let databaseReady = false;
   for (let attempt = 0; attempt < 60 && !stopping; attempt += 1) {
     try {
-      await execute('docker', ['exec', containerId, 'pg_isready', '-h', '127.0.0.1', '-U', 'arena_browser', '-d', 'arena_browser']);
+      await execute(
+        'docker',
+        [
+          'exec',
+          containerId,
+          'pg_isready',
+          '-h',
+          '127.0.0.1',
+          '-U',
+          'arena_browser',
+          '-d',
+          'arena_browser'
+        ]
+      );
       databaseReady = true;
       break;
     } catch {
@@ -83,20 +106,24 @@ async function start() {
   const inheritedEnvironment = Object.fromEntries(
     Object.entries(process.env).filter(([name]) => !name.startsWith('SPRING_')),
   );
-  application = spawn(java, ['-jar', jarPath], {
-    stdio: 'inherit',
-    env: {
-      ...inheritedEnvironment,
-      SPRING_PROFILES_ACTIVE: 'postgres',
-      SPRING_DOCKER_COMPOSE_ENABLED: 'false',
-      SPRING_DATASOURCE_URL: `jdbc:postgresql://127.0.0.1:${databasePort}/arena_browser`,
-      SPRING_DATASOURCE_USERNAME: 'arena_browser',
-      SPRING_DATASOURCE_PASSWORD: databasePassword,
-      ADMIN_PASSWORD: 'browser-test-password',
-      SERVER_PORT: port,
-      SERVER_ADDRESS: '127.0.0.1',
-    },
-  });
+  application = spawn(
+    java,
+    ['-jar', jarPath],
+    {
+      stdio: 'inherit',
+      env: {
+        ...inheritedEnvironment,
+        SPRING_PROFILES_ACTIVE: 'postgres',
+        SPRING_DOCKER_COMPOSE_ENABLED: 'false',
+        SPRING_DATASOURCE_URL: `jdbc:postgresql://127.0.0.1:${databasePort}/arena_browser`,
+        SPRING_DATASOURCE_USERNAME: 'arena_browser',
+        SPRING_DATASOURCE_PASSWORD: databasePassword,
+        ADMIN_PASSWORD: 'browser-test-password',
+        SERVER_PORT: port,
+        SERVER_ADDRESS: '127.0.0.1',
+      },
+    }
+  );
   application.on('error', error => {
     console.error('Browser application failed to start:', error.message);
     void shutdown(1);

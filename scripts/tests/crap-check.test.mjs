@@ -32,11 +32,11 @@ test('returns the threshold failure exit code', async () => {
   let output = '';
   let errors = '';
 
-  const exitCode = await run(
-    ['--report', reportPath],
-    { write: (value) => { output += value; } },
-    { write: (value) => { errors += value; } },
-  );
+  const exitCode = await run(['--report', reportPath], { write: (value) => {
+    output += value;
+  } }, { write: (value) => {
+    errors += value;
+  } },);
 
   await rm(directory, { recursive: true, force: true });
   assert.equal(exitCode, 2);
@@ -47,5 +47,7 @@ test('returns the threshold failure exit code', async () => {
 test('pre-push runs CRAP after Maven verification', async () => {
   const hook = await readFile(new URL('../../.githooks/pre-push', import.meta.url), 'utf8');
 
-  assert.ok(hook.indexOf('./mvnw clean verify -Ppostgres-tests') < hook.indexOf('npm run lint:crap'));
+  assert.ok(
+    hook.indexOf('./mvnw clean verify -Ppostgres-tests') < hook.indexOf('npm run lint:crap')
+  );
 });

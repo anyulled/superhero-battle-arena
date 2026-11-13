@@ -6,9 +6,13 @@ import java.util.UUID;
 
 /** Represents a team participated in the arena. */
 public record Team(
-    UUID teamId, UUID sessionId, String name, OffsetDateTime createdAt, List<String> members) {
-
-  /**
+        UUID teamId,
+        UUID sessionId,
+        String name,
+        OffsetDateTime createdAt,
+        List<String> members
+) {
+    /**
    * Constructs a new Team.
    *
    * @param teamId the team ID.
@@ -17,9 +21,9 @@ public record Team(
    * @param createdAt the creation timestamp.
    * @param members the list of members.
    */
-  public Team {
-    if (members == null || members.size() < 2) {
-      throw new IllegalArgumentException("A team must have at least two members.");
+    public Team {
+        if (members == null || members.size() < 2) {
+            throw new IllegalArgumentException("A team must have at least two members.");
+        }
     }
-  }
 }

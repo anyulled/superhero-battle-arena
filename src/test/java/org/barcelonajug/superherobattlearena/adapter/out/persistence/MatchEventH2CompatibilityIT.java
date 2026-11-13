@@ -25,70 +25,75 @@ import org.springframework.transaction.annotation.Transactional;
 @ActiveProfiles({"h2", "test"})
 @Transactional
 class MatchEventH2CompatibilityIT {
+    private static final Logger log = LoggerFactory.getLogger(MatchEventH2CompatibilityIT.class);
 
-  private static final Logger log = LoggerFactory.getLogger(MatchEventH2CompatibilityIT.class);
+    @Autowired private MatchEventRepositoryPort matchEventRepository;
+    @Autowired private DataSource dataSource;
 
-  @Autowired private MatchEventRepositoryPort matchEventRepository;
-  @Autowired private DataSource dataSource;
+    @BeforeEach
+    void requireH2Database() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            DatabaseMetaData metadata = connection.getMetaData();
 
-  @BeforeEach
-  void requireH2Database() throws SQLException {
-    try (Connection connection = dataSource.getConnection()) {
-      DatabaseMetaData metadata = connection.getMetaData();
+            String databaseProductName = metadata.getDatabaseProductName();
 
-      String databaseProductName = metadata.getDatabaseProductName();
-
-      assertThat(databaseProductName).isEqualTo("H2");
-    }
-  }
-
-  @Test
-  void preservesSequentiallySavedEvents() {
-    UUID matchId = UUID.randomUUID();
-    int eventCount = 1000;
-    List<MatchEvent> events = new ArrayList<>();
-
-    for (int i = 0; i < eventCount; i++) {
-      var eventJson = hit("Attacker", "Defender", "1", "2", 10, System.currentTimeMillis());
-      events.add(new MatchEvent(matchId, i + 1, eventJson));
+            assertThat(databaseProductName).isEqualTo("H2");
+        }
     }
 
-    long startTime = System.nanoTime();
+    @Test
+    void preservesSequentiallySavedEvents() {
+        UUID matchId = UUID.randomUUID();
+        int eventCount = 1000;
+        List<MatchEvent> events = new ArrayList<>();
 
-    for (MatchEvent event : events) {
-      matchEventRepository.save(event);
+        for (int i = 0; i < eventCount; i++) {
+            var eventJson = hit("Attacker", "Defender", "1", "2", 10, System.currentTimeMillis());
+            events.add(new MatchEvent(matchId, i + 1, eventJson));
+        }
+
+        long startTime = System.nanoTime();
+
+        for (MatchEvent event : events) {
+            matchEventRepository.save(event);
+        }
+
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1_000_000;
+
+        log.info(
+                "H2 compatibility timing - sequential save of {} events took {} ms",
+                eventCount,
+                duration
+        );
+
+        assertThat(matchEventRepository.findByMatchId(matchId)).hasSize(eventCount);
     }
 
-    long endTime = System.nanoTime();
-    long duration = (endTime - startTime) / 1_000_000;
+    @Test
+    void preservesBatchSavedEvents() {
+        UUID matchId = UUID.randomUUID();
+        int eventCount = 1000;
+        List<MatchEvent> events = new ArrayList<>();
 
-    log.info(
-        "H2 compatibility timing - sequential save of {} events took {} ms", eventCount, duration);
+        for (int i = 0; i < eventCount; i++) {
+            var eventJson = hit("Attacker", "Defender", "1", "2", 10, System.currentTimeMillis());
+            events.add(new MatchEvent(matchId, i + 1, eventJson));
+        }
 
-    assertThat(matchEventRepository.findByMatchId(matchId)).hasSize(eventCount);
-  }
+        long startTime = System.nanoTime();
 
-  @Test
-  void preservesBatchSavedEvents() {
-    UUID matchId = UUID.randomUUID();
-    int eventCount = 1000;
-    List<MatchEvent> events = new ArrayList<>();
+        matchEventRepository.saveAll(events);
 
-    for (int i = 0; i < eventCount; i++) {
-      var eventJson = hit("Attacker", "Defender", "1", "2", 10, System.currentTimeMillis());
-      events.add(new MatchEvent(matchId, i + 1, eventJson));
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1_000_000;
+
+        log.info(
+                "H2 compatibility timing - batch saveAll of {} events took {} ms",
+                eventCount,
+                duration
+        );
+
+        assertThat(matchEventRepository.findByMatchId(matchId)).hasSize(eventCount);
     }
-
-    long startTime = System.nanoTime();
-
-    matchEventRepository.saveAll(events);
-
-    long endTime = System.nanoTime();
-    long duration = (endTime - startTime) / 1_000_000;
-
-    log.info(
-        "H2 compatibility timing - batch saveAll of {} events took {} ms", eventCount, duration);
-
-    assertThat(matchEventRepository.findByMatchId(matchId)).hasSize(eventCount);
-  }
 }

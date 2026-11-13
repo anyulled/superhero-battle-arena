@@ -25,7 +25,10 @@ test('fails with instruction when target file exceeds 500 lines', t => {
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /exceeds 500 lines \(current: 501\)/);
-  assert.match(result.stderr, /Por favor, separa el fichero en varios más pequeños enlazados por categoría/);
+  assert.match(
+    result.stderr,
+    /Por favor, separa el fichero en varios más pequeños enlazados por categoría/
+  );
 });
 
 test('counts a final line without a newline when enforcing the 500-line limit', t => {
@@ -39,7 +42,10 @@ test('counts a final line without a newline when enforcing the 500-line limit', 
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /exceeds 500 lines \(current: 501\)/);
-  assert.match(result.stderr, /Por favor, separa el fichero en varios más pequeños enlazados por categoría/);
+  assert.match(
+    result.stderr,
+    /Por favor, separa el fichero en varios más pequeños enlazados por categoría/
+  );
 });
 
 test('fails if target file does not exist', () => {

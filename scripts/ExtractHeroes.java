@@ -8,16 +8,14 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.StreamSupport;
 
 /**
  * JBang script to extract hero IDs from the all-superheroes.json file.
  * Uses immutable, functional programming style.
- * 
+ *
  * Usage: jbang ExtractHeroes.java <json-file> <count>
  */
 class ExtractHeroes {
-
     private final String jsonFile;
     private final int count;
     private final ObjectMapper objectMapper;
@@ -55,10 +53,8 @@ class ExtractHeroes {
                     .collect(Collectors.joining(" "));
 
             System.out.println(output);
-
         } catch (Exception e) {
             System.err.println("Error extracting heroes: " + e.getMessage());
-            e.printStackTrace();
             System.exit(1);
         }
     }

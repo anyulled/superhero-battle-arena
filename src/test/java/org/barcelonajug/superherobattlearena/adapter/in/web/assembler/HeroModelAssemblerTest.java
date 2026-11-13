@@ -8,84 +8,85 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class HeroModelAssemblerTest {
+    private HeroModelAssembler assembler;
 
-  private HeroModelAssembler assembler;
+    @BeforeEach
+    void setUp() {
+        assembler = new HeroModelAssembler();
+    }
 
-  @BeforeEach
-  void setUp() {
-    assembler = new HeroModelAssembler();
-  }
+    @Test
+    void shouldConvertHeroToEntityModelWithLinks() {
+        Hero hero = createTestHero(1, "Batman", "batman");
 
-  @Test
-  void shouldConvertHeroToEntityModelWithLinks() {
-    Hero hero = createTestHero(1, "Batman", "batman");
+        var result = assembler.toModel(hero);
 
-    var result = assembler.toModel(hero);
+        assertThat(result.getContent()).isNotNull();
+        assertThat(result.getContent().name()).isEqualTo("Batman");
+        assertThat(result.getLinks()).hasSize(2);
+        assertThat(result.getLink("self")).isPresent();
+        assertThat(result.getLink("heroes")).isPresent();
+    }
 
-    assertThat(result.getContent()).isNotNull();
-    assertThat(result.getContent().name()).isEqualTo("Batman");
-    assertThat(result.getLinks()).hasSize(2);
-    assertThat(result.getLink("self")).isPresent();
-    assertThat(result.getLink("heroes")).isPresent();
-  }
+    @Test
+    void shouldGenerateCorrectSelfLink() {
+        Hero hero = createTestHero(42, "Spider-Man", "spider-man");
 
-  @Test
-  void shouldGenerateCorrectSelfLink() {
-    Hero hero = createTestHero(42, "Spider-Man", "spider-man");
+        var result = assembler.toModel(hero);
 
-    var result = assembler.toModel(hero);
+        assertThat(result.getLink("self")).isPresent();
+        assertThat(result.getLink("self").get().getHref()).contains("/api/heroes/42");
+    }
 
-    assertThat(result.getLink("self")).isPresent();
-    assertThat(result.getLink("self").get().getHref()).contains("/api/heroes/42");
-  }
+    @Test
+    void shouldHandleHeroWithNullImages() {
+        Hero hero =
+                Hero.builder()
+                        .id(1)
+                        .name("Test")
+                        .slug("test")
+                        .role("Fighter")
+                        .cost(10)
+                        .alignment("good")
+                        .powerstats(
+                                Hero.PowerStats.builder()
+                                        .durability(50)
+                                        .strength(50)
+                                        .power(50)
+                                        .speed(50)
+                                        .intelligence(50)
+                                        .combat(50)
+                                        .build()
+                        )
+                        .tags(List.of())
+                        .build();
 
-  @Test
-  void shouldHandleHeroWithNullImages() {
-    Hero hero =
-        Hero.builder()
-            .id(1)
-            .name("Test")
-            .slug("test")
-            .role("Fighter")
-            .cost(10)
-            .alignment("good")
-            .powerstats(
-                Hero.PowerStats.builder()
-                    .durability(50)
-                    .strength(50)
-                    .power(50)
-                    .speed(50)
-                    .intelligence(50)
-                    .combat(50)
-                    .build())
-            .tags(List.of())
-            .build();
+        var result = assembler.toModel(hero);
 
-    var result = assembler.toModel(hero);
+        assertThat(result.getContent()).isNotNull();
+        assertThat(result.getContent().images()).isNull();
+    }
 
-    assertThat(result.getContent()).isNotNull();
-    assertThat(result.getContent().images()).isNull();
-  }
-
-  private Hero createTestHero(int id, String name, String slug) {
-    return Hero.builder()
-        .id(id)
-        .name(name)
-        .slug(slug)
-        .role("Fighter")
-        .cost(10)
-        .alignment("good")
-        .powerstats(
-            Hero.PowerStats.builder()
-                .durability(50)
-                .strength(50)
-                .power(50)
-                .speed(50)
-                .intelligence(50)
-                .combat(50)
-                .build())
-        .tags(List.of())
-        .images(Hero.Images.builder().build())
-        .build();
-  }
+    private Hero createTestHero(int id, String name, String slug) {
+        return Hero.builder()
+                .id(id)
+                .name(name)
+                .slug(slug)
+                .role("Fighter")
+                .cost(10)
+                .alignment("good")
+                .powerstats(
+                        Hero.PowerStats.builder()
+                                .durability(50)
+                                .strength(50)
+                                .power(50)
+                                .speed(50)
+                                .intelligence(50)
+                                .combat(50)
+                                .build()
+                )
+                .tags(List.of())
+                .images(Hero.Images.builder().build())
+                .build();
+    }
 }
