@@ -19,86 +19,75 @@ import org.springframework.beans.factory.annotation.Autowired;
  * constraints, and data persistence using Testcontainers.
  */
 class MatchRepositoryIntegrationIT extends AbstractPostgresTestContainerConfig {
-    @Autowired private SpringDataMatchRepository matchRepository;
+  @Autowired private SpringDataMatchRepository matchRepository;
 
-    @Test
-    void shouldSaveAndRetrieveMatch() {
-        // Arrange
-        UUID matchId = UUID.randomUUID();
-        UUID sessionId = UUID.randomUUID();
-        MatchEntity match = pendingMatch(matchId, sessionId, 1);
+  @Test
+  void shouldSaveAndRetrieveMatch() {
+    // Arrange
+    UUID matchId = UUID.randomUUID();
+    UUID sessionId = UUID.randomUUID();
+    MatchEntity match = pendingMatch(matchId, sessionId, 1);
 
-        // Act
-        matchRepository.save(match);
-        var found = matchRepository.findById(matchId);
+    // Act
+    matchRepository.save(match);
+    var found = matchRepository.findById(matchId);
 
-        // Assert
-        assertThat(found).isPresent();
-        assertThat(found.get().getStatus()).isEqualTo(MatchStatus.PENDING);
-        assertThat(found.get().getSessionId()).isEqualTo(sessionId);
+    // Assert
+    assertThat(found).isPresent();
+    assertThat(found.get().getStatus()).isEqualTo(MatchStatus.PENDING);
+    assertThat(found.get().getSessionId()).isEqualTo(sessionId);
+  }
+
+  @Test
+  void shouldFindPendingMatchesByRoundAndSession() {
+    // Arrange
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 1;
+
+    // Create 5 pending matches for target session/round
+    for (int i = 0; i < 5; i++) {
+      matchRepository.save(pendingMatch(sessionId, roundNo));
     }
 
-    @Test
-    void shouldFindPendingMatchesByRoundAndSession() {
-        // Arrange
-        UUID sessionId = UUID.randomUUID();
-        int roundNo = 1;
-
-        // Create 5 pending matches for target session/round
-        for (int i = 0; i < 5; i++) {
-            matchRepository.save(pendingMatch(sessionId, roundNo));
-        }
-
-        // Create noise data (different session)
-        for (int i = 0; i < 3; i++) {
-            matchRepository.save(pendingMatch(UUID.randomUUID(), roundNo));
-        }
-
-        // Act
-        List<MatchEntity> pending =
-                matchRepository.findByRoundNoAndStatusAndSessionId(
-                        roundNo,
-                        MatchStatus.PENDING,
-                        sessionId
-                );
-
-        // Assert
-        assertThat(pending)
-                .hasSize(5)
-                .allMatch(m -> Objects.requireNonNull(m.getSessionId()).equals(sessionId));
+    // Create noise data (different session)
+    for (int i = 0; i < 3; i++) {
+      matchRepository.save(pendingMatch(UUID.randomUUID(), roundNo));
     }
 
-    @Test
-    void shouldFilterByStatus() {
-        // Arrange
-        UUID sessionId = UUID.randomUUID();
-        int roundNo = 1;
+    // Act
+    List<MatchEntity> pending =
+        matchRepository.findByRoundNoAndStatusAndSessionId(roundNo, MatchStatus.PENDING, sessionId);
 
-        // Create 2 pending and 3 completed matches
-        for (int i = 0; i < 2; i++) {
-            matchRepository.save(pendingMatch(sessionId, roundNo));
-        }
+    // Assert
+    assertThat(pending)
+        .hasSize(5)
+        .allMatch(m -> Objects.requireNonNull(m.getSessionId()).equals(sessionId));
+  }
 
-        for (int i = 0; i < 3; i++) {
-            matchRepository.save(completedMatch(sessionId, roundNo, UUID.randomUUID()));
-        }
+  @Test
+  void shouldFilterByStatus() {
+    // Arrange
+    UUID sessionId = UUID.randomUUID();
+    int roundNo = 1;
 
-        // Act
-        List<MatchEntity> pending =
-                matchRepository.findByRoundNoAndStatusAndSessionId(
-                        roundNo,
-                        MatchStatus.PENDING,
-                        sessionId
-                );
-        List<MatchEntity> completed =
-                matchRepository.findByRoundNoAndStatusAndSessionId(
-                        roundNo,
-                        MatchStatus.COMPLETED,
-                        sessionId
-                );
-
-        // Assert
-        assertThat(pending).hasSize(2);
-        assertThat(completed).hasSize(3);
+    // Create 2 pending and 3 completed matches
+    for (int i = 0; i < 2; i++) {
+      matchRepository.save(pendingMatch(sessionId, roundNo));
     }
+
+    for (int i = 0; i < 3; i++) {
+      matchRepository.save(completedMatch(sessionId, roundNo, UUID.randomUUID()));
+    }
+
+    // Act
+    List<MatchEntity> pending =
+        matchRepository.findByRoundNoAndStatusAndSessionId(roundNo, MatchStatus.PENDING, sessionId);
+    List<MatchEntity> completed =
+        matchRepository.findByRoundNoAndStatusAndSessionId(
+            roundNo, MatchStatus.COMPLETED, sessionId);
+
+    // Assert
+    assertThat(pending).hasSize(2);
+    assertThat(completed).hasSize(3);
+  }
 }

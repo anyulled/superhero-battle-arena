@@ -14,38 +14,37 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 @AnalyzeClasses(
-        packages = "org.barcelonajug.superherobattlearena",
-        importOptions = ImportOption.DoNotIncludeTests.class
-)
+    packages = "org.barcelonajug.superherobattlearena",
+    importOptions = ImportOption.DoNotIncludeTests.class)
 public class UnsafeCodePolicyTest {
-    /** No native methods allowed */
-    @ArchTest
-    static final ArchRule no_native_methods =
-            methods()
-                    .should()
-                    .notHaveModifier(JavaModifier.NATIVE)
-                    .as("Native methods are strictly forbidden.");
+  /** No native methods allowed */
+  @ArchTest
+  static final ArchRule no_native_methods =
+      methods()
+          .should()
+          .notHaveModifier(JavaModifier.NATIVE)
+          .as("Native methods are strictly forbidden.");
 
-    /** No usage of sun.misc.Unsafe */
-    @ArchTest
-    static final ArchRule no_usage_of_sun_misc_unsafe =
-            noClasses()
-                    .should()
-                    .dependOnClassesThat()
-                    .resideInAnyPackage("sun.misc..")
-                    .as("Using sun.misc.Unsafe is strictly forbidden.");
+  /** No usage of sun.misc.Unsafe */
+  @ArchTest
+  static final ArchRule no_usage_of_sun_misc_unsafe =
+      noClasses()
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("sun.misc..")
+          .as("Using sun.misc.Unsafe is strictly forbidden.");
 
-    /** No bypassing visibility with reflection */
-    @ArchTest
-    static final ArchRule no_bypassing_visibility_with_reflection =
-            noClasses()
-                    .should()
-                    .callMethod(AccessibleObject.class, "setAccessible", boolean.class)
-                    .orShould()
-                    .callMethod(Field.class, "setAccessible", boolean.class)
-                    .orShould()
-                    .callMethod(Method.class, "setAccessible", boolean.class)
-                    .orShould()
-                    .callMethod(Constructor.class, "setAccessible", boolean.class)
-                    .as("Bypassing visibility with setAccessible(true) is strictly forbidden.");
+  /** No bypassing visibility with reflection */
+  @ArchTest
+  static final ArchRule no_bypassing_visibility_with_reflection =
+      noClasses()
+          .should()
+          .callMethod(AccessibleObject.class, "setAccessible", boolean.class)
+          .orShould()
+          .callMethod(Field.class, "setAccessible", boolean.class)
+          .orShould()
+          .callMethod(Method.class, "setAccessible", boolean.class)
+          .orShould()
+          .callMethod(Constructor.class, "setAccessible", boolean.class)
+          .as("Bypassing visibility with setAccessible(true) is strictly forbidden.");
 }

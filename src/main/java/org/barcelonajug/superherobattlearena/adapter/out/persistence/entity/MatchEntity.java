@@ -17,126 +17,126 @@ import org.jspecify.annotations.Nullable;
 @Entity
 @Table(name = "matches")
 public class MatchEntity {
-    @Id
-    @Column(name = "match_id")
-    @SuppressWarnings("NullAway.Init")
-    private UUID matchId;
+  @Id
+  @Column(name = "match_id")
+  @SuppressWarnings("NullAway.Init")
+  private UUID matchId;
 
-    @Column(name = "session_id")
-    private @Nullable UUID sessionId;
+  @Column(name = "session_id")
+  private @Nullable UUID sessionId;
 
-    @Column(name = "round_no", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private Integer roundNo;
+  @Column(name = "round_no", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private Integer roundNo;
 
-    @Column(name = "team_a", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private UUID teamA;
+  @Column(name = "team_a", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private UUID teamA;
 
-    @Column(name = "team_b", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private UUID teamB;
+  @Column(name = "team_b", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private UUID teamB;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private MatchStatus status;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private MatchStatus status;
 
-    @Column(name = "winner_team")
-    private @Nullable UUID winnerTeam;
+  @Column(name = "winner_team")
+  private @Nullable UUID winnerTeam;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "result_json")
-    private @Nullable MatchResult resultJson;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "result_json")
+  private @Nullable MatchResult resultJson;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "match_type", nullable = false)
-    private MatchType matchType = MatchType.KNOCKOUT;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "match_type", nullable = false)
+  private MatchType matchType = MatchType.KNOCKOUT;
 
-    @Column(name = "bracket_position")
-    private @Nullable Integer bracketPosition;
+  @Column(name = "bracket_position")
+  private @Nullable Integer bracketPosition;
 
-    public UUID getMatchId() {
-        return matchId;
-    }
+  public UUID getMatchId() {
+    return matchId;
+  }
 
-    public void setMatchId(UUID matchId) {
-        this.matchId = matchId;
-    }
+  public void setMatchId(UUID matchId) {
+    this.matchId = matchId;
+  }
 
-    public @Nullable UUID getSessionId() {
-        return sessionId;
-    }
+  public @Nullable UUID getSessionId() {
+    return sessionId;
+  }
 
-    public void setSessionId(@Nullable UUID sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(@Nullable UUID sessionId) {
+    this.sessionId = sessionId;
+  }
 
-    public Integer getRoundNo() {
-        return roundNo;
-    }
+  public Integer getRoundNo() {
+    return roundNo;
+  }
 
-    public void setRoundNo(Integer roundNo) {
-        this.roundNo = roundNo;
-    }
+  public void setRoundNo(Integer roundNo) {
+    this.roundNo = roundNo;
+  }
 
-    public UUID getTeamA() {
-        return teamA;
-    }
+  public UUID getTeamA() {
+    return teamA;
+  }
 
-    public void setTeamA(UUID teamA) {
-        this.teamA = teamA;
-    }
+  public void setTeamA(UUID teamA) {
+    this.teamA = teamA;
+  }
 
-    public UUID getTeamB() {
-        return teamB;
-    }
+  public UUID getTeamB() {
+    return teamB;
+  }
 
-    public void setTeamB(UUID teamB) {
-        this.teamB = teamB;
-    }
+  public void setTeamB(UUID teamB) {
+    this.teamB = teamB;
+  }
 
-    public MatchStatus getStatus() {
-        return status;
-    }
+  public MatchStatus getStatus() {
+    return status;
+  }
 
-    public void setStatus(MatchStatus status) {
-        this.status = status;
-    }
+  public void setStatus(MatchStatus status) {
+    this.status = status;
+  }
 
-    public @Nullable UUID getWinnerTeam() {
-        return winnerTeam;
-    }
+  public @Nullable UUID getWinnerTeam() {
+    return winnerTeam;
+  }
 
-    public void setWinnerTeam(@Nullable UUID winnerTeam) {
-        this.winnerTeam = winnerTeam;
-    }
+  public void setWinnerTeam(@Nullable UUID winnerTeam) {
+    this.winnerTeam = winnerTeam;
+  }
 
-    public @Nullable MatchResult getResultJson() {
-        return resultJson;
-    }
+  public @Nullable MatchResult getResultJson() {
+    return resultJson;
+  }
 
-    public void setResultJson(@Nullable MatchResult resultJson) {
-        this.resultJson = resultJson;
-    }
+  public void setResultJson(@Nullable MatchResult resultJson) {
+    this.resultJson = resultJson;
+  }
 
-    /** Returns the tournament stage represented by this match. */
-    public MatchType getMatchType() {
-        return matchType;
-    }
+  /** Returns the tournament stage represented by this match. */
+  public MatchType getMatchType() {
+    return matchType;
+  }
 
-    /** Sets the tournament stage represented by this match. */
-    public void setMatchType(MatchType matchType) {
-        this.matchType = matchType;
-    }
+  /** Sets the tournament stage represented by this match. */
+  public void setMatchType(MatchType matchType) {
+    this.matchType = matchType;
+  }
 
-    /** Returns the bracket position, or null when no position has been assigned. */
-    public @Nullable Integer getBracketPosition() {
-        return bracketPosition;
-    }
+  /** Returns the bracket position, or null when no position has been assigned. */
+  public @Nullable Integer getBracketPosition() {
+    return bracketPosition;
+  }
 
-    /** Sets the bracket position, allowing null for matches without an assigned position. */
-    public void setBracketPosition(@Nullable Integer bracketPosition) {
-        this.bracketPosition = bracketPosition;
-    }
+  /** Sets the bracket position, allowing null for matches without an assigned position. */
+  public void setBracketPosition(@Nullable Integer bracketPosition) {
+    this.bracketPosition = bracketPosition;
+  }
 }

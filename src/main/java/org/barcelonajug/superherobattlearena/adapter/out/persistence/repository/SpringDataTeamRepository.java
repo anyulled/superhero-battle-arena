@@ -9,9 +9,9 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataTeamRepository extends JpaRepository<TeamEntity, UUID> {
-    boolean existsByName(String name);
+  boolean existsByName(String name);
 
-    Optional<TeamEntity> findByName(String name);
+  Optional<TeamEntity> findByName(String name);
 
-    List<TeamEntity> findBySessionId(UUID sessionId);
+  List<TeamEntity> findBySessionId(UUID sessionId);
 }

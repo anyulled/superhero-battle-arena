@@ -1198,7 +1198,7 @@ class InitFixture implements Callable<Integer> {
         r1Spec.put("description", "Stage 1: Initial Round (Classified Teams)");
         r1Spec.put("teamSize", 5);
         r1Spec.put("budgetCap", 1200);
-        r1Spec.put("mapType", "ARENA_1");
+        r1Spec.put("mapType", DEFAULT_MAP_TYPE);
         r1Spec.put("allowedRoles", List.of());
         r1Spec.put("allowedAlignments", List.of());
 
@@ -1292,7 +1292,7 @@ class InitFixture implements Callable<Integer> {
         specPayload.put("maxSameRole", Map.of());
         specPayload.put("bannedTags", List.of());
         specPayload.put("tagModifiers", Map.of());
-        specPayload.put("mapType", spec.getOrDefault("mapType", "ARENA_1"));
+        specPayload.put("mapType", spec.getOrDefault("mapType", DEFAULT_MAP_TYPE));
         specPayload.put("allowedRoles", spec.getOrDefault("allowedRoles", List.of()));
         specPayload.put("allowedGenders", List.of());
         specPayload.put("allowedRaces", List.of());

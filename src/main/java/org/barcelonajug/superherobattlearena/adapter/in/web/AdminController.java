@@ -32,199 +32,156 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin Management", description = "Privileged endpoints for tournament administration")
 public class AdminController {
-    private final AdminUseCase adminUseCase;
-    private final RoundConstraintOptionsUseCase roundConstraintOptionsUseCase;
+  private final AdminUseCase adminUseCase;
+  private final RoundConstraintOptionsUseCase roundConstraintOptionsUseCase;
 
-    public AdminController(
-            AdminUseCase adminUseCase,
-            RoundConstraintOptionsUseCase roundConstraintOptionsUseCase
-    ) {
-        this.adminUseCase = adminUseCase;
-        this.roundConstraintOptionsUseCase = roundConstraintOptionsUseCase;
-    }
+  public AdminController(
+      AdminUseCase adminUseCase, RoundConstraintOptionsUseCase roundConstraintOptionsUseCase) {
+    this.adminUseCase = adminUseCase;
+    this.roundConstraintOptionsUseCase = roundConstraintOptionsUseCase;
+  }
 
-    /** Start a new tournament session */
-    @Operation(
-            summary = "Start a new session",
-            description = "Initializes a new tournament session, optionally with a predefined UUID."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Session started",
-            content = @Content(schema = @Schema(implementation = UUID.class))
-    )
-    @PostMapping("/sessions/start")
-    public ResponseEntity<UUID> startSession(
-            @Parameter(description = "Optional custom session ID") @RequestParam(
-                    required = false
-            ) UUID sessionId
-    ) {
-        return ResponseEntity.ok(adminUseCase.startSession(sessionId));
-    }
+  /** Start a new tournament session */
+  @Operation(
+      summary = "Start a new session",
+      description = "Initializes a new tournament session, optionally with a predefined UUID.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Session started",
+      content = @Content(schema = @Schema(implementation = UUID.class)))
+  @PostMapping("/sessions/start")
+  public ResponseEntity<UUID> startSession(
+      @Parameter(description = "Optional custom session ID") @RequestParam(required = false)
+          UUID sessionId) {
+    return ResponseEntity.ok(adminUseCase.startSession(sessionId));
+  }
 
-    /** List all tournament sessions */
-    @Operation(
-            summary = "List all sessions",
-            description = "Retrieves a list of all current and past tournament sessions."
-    )
-    @ApiResponse(responseCode = "200", description = "List of sessions retrieved")
-    @GetMapping("/sessions")
-    public ResponseEntity<List<SessionDto>> listSessions() {
-        return ResponseEntity.ok(
-                adminUseCase.listSessions().stream().map(SessionDto::from).toList()
-        );
-    }
+  /** List all tournament sessions */
+  @Operation(
+      summary = "List all sessions",
+      description = "Retrieves a list of all current and past tournament sessions.")
+  @ApiResponse(responseCode = "200", description = "List of sessions retrieved")
+  @GetMapping("/sessions")
+  public ResponseEntity<List<SessionDto>> listSessions() {
+    return ResponseEntity.ok(adminUseCase.listSessions().stream().map(SessionDto::from).toList());
+  }
 
-    @Operation(
-            summary = "List round constraint options",
-            description = "Retrieves the available superhero values for round constraint combo boxes."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Round constraint options retrieved",
-            content = @Content(schema = @Schema(implementation = RoundConstraintOptionsDto.class))
-    )
-    @GetMapping("/round-constraints/options")
-    public ResponseEntity<RoundConstraintOptionsDto> roundConstraintOptions() {
-        return ResponseEntity.ok(
-                RoundConstraintOptionsDto.from(roundConstraintOptionsUseCase.getOptions())
-        );
-    }
+  @Operation(
+      summary = "List round constraint options",
+      description = "Retrieves the available superhero values for round constraint combo boxes.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Round constraint options retrieved",
+      content = @Content(schema = @Schema(implementation = RoundConstraintOptionsDto.class)))
+  @GetMapping("/round-constraints/options")
+  public ResponseEntity<RoundConstraintOptionsDto> roundConstraintOptions() {
+    return ResponseEntity.ok(
+        RoundConstraintOptionsDto.from(roundConstraintOptionsUseCase.getOptions()));
+  }
 
-    /** Create a new round with custom constraints */
-    @Operation(
-            summary = "Create a custom round",
-            description = "Creates a new round with specified constraints and specifications."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Round created",
-            content = @Content(schema = @Schema(implementation = Integer.class))
-    )
-    @PostMapping("/rounds/create")
-    public ResponseEntity<Integer> createRound(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Details for the new round",
-                    required = true
-            ) @RequestBody CreateRoundRequest request
-    ) {
-        return ResponseEntity.ok(
-                adminUseCase.createRound(request.sessionId(), request.spec().toDomain())
-        );
-    }
+  /** Create a new round with custom constraints */
+  @Operation(
+      summary = "Create a custom round",
+      description = "Creates a new round with specified constraints and specifications.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Round created",
+      content = @Content(schema = @Schema(implementation = Integer.class)))
+  @PostMapping("/rounds/create")
+  public ResponseEntity<Integer> createRound(
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(
+              description = "Details for the new round",
+              required = true)
+          @RequestBody
+          CreateRoundRequest request) {
+    return ResponseEntity.ok(
+        adminUseCase.createRound(request.sessionId(), request.spec().toDomain()));
+  }
 
-    /** Automatically match teams for a round */
-    @Operation(
-            summary = "Auto-match teams",
-            description = "Automatically creates matches for all registered teams in a round."
-    )
-    @ApiResponse(responseCode = "200", description = "Matches created")
-    @PostMapping("/matches/auto-match")
-    public ResponseEntity<List<UUID>> autoMatch(
-            @Parameter(
-                    description = "ID of the session",
-                    required = true
-            ) @RequestParam UUID sessionId,
-            @Parameter(
-                    description = "Number of the round",
-                    required = true
-            ) @RequestParam Integer roundNo
-    ) {
-        return ResponseEntity.ok(adminUseCase.autoMatch(sessionId, roundNo));
-    }
+  /** Automatically match teams for a round */
+  @Operation(
+      summary = "Auto-match teams",
+      description = "Automatically creates matches for all registered teams in a round.")
+  @ApiResponse(responseCode = "200", description = "Matches created")
+  @PostMapping("/matches/auto-match")
+  public ResponseEntity<List<UUID>> autoMatch(
+      @Parameter(description = "ID of the session", required = true) @RequestParam UUID sessionId,
+      @Parameter(description = "Number of the round", required = true) @RequestParam
+          Integer roundNo) {
+    return ResponseEntity.ok(adminUseCase.autoMatch(sessionId, roundNo));
+  }
 
-    /** Manually create a single match */
-    @Operation(
-            summary = "Create a match",
-            description = "Manually creates a match between two teams."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Match created",
-            content = @Content(schema = @Schema(implementation = UUID.class))
-    )
-    @PostMapping("/matches/create")
-    public ResponseEntity<UUID> createMatch(
-            @Parameter(
-                    description = "ID of the first team",
-                    required = true
-            ) @RequestParam UUID teamA,
-            @Parameter(
-                    description = "ID of the second team",
-                    required = true
-            ) @RequestParam UUID teamB,
-            @Parameter(description = "Number of the round", example = "1") @RequestParam(
-                    defaultValue = "1"
-            ) Integer roundNo,
-            @Parameter(description = "Optional session ID") @RequestParam(
-                    required = false
-            ) UUID sessionId
-    ) {
-        return ResponseEntity.ok(adminUseCase.createMatch(teamA, teamB, roundNo, sessionId));
-    }
+  /** Manually create a single match */
+  @Operation(
+      summary = "Create a match",
+      description = "Manually creates a match between two teams.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Match created",
+      content = @Content(schema = @Schema(implementation = UUID.class)))
+  @PostMapping("/matches/create")
+  public ResponseEntity<UUID> createMatch(
+      @Parameter(description = "ID of the first team", required = true) @RequestParam UUID teamA,
+      @Parameter(description = "ID of the second team", required = true) @RequestParam UUID teamB,
+      @Parameter(description = "Number of the round", example = "1")
+          @RequestParam(defaultValue = "1")
+          Integer roundNo,
+      @Parameter(description = "Optional session ID") @RequestParam(required = false)
+          UUID sessionId) {
+    return ResponseEntity.ok(adminUseCase.createMatch(teamA, teamB, roundNo, sessionId));
+  }
 
-    /** Run a single match */
-    @Operation(summary = "Run a match", description = "Simulates a match and returns the winner.")
-    @ApiResponse(responseCode = "200", description = "Match completed")
-    @PostMapping("/matches/{matchId}/run")
-    public ResponseEntity<String> runMatch(
-            @Parameter(
-                    description = "ID of the match to run",
-                    required = true
-            ) @PathVariable UUID matchId
-    ) {
-        return ResponseEntity.ok("Match completed. Winner: " + adminUseCase.runMatch(matchId));
-    }
+  /** Run a single match */
+  @Operation(summary = "Run a match", description = "Simulates a match and returns the winner.")
+  @ApiResponse(responseCode = "200", description = "Match completed")
+  @PostMapping("/matches/{matchId}/run")
+  public ResponseEntity<String> runMatch(
+      @Parameter(description = "ID of the match to run", required = true) @PathVariable
+          UUID matchId) {
+    return ResponseEntity.ok("Match completed. Winner: " + adminUseCase.runMatch(matchId));
+  }
 
-    /**
+  /**
    * Run all pending matches for a round.
    *
    * @param roundNo the round number
    * @param sessionId the session ID (optional)
    * @return the batch simulation result
    */
-    @Operation(
-            summary = "Run all matches in round",
-            description = "Simulates all pending matches for a specific round in a batch."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "Simulation batch completed",
-            content = @Content(schema = @Schema(implementation = BatchSimulationResult.class))
-    )
-    @PostMapping("/matches/run-all")
-    @SuppressWarnings("unchecked")
-    public ResponseEntity<BatchSimulationResult> runAllBattles(
-            @Parameter(
-                    description = "Number of the round",
-                    required = true
-            ) @RequestParam Integer roundNo,
-            @Parameter(description = "Optional session ID") @RequestParam(
-                    required = false
-            ) UUID sessionId
-    ) {
-        Map<String, Object> result = adminUseCase.runAllBattles(roundNo, sessionId);
+  @Operation(
+      summary = "Run all matches in round",
+      description = "Simulates all pending matches for a specific round in a batch.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Simulation batch completed",
+      content = @Content(schema = @Schema(implementation = BatchSimulationResult.class)))
+  @PostMapping("/matches/run-all")
+  @SuppressWarnings("unchecked")
+  public ResponseEntity<BatchSimulationResult> runAllBattles(
+      @Parameter(description = "Number of the round", required = true) @RequestParam
+          Integer roundNo,
+      @Parameter(description = "Optional session ID") @RequestParam(required = false)
+          UUID sessionId) {
+    Map<String, Object> result = adminUseCase.runAllBattles(roundNo, sessionId);
 
-        BatchSimulationResult batchResult =
-                new BatchSimulationResult(
-                        requireNonNull((List<UUID>)result.get("matchIds")),
-                        requireNonNull((Map<UUID, UUID>)result.get("winners")),
-                        requireNonNull((Integer)result.get("total")),
-                        requireNonNull((Integer)result.get("successCount"))
-                );
+    BatchSimulationResult batchResult =
+        new BatchSimulationResult(
+            requireNonNull((List<UUID>) result.get("matchIds")),
+            requireNonNull((Map<UUID, UUID>) result.get("winners")),
+            requireNonNull((Integer) result.get("total")),
+            requireNonNull((Integer) result.get("successCount")));
 
-        return ResponseEntity.ok(batchResult);
-    }
+    return ResponseEntity.ok(batchResult);
+  }
 
-    /** Reset the tournament database to its initial state */
-    @Operation(
-            summary = "Reset database",
-            description = "DANGER: Clears all tournament data: sessions, rounds, matches, teams, etc."
-    )
-    @ApiResponse(responseCode = "200", description = "Database reset successfully")
-    @PostMapping("/reset")
-    public ResponseEntity<Void> resetDatabase() {
-        adminUseCase.resetDatabase();
-        return ResponseEntity.ok().build();
-    }
+  /** Reset the tournament database to its initial state */
+  @Operation(
+      summary = "Reset database",
+      description = "DANGER: Clears all tournament data: sessions, rounds, matches, teams, etc.")
+  @ApiResponse(responseCode = "200", description = "Database reset successfully")
+  @PostMapping("/reset")
+  public ResponseEntity<Void> resetDatabase() {
+    adminUseCase.resetDatabase();
+    return ResponseEntity.ok().build();
+  }
 }

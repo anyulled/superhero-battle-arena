@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataSubmissionRepository
-        extends JpaRepository<SubmissionEntity, SubmissionEntity.SubmissionId> {
-    Optional<SubmissionEntity> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
+    extends JpaRepository<SubmissionEntity, SubmissionEntity.SubmissionId> {
+  Optional<SubmissionEntity> findByTeamIdAndRoundNo(UUID teamId, Integer roundNo);
 
-    List<SubmissionEntity> findByRoundNo(Integer roundNo);
+  List<SubmissionEntity> findByRoundNo(Integer roundNo);
 }

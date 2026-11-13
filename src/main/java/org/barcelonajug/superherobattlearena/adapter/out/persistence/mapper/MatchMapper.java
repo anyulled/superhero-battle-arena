@@ -9,11 +9,11 @@ import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface MatchMapper {
-    @Nullable Match toDomain(MatchEntity entity);
+  @Nullable Match toDomain(MatchEntity entity);
 
-    @Nullable MatchEntity toEntity(Match domain);
+  @Nullable MatchEntity toEntity(Match domain);
 
-    List<Match> toDomain(List<MatchEntity> entities);
+  List<Match> toDomain(List<MatchEntity> entities);
 
-    List<MatchEntity> toEntity(List<Match> domains);
+  List<MatchEntity> toEntity(List<Match> domains);
 }

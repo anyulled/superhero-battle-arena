@@ -18,108 +18,108 @@ import org.jspecify.annotations.Nullable;
 @Table(name = "eliminated_teams")
 @IdClass(EliminationEntity.EliminationId.class)
 public class EliminationEntity {
-    @Id
-    @Column(name = "session_id")
-    @SuppressWarnings("NullAway.Init")
-    private UUID sessionId;
+  @Id
+  @Column(name = "session_id")
+  @SuppressWarnings("NullAway.Init")
+  private UUID sessionId;
 
-    @Id
-    @Column(name = "team_id")
-    @SuppressWarnings("NullAway.Init")
-    private UUID teamId;
+  @Id
+  @Column(name = "team_id")
+  @SuppressWarnings("NullAway.Init")
+  private UUID teamId;
 
-    @Column(name = "round_no", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private Integer roundNo;
+  @Column(name = "round_no", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private Integer roundNo;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "reason", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private EliminationReason reason;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "reason", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private EliminationReason reason;
 
-    @Column(name = "eliminated_at", nullable = false)
-    @SuppressWarnings("NullAway.Init")
-    private OffsetDateTime eliminatedAt;
+  @Column(name = "eliminated_at", nullable = false)
+  @SuppressWarnings("NullAway.Init")
+  private OffsetDateTime eliminatedAt;
 
-    public static class EliminationId implements Serializable {
-        private @Nullable UUID sessionId;
-        private @Nullable UUID teamId;
+  public static class EliminationId implements Serializable {
+    private @Nullable UUID sessionId;
+    private @Nullable UUID teamId;
 
-        /** Creates an empty composite identifier for JPA hydration. */
-        public EliminationId() {}
+    /** Creates an empty composite identifier for JPA hydration. */
+    public EliminationId() {}
 
-        /** Creates a composite identifier from the session and team identifiers. */
-        public EliminationId(@Nullable UUID sessionId, @Nullable UUID teamId) {
-            this.sessionId = sessionId;
-            this.teamId = teamId;
-        }
-
-        /** Compares elimination identifiers by both session and team. */
-        @Override
-        public boolean equals(@Nullable Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof EliminationId that)) {
-                return false;
-            }
-            return Objects.equals(sessionId, that.sessionId) && Objects.equals(teamId, that.teamId);
-        }
-
-        /** Returns a hash derived from both parts of the elimination identifier. */
-        @Override
-        public int hashCode() {
-            return Objects.hash(sessionId, teamId);
-        }
+    /** Creates a composite identifier from the session and team identifiers. */
+    public EliminationId(@Nullable UUID sessionId, @Nullable UUID teamId) {
+      this.sessionId = sessionId;
+      this.teamId = teamId;
     }
 
-    /** Returns the session in which the team was eliminated. */
-    public UUID getSessionId() {
-        return sessionId;
+    /** Compares elimination identifiers by both session and team. */
+    @Override
+    public boolean equals(@Nullable Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof EliminationId that)) {
+        return false;
+      }
+      return Objects.equals(sessionId, that.sessionId) && Objects.equals(teamId, that.teamId);
     }
 
-    /** Sets the session in which the team was eliminated. */
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
+    /** Returns a hash derived from both parts of the elimination identifier. */
+    @Override
+    public int hashCode() {
+      return Objects.hash(sessionId, teamId);
     }
+  }
 
-    /** Returns the eliminated team identifier. */
-    public UUID getTeamId() {
-        return teamId;
-    }
+  /** Returns the session in which the team was eliminated. */
+  public UUID getSessionId() {
+    return sessionId;
+  }
 
-    /** Sets the eliminated team identifier. */
-    public void setTeamId(UUID teamId) {
-        this.teamId = teamId;
-    }
+  /** Sets the session in which the team was eliminated. */
+  public void setSessionId(UUID sessionId) {
+    this.sessionId = sessionId;
+  }
 
-    /** Returns the round in which elimination occurred. */
-    public Integer getRoundNo() {
-        return roundNo;
-    }
+  /** Returns the eliminated team identifier. */
+  public UUID getTeamId() {
+    return teamId;
+  }
 
-    /** Sets the round in which elimination occurred. */
-    public void setRoundNo(Integer roundNo) {
-        this.roundNo = roundNo;
-    }
+  /** Sets the eliminated team identifier. */
+  public void setTeamId(UUID teamId) {
+    this.teamId = teamId;
+  }
 
-    /** Returns the reason for elimination. */
-    public EliminationReason getReason() {
-        return reason;
-    }
+  /** Returns the round in which elimination occurred. */
+  public Integer getRoundNo() {
+    return roundNo;
+  }
 
-    /** Sets the reason for elimination. */
-    public void setReason(EliminationReason reason) {
-        this.reason = reason;
-    }
+  /** Sets the round in which elimination occurred. */
+  public void setRoundNo(Integer roundNo) {
+    this.roundNo = roundNo;
+  }
 
-    /** Returns the timestamp of elimination. */
-    public OffsetDateTime getEliminatedAt() {
-        return eliminatedAt;
-    }
+  /** Returns the reason for elimination. */
+  public EliminationReason getReason() {
+    return reason;
+  }
 
-    /** Sets the timestamp of elimination. */
-    public void setEliminatedAt(OffsetDateTime eliminatedAt) {
-        this.eliminatedAt = eliminatedAt;
-    }
+  /** Sets the reason for elimination. */
+  public void setReason(EliminationReason reason) {
+    this.reason = reason;
+  }
+
+  /** Returns the timestamp of elimination. */
+  public OffsetDateTime getEliminatedAt() {
+    return eliminatedAt;
+  }
+
+  /** Sets the timestamp of elimination. */
+  public void setEliminatedAt(OffsetDateTime eliminatedAt) {
+    this.eliminatedAt = eliminatedAt;
+  }
 }

@@ -13,42 +13,42 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class SessionPersistenceAdapter implements SessionRepositoryPort {
-    private final SessionRepository repository;
-    private final SessionMapper mapper;
+  private final SessionRepository repository;
+  private final SessionMapper mapper;
 
-    public SessionPersistenceAdapter(SessionRepository repository, SessionMapper mapper) {
-        this.repository = repository;
-        this.mapper = mapper;
-    }
+  public SessionPersistenceAdapter(SessionRepository repository, SessionMapper mapper) {
+    this.repository = repository;
+    this.mapper = mapper;
+  }
 
-    @Override
-    public Session save(Session session) {
-        SessionEntity entity = Objects.requireNonNull(mapper.toEntity(session));
-        SessionEntity savedEntity = repository.save(entity);
-        return Objects.requireNonNull(mapper.toDomain(savedEntity));
-    }
+  @Override
+  public Session save(Session session) {
+    SessionEntity entity = Objects.requireNonNull(mapper.toEntity(session));
+    SessionEntity savedEntity = repository.save(entity);
+    return Objects.requireNonNull(mapper.toDomain(savedEntity));
+  }
 
-    @Override
-    public Optional<Session> findByActiveTrue() {
-        return repository.findByActiveTrue().map(mapper::toDomain);
-    }
+  @Override
+  public Optional<Session> findByActiveTrue() {
+    return repository.findByActiveTrue().map(mapper::toDomain);
+  }
 
-    @Override
-    public List<Session> findAll() {
-        return repository.findAll().stream()
-                .map(mapper::toDomain)
-                .filter(Objects::nonNull)
-                .map(Objects::requireNonNull)
-                .toList();
-    }
+  @Override
+  public List<Session> findAll() {
+    return repository.findAll().stream()
+        .map(mapper::toDomain)
+        .filter(Objects::nonNull)
+        .map(Objects::requireNonNull)
+        .toList();
+  }
 
-    @Override
-    public Optional<Session> findById(UUID id) {
-        return repository.findById(id).map(mapper::toDomain);
-    }
+  @Override
+  public Optional<Session> findById(UUID id) {
+    return repository.findById(id).map(mapper::toDomain);
+  }
 
-    @Override
-    public void deleteAll() {
-        repository.deleteAll();
-    }
+  @Override
+  public void deleteAll() {
+    repository.deleteAll();
+  }
 }

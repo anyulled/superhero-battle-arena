@@ -10,17 +10,15 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataSuperheroRepository extends JpaRepository<SuperheroEntity, Integer> {
-    @Query(
-            "SELECT s FROM SuperheroEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :term, '%'))"
-    )
-    List<SuperheroEntity> searchByName(String term);
+  @Query("SELECT s FROM SuperheroEntity s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :term, '%'))")
+  List<SuperheroEntity> searchByName(String term);
 
-    List<SuperheroEntity> findByAlignmentAndPublisher(String alignment, String publisher);
+  List<SuperheroEntity> findByAlignmentAndPublisher(String alignment, String publisher);
 
-    List<SuperheroEntity> findByAlignment(String alignment);
+  List<SuperheroEntity> findByAlignment(String alignment);
 
-    List<SuperheroEntity> findByPublisher(String publisher);
+  List<SuperheroEntity> findByPublisher(String publisher);
 
-    @Override
-    Page<SuperheroEntity> findAll(Pageable pageable);
+  @Override
+  Page<SuperheroEntity> findAll(Pageable pageable);
 }

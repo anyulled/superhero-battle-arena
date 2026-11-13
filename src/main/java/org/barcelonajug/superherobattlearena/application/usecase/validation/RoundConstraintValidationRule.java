@@ -10,61 +10,51 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class RoundConstraintValidationRule implements ValidationRule {
-    @Override
-    public void validate(List<Hero> heroes, RoundSpec roundSpec) {
-        validateAllowedValues(heroes, roundSpec.allowedRoles(), Hero::role, "role");
-        validateAllowedValues(heroes, roundSpec.allowedGenders(), this::genderOf, "gender");
-        validateAllowedValues(heroes, roundSpec.allowedRaces(), this::raceOf, "race");
-        validateAllowedValues(heroes, roundSpec.allowedPublishers(), Hero::publisher, "publisher");
-        validateAllowedValues(heroes, roundSpec.allowedAlignments(), Hero::alignment, "alignment");
+  @Override
+  public void validate(List<Hero> heroes, RoundSpec roundSpec) {
+    validateAllowedValues(heroes, roundSpec.allowedRoles(), Hero::role, "role");
+    validateAllowedValues(heroes, roundSpec.allowedGenders(), this::genderOf, "gender");
+    validateAllowedValues(heroes, roundSpec.allowedRaces(), this::raceOf, "race");
+    validateAllowedValues(heroes, roundSpec.allowedPublishers(), Hero::publisher, "publisher");
+    validateAllowedValues(heroes, roundSpec.allowedAlignments(), Hero::alignment, "alignment");
+  }
+
+  private void validateAllowedValues(
+      List<Hero> heroes,
+      @Nullable List<String> allowedValues,
+      ValueSelector selector,
+      String fieldName) {
+    if (allowedValues == null || allowedValues.isEmpty()) {
+      return;
     }
 
-    private void validateAllowedValues(
-            List<Hero> heroes,
-            @Nullable List<String> allowedValues,
-            ValueSelector selector,
-            String fieldName
-    ) {
-        if (allowedValues == null || allowedValues.isEmpty()) {
-            return;
-        }
+    heroes.stream()
+        .map(hero -> Map.entry(hero, selector.valueOf(hero)))
+        .filter(entry -> entry.getValue() == null || !allowedValues.contains(entry.getValue()))
+        .findFirst()
+        .ifPresent(
+            entry -> {
+              throw new RoundConstraintException(
+                  fieldName, entry.getKey().name(), entry.getValue(), allowedValues);
+            });
+  }
 
-        heroes.stream()
-                .map(hero -> Map.entry(hero, selector.valueOf(hero)))
-                .filter(
-                        entry -> entry.getValue() == null || !allowedValues.contains(
-                                entry.getValue()
-                        )
-                )
-                .findFirst()
-                .ifPresent(
-                        entry -> {
-                            throw new RoundConstraintException(
-                                    fieldName,
-                                    entry.getKey().name(),
-                                    entry.getValue(),
-                                    allowedValues
-                            );
-                        }
-                );
+  private @Nullable String genderOf(Hero hero) {
+    if (hero.appearance() != null) {
+      return hero.appearance().gender();
     }
+    return null;
+  }
 
-    private @Nullable String genderOf(Hero hero) {
-        if (hero.appearance() != null) {
-            return hero.appearance().gender();
-        }
-        return null;
+  private @Nullable String raceOf(Hero hero) {
+    if (hero.appearance() != null) {
+      return hero.appearance().race();
     }
+    return null;
+  }
 
-    private @Nullable String raceOf(Hero hero) {
-        if (hero.appearance() != null) {
-            return hero.appearance().race();
-        }
-        return null;
-    }
-
-    @FunctionalInterface
-    private interface ValueSelector {
-        @Nullable String valueOf(Hero hero);
-    }
+  @FunctionalInterface
+  private interface ValueSelector {
+    @Nullable String valueOf(Hero hero);
+  }
 }

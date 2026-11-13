@@ -11,34 +11,25 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
-    @ExceptionHandler(ValidationException.class)
-    public ProblemDetail handleValidationException(ValidationException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                BAD_REQUEST,
-                ex.getMessage()
-        );
-        problemDetail.setTitle("Validation Error");
-        problemDetail.setType(URI.create("https://barcelonajug.org/errors/validation-error"));
-        return problemDetail;
-    }
+  @ExceptionHandler(ValidationException.class)
+  public ProblemDetail handleValidationException(ValidationException ex) {
+    ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
+    problemDetail.setTitle("Validation Error");
+    problemDetail.setType(URI.create("https://barcelonajug.org/errors/validation-error"));
+    return problemDetail;
+  }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                BAD_REQUEST,
-                ex.getMessage()
-        );
-        problemDetail.setTitle("Invalid Argument");
-        return problemDetail;
-    }
+  @ExceptionHandler(IllegalArgumentException.class)
+  public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
+    ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
+    problemDetail.setTitle("Invalid Argument");
+    return problemDetail;
+  }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
-                BAD_REQUEST,
-                ex.getMessage()
-        );
-        problemDetail.setTitle("Invalid State");
-        return problemDetail;
-    }
+  @ExceptionHandler(IllegalStateException.class)
+  public ProblemDetail handleIllegalStateException(IllegalStateException ex) {
+    ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(BAD_REQUEST, ex.getMessage());
+    problemDetail.setTitle("Invalid State");
+    return problemDetail;
+  }
 }

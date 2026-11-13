@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataMatchEventRepository
-        extends JpaRepository<MatchEventEntity, MatchEventEntity.MatchEventId> {
-    List<MatchEventEntity> findByMatchIdOrderBySeqAsc(UUID matchId);
+    extends JpaRepository<MatchEventEntity, MatchEventEntity.MatchEventId> {
+  List<MatchEventEntity> findByMatchIdOrderBySeqAsc(UUID matchId);
 }

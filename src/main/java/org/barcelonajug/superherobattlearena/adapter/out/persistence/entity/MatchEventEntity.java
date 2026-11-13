@@ -16,67 +16,67 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "match_events")
 @IdClass(MatchEventEntity.MatchEventId.class)
 public class MatchEventEntity {
-    @Id
-    @Column(name = "match_id")
+  @Id
+  @Column(name = "match_id")
+  @SuppressWarnings("NullAway.Init")
+  private UUID matchId;
+
+  @Id
+  @SuppressWarnings("NullAway.Init")
+  private Integer seq;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "event_json")
+  @SuppressWarnings("NullAway.Init")
+  private MatchEventSnapshot eventJson;
+
+  public static class MatchEventId implements Serializable {
     @SuppressWarnings("NullAway.Init")
     private UUID matchId;
 
-    @Id
     @SuppressWarnings("NullAway.Init")
     private Integer seq;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "event_json")
-    @SuppressWarnings("NullAway.Init")
-    private MatchEventSnapshot eventJson;
+    public MatchEventId() {}
 
-    public static class MatchEventId implements Serializable {
-        @SuppressWarnings("NullAway.Init")
-        private UUID matchId;
-
-        @SuppressWarnings("NullAway.Init")
-        private Integer seq;
-
-        public MatchEventId() {}
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (!(o instanceof MatchEventId that)) {
-                return false;
-            }
-            return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(matchId, seq);
-        }
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof MatchEventId that)) {
+        return false;
+      }
+      return Objects.equals(matchId, that.matchId) && Objects.equals(seq, that.seq);
     }
 
-    public UUID getMatchId() {
-        return matchId;
+    @Override
+    public int hashCode() {
+      return Objects.hash(matchId, seq);
     }
+  }
 
-    public void setMatchId(UUID matchId) {
-        this.matchId = matchId;
-    }
+  public UUID getMatchId() {
+    return matchId;
+  }
 
-    public Integer getSeq() {
-        return seq;
-    }
+  public void setMatchId(UUID matchId) {
+    this.matchId = matchId;
+  }
 
-    public void setSeq(Integer seq) {
-        this.seq = seq;
-    }
+  public Integer getSeq() {
+    return seq;
+  }
 
-    public MatchEventSnapshot getEventJson() {
-        return eventJson;
-    }
+  public void setSeq(Integer seq) {
+    this.seq = seq;
+  }
 
-    public void setEventJson(MatchEventSnapshot eventJson) {
-        this.eventJson = eventJson;
-    }
+  public MatchEventSnapshot getEventJson() {
+    return eventJson;
+  }
+
+  public void setEventJson(MatchEventSnapshot eventJson) {
+    this.eventJson = eventJson;
+  }
 }

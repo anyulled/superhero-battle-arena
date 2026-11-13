@@ -70,3 +70,6 @@ max = 22
 
 [rules.java.constant-name]
 pattern = "^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|[a-z][a-zA-Z0-9_]*|log|logger|serialVersionUID|serialPersistentFields)$"
+
+[rules.java.duplicate-code]
+min-tokens = 170

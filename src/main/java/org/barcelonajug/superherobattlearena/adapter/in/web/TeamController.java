@@ -24,78 +24,60 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/teams")
 @Tag(name = "Team Management", description = "Endpoints for registering and viewing teams")
 public class TeamController {
-    private final TeamUseCase teamUseCase;
-    private final RosterUseCase rosterUseCase;
+  private final TeamUseCase teamUseCase;
+  private final RosterUseCase rosterUseCase;
 
-    public TeamController(TeamUseCase teamUseCase, RosterUseCase rosterUseCase) {
-        this.teamUseCase = teamUseCase;
-        this.rosterUseCase = rosterUseCase;
-    }
+  public TeamController(TeamUseCase teamUseCase, RosterUseCase rosterUseCase) {
+    this.teamUseCase = teamUseCase;
+    this.rosterUseCase = rosterUseCase;
+  }
 
-    @Operation(
-            summary = "Get all available heroes",
-            description = "Retrieves a list of all heroes that can be picked for a team."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "List of heroes",
-            content = @Content(
-                    array = @ArraySchema(schema = @Schema(implementation = HeroDto.class))
-            )
-    )
-    @GetMapping("/heroes")
-    public List<HeroDto> getHeroes() {
-        return rosterUseCase.getAllHeroes().stream().map(HeroDto::from).toList();
-    }
+  @Operation(
+      summary = "Get all available heroes",
+      description = "Retrieves a list of all heroes that can be picked for a team.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "List of heroes",
+      content = @Content(array = @ArraySchema(schema = @Schema(implementation = HeroDto.class))))
+  @GetMapping("/heroes")
+  public List<HeroDto> getHeroes() {
+    return rosterUseCase.getAllHeroes().stream().map(HeroDto::from).toList();
+  }
 
-    @Operation(
-            summary = "List teams",
-            description = "Retrieves a list of teams, optionally filtered by session."
-    )
-    @ApiResponse(
-            responseCode = "200",
-            description = "List of teams",
-            content = @Content(
-                    array = @ArraySchema(schema = @Schema(implementation = TeamDto.class))
-            )
-    )
-    @GetMapping
-    public ResponseEntity<List<TeamDto>> getTeams(
-            @Parameter(description = "Optional session ID to filter teams") @RequestParam(
-                    required = false
-            ) UUID sessionId
-    ) {
-        return ResponseEntity.ok(
-                teamUseCase.getTeams(sessionId).stream().map(TeamDto::from).toList()
-        );
-    }
+  @Operation(
+      summary = "List teams",
+      description = "Retrieves a list of teams, optionally filtered by session.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "List of teams",
+      content = @Content(array = @ArraySchema(schema = @Schema(implementation = TeamDto.class))))
+  @GetMapping
+  public ResponseEntity<List<TeamDto>> getTeams(
+      @Parameter(description = "Optional session ID to filter teams")
+          @RequestParam(required = false)
+          UUID sessionId) {
+    return ResponseEntity.ok(teamUseCase.getTeams(sessionId).stream().map(TeamDto::from).toList());
+  }
 
-    @Operation(summary = "Register a team", description = "Registers a new team for the arena.")
-    @ApiResponse(
-            responseCode = "200",
-            description = "Team registered successfully",
-            content = @Content(schema = @Schema(implementation = UUID.class))
-    )
-    @PostMapping("/register")
-    public ResponseEntity<UUID> registerTeam(
-            @Parameter(description = "Name of the team", required = true) @RequestParam String name,
-            @Parameter(
-                    description = "List of hero names/IDs in the team",
-                    required = true
-            ) @RequestParam List<String> members,
-            @Parameter(description = "Optional session ID") @RequestParam(
-                    required = false
-            ) UUID sessionId
-    ) {
-        validateRegistrationText(name, members);
-        return ResponseEntity.ok(teamUseCase.registerTeam(name, members, sessionId));
-    }
+  @Operation(summary = "Register a team", description = "Registers a new team for the arena.")
+  @ApiResponse(
+      responseCode = "200",
+      description = "Team registered successfully",
+      content = @Content(schema = @Schema(implementation = UUID.class)))
+  @PostMapping("/register")
+  public ResponseEntity<UUID> registerTeam(
+      @Parameter(description = "Name of the team", required = true) @RequestParam String name,
+      @Parameter(description = "List of hero names/IDs in the team", required = true) @RequestParam
+          List<String> members,
+      @Parameter(description = "Optional session ID") @RequestParam(required = false)
+          UUID sessionId) {
+    validateRegistrationText(name, members);
+    return ResponseEntity.ok(teamUseCase.registerTeam(name, members, sessionId));
+  }
 
-    private void validateRegistrationText(String name, List<String> members) {
-        if (name.indexOf(0) >= 0 || members.stream().anyMatch(member -> member.indexOf(0) >= 0)) {
-            throw new IllegalArgumentException(
-                    "Team names and members must not contain null characters"
-            );
-        }
+  private void validateRegistrationText(String name, List<String> members) {
+    if (name.indexOf(0) >= 0 || members.stream().anyMatch(member -> member.indexOf(0) >= 0)) {
+      throw new IllegalArgumentException("Team names and members must not contain null characters");
     }
+  }
 }

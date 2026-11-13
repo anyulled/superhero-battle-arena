@@ -7,76 +7,76 @@ import org.jspecify.annotations.Nullable;
 
 /** Represents a round in a tournament session. */
 public class Round {
-    @SuppressWarnings("NullAway.Init")
-    private UUID roundId;
+  @SuppressWarnings("NullAway.Init")
+  private UUID roundId;
 
-    @SuppressWarnings("NullAway.Init")
-    private Integer roundNo;
+  @SuppressWarnings("NullAway.Init")
+  private Integer roundNo;
 
-    @SuppressWarnings("NullAway.Init")
-    private UUID sessionId;
+  @SuppressWarnings("NullAway.Init")
+  private UUID sessionId;
 
-    private @Nullable Long seed;
-    private @Nullable RoundSpec specJson;
+  private @Nullable Long seed;
+  private @Nullable RoundSpec specJson;
 
-    @SuppressWarnings("NullAway.Init")
-    private RoundStatus status;
+  @SuppressWarnings("NullAway.Init")
+  private RoundStatus status;
 
-    private @Nullable OffsetDateTime submissionDeadline;
+  private @Nullable OffsetDateTime submissionDeadline;
 
-    public UUID getRoundId() {
-        return roundId;
-    }
+  public UUID getRoundId() {
+    return roundId;
+  }
 
-    public void setRoundId(UUID roundId) {
-        this.roundId = roundId;
-    }
+  public void setRoundId(UUID roundId) {
+    this.roundId = roundId;
+  }
 
-    public Integer getRoundNo() {
-        return roundNo;
-    }
+  public Integer getRoundNo() {
+    return roundNo;
+  }
 
-    public void setRoundNo(Integer roundNo) {
-        this.roundNo = roundNo;
-    }
+  public void setRoundNo(Integer roundNo) {
+    this.roundNo = roundNo;
+  }
 
-    public UUID getSessionId() {
-        return sessionId;
-    }
+  public UUID getSessionId() {
+    return sessionId;
+  }
 
-    public void setSessionId(UUID sessionId) {
-        this.sessionId = sessionId;
-    }
+  public void setSessionId(UUID sessionId) {
+    this.sessionId = sessionId;
+  }
 
-    public @Nullable Long getSeed() {
-        return seed;
-    }
+  public @Nullable Long getSeed() {
+    return seed;
+  }
 
-    public void setSeed(@Nullable Long seed) {
-        this.seed = seed;
-    }
+  public void setSeed(@Nullable Long seed) {
+    this.seed = seed;
+  }
 
-    public @Nullable RoundSpec getSpecJson() {
-        return specJson;
-    }
+  public @Nullable RoundSpec getSpecJson() {
+    return specJson;
+  }
 
-    public void setSpecJson(@Nullable RoundSpec specJson) {
-        this.specJson = specJson;
-    }
+  public void setSpecJson(@Nullable RoundSpec specJson) {
+    this.specJson = specJson;
+  }
 
-    public RoundStatus getStatus() {
-        return status;
-    }
+  public RoundStatus getStatus() {
+    return status;
+  }
 
-    public void setStatus(RoundStatus status) {
-        this.status = status;
-    }
+  public void setStatus(RoundStatus status) {
+    this.status = status;
+  }
 
-    public @Nullable OffsetDateTime getSubmissionDeadline() {
-        return submissionDeadline;
-    }
+  public @Nullable OffsetDateTime getSubmissionDeadline() {
+    return submissionDeadline;
+  }
 
-    public void setSubmissionDeadline(@Nullable OffsetDateTime submissionDeadline) {
-        this.submissionDeadline = submissionDeadline;
-    }
+  public void setSubmissionDeadline(@Nullable OffsetDateTime submissionDeadline) {
+    this.submissionDeadline = submissionDeadline;
+  }
 }

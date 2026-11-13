@@ -8,8 +8,8 @@ insert_final_newline = true
 ward_max_blank_lines = 1
 
 [*.java]
-indent_size = 4
+indent_size = 2
 
 [*.java]
-ward_continuation_indent_size = 8
+ward_continuation_indent_size = 4
 # ward-owned: editorconfig v1 end

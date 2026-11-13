@@ -15,20 +15,20 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @AutoConfigureMockMvc
 class OpenApiContractIT extends AbstractPostgresTestContainerConfig {
-    @Autowired private MockMvc mockMvc;
+  @Autowired private MockMvc mockMvc;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Test
-    void preservesThePublishedOpenApiContract() throws Exception {
-        JsonNode expected;
-        try (var contract = new ClassPathResource("contracts/openapi.json").getInputStream()) {
-            expected = objectMapper.readTree(contract);
-        }
-
-        var response = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk()).andReturn();
-        JsonNode actual = objectMapper.readTree(response.getResponse().getContentAsString());
-
-        assertThat(actual).isEqualTo(expected);
+  @Test
+  void preservesThePublishedOpenApiContract() throws Exception {
+    JsonNode expected;
+    try (var contract = new ClassPathResource("contracts/openapi.json").getInputStream()) {
+      expected = objectMapper.readTree(contract);
     }
+
+    var response = mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk()).andReturn();
+    JsonNode actual = objectMapper.readTree(response.getResponse().getContentAsString());
+
+    assertThat(actual).isEqualTo(expected);
+  }
 }

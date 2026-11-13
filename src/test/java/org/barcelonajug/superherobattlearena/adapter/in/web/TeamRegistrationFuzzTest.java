@@ -19,24 +19,24 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @Tag("fuzz")
 class TeamRegistrationFuzzTest extends AbstractPostgresTestContainerConfig {
-    @Autowired private MockMvc mockMvc;
-    @Autowired private SessionUseCase sessionUseCase;
+  @Autowired private MockMvc mockMvc;
+  @Autowired private SessionUseCase sessionUseCase;
 
-    @BeforeEach
-    void arrangeActiveSession() {
-        sessionUseCase.startSession(UUID.fromString("00000000-0000-0000-0000-000000000003"));
-    }
+  @BeforeEach
+  void arrangeActiveSession() {
+    sessionUseCase.startSession(UUID.fromString("00000000-0000-0000-0000-000000000003"));
+  }
 
-    @FuzzTest
-    void fuzzTeamRegistrationEndpoint(FuzzedDataProvider data) throws Exception {
-        String name = data.consumeString(200);
-        String[] members =
-                IntStream.range(0, data.consumeInt(0, 20))
-                        .mapToObj(i -> data.consumeString(50))
-                        .toArray(String[]::new);
+  @FuzzTest
+  void fuzzTeamRegistrationEndpoint(FuzzedDataProvider data) throws Exception {
+    String name = data.consumeString(200);
+    String[] members =
+        IntStream.range(0, data.consumeInt(0, 20))
+            .mapToObj(i -> data.consumeString(50))
+            .toArray(String[]::new);
 
-        mockMvc
-                .perform(post("/api/teams/register").param("name", name).param("members", members))
-                .andExpect(status().is(lessThan(500)));
-    }
+    mockMvc
+        .perform(post("/api/teams/register").param("name", name).param("members", members))
+        .andExpect(status().is(lessThan(500)));
+  }
 }

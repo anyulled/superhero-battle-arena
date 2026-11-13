@@ -17,45 +17,43 @@ import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest(
-        classes = SuperheroBattleArenaApplication.class,
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
-)
+    classes = SuperheroBattleArenaApplication.class,
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"postgres-test", "test"})
 @Transactional
 public abstract class AbstractPostgresTestContainerConfig {
-    @Autowired private DataSource dataSource;
+  @Autowired private DataSource dataSource;
 
-    @BeforeEach
-    void requirePostgreSqlDatabase() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            DatabaseMetaData metadata = connection.getMetaData();
+  @BeforeEach
+  void requirePostgreSqlDatabase() throws SQLException {
+    try (Connection connection = dataSource.getConnection()) {
+      DatabaseMetaData metadata = connection.getMetaData();
 
-            String databaseProductName = metadata.getDatabaseProductName();
+      String databaseProductName = metadata.getDatabaseProductName();
 
-            assertThat(databaseProductName).isEqualTo("PostgreSQL");
-        }
+      assertThat(databaseProductName).isEqualTo("PostgreSQL");
     }
+  }
 
-    @SuppressWarnings("resource")
-    static final PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
-                    .withDatabaseName("superhero_db")
-                    .withUsername("super_user")
-                    .withPassword("super_password");
+  @SuppressWarnings("resource")
+  static final PostgreSQLContainer postgres =
+      new PostgreSQLContainer("postgres:16")
+          .withDatabaseName("superhero_db")
+          .withUsername("super_user")
+          .withPassword("super_password");
 
-    static {
-        postgres.start();
-    }
+  static {
+    postgres.start();
+  }
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add(
-                "spring.flyway.locations",
-                () -> "classpath:db/migration/common,classpath:db/migration/postgresql"
-        );
-        registry.add("spring.flyway.clean-disabled", () -> "true");
-    }
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add(
+        "spring.flyway.locations",
+        () -> "classpath:db/migration/common,classpath:db/migration/postgresql");
+    registry.add("spring.flyway.clean-disabled", () -> "true");
+  }
 }
