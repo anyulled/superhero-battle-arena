@@ -43,6 +43,8 @@ public class SubmissionEntity {
   private @Nullable OffsetDateTime submittedAt;
 
   public static class SubmissionId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private @Nullable UUID teamId;
     private @Nullable Integer roundNo;
 
@@ -54,10 +56,7 @@ public class SubmissionEntity {
     }
 
     @Override
-    public boolean equals(@Nullable Object o) {
-      if (this == o) {
-        return true;
-      }
+    public boolean equals(Object o) {
       if (!(o instanceof SubmissionId that)) {
         return false;
       }

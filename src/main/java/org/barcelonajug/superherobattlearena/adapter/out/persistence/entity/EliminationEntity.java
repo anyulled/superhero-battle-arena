@@ -42,31 +42,26 @@ public class EliminationEntity {
   private OffsetDateTime eliminatedAt;
 
   public static class EliminationId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private @Nullable UUID sessionId;
     private @Nullable UUID teamId;
 
-    /** Creates an empty composite identifier for JPA hydration. */
     public EliminationId() {}
 
-    /** Creates a composite identifier from the session and team identifiers. */
     public EliminationId(@Nullable UUID sessionId, @Nullable UUID teamId) {
       this.sessionId = sessionId;
       this.teamId = teamId;
     }
 
-    /** Compares elimination identifiers by both session and team. */
     @Override
-    public boolean equals(@Nullable Object o) {
-      if (this == o) {
-        return true;
-      }
+    public boolean equals(Object o) {
       if (!(o instanceof EliminationId that)) {
         return false;
       }
       return Objects.equals(sessionId, that.sessionId) && Objects.equals(teamId, that.teamId);
     }
 
-    /** Returns a hash derived from both parts of the elimination identifier. */
     @Override
     public int hashCode() {
       return Objects.hash(sessionId, teamId);

@@ -31,6 +31,8 @@ public class MatchEventEntity {
   private MatchEventSnapshot eventJson;
 
   public static class MatchEventId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @SuppressWarnings("NullAway.Init")
     private UUID matchId;
 
@@ -41,9 +43,6 @@ public class MatchEventEntity {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
       if (!(o instanceof MatchEventId that)) {
         return false;
       }
