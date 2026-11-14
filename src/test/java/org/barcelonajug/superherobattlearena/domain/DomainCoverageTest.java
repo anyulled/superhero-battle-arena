@@ -107,7 +107,7 @@ class DomainCoverageTest {
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
 
-    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, 1, MatchStatus.PENDING);
+    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, 1);
     match.setWinnerTeam(teamA);
 
     assertThat(match.getMatchId()).isEqualTo(matchId);

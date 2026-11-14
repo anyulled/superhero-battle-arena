@@ -44,7 +44,6 @@ class RoundUseCaseTest {
   private static final UUID TEAM_ID = UUID.randomUUID();
   private static final int ROUND_NO = 1;
 
-  /** Creates the round use case with isolated persistence mocks. */
   @BeforeEach
   void setUp() {
     roundUseCase =
@@ -54,11 +53,9 @@ class RoundUseCaseTest {
 
   @Nested
   class SubmitTeam {
-    private Team team;
-
     @BeforeEach
     void arrangeTeam() {
-      team =
+      Team team =
           new Team(
               TEAM_ID,
               SESSION_ID,

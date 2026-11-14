@@ -3,8 +3,6 @@ package org.barcelonajug.superherobattlearena.application.usecase.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import org.barcelonajug.superherobattlearena.domain.Hero;
@@ -32,7 +30,7 @@ class RoundConstraintValidationRuleTest {
   }
 
   @Test
-  void shouldReturnNullGenderWhenAppearanceIsMissing() throws Exception {
+  void shouldReturnNullGenderWhenAppearanceIsMissing() {
     Hero hero =
         Hero.builder()
             .id(1)
@@ -43,15 +41,11 @@ class RoundConstraintValidationRuleTest {
             .powerstats(Hero.PowerStats.builder().build())
             .build();
 
-    Method method = RoundConstraintValidationRule.class.getDeclaredMethod("genderOf", Hero.class);
-    method.setAccessible(true);
-
-    assertThatCode(() -> method.invoke(rule, hero)).doesNotThrowAnyException();
-    assertThat(method.invoke(rule, hero)).isNull();
+    assertThat(rule.genderOf(hero)).isNull();
   }
 
   @Test
-  void shouldReturnNullRaceWhenAppearanceIsMissing() throws Exception {
+  void shouldReturnNullRaceWhenAppearanceIsMissing() {
     Hero hero =
         Hero.builder()
             .id(1)
@@ -62,35 +56,13 @@ class RoundConstraintValidationRuleTest {
             .powerstats(Hero.PowerStats.builder().build())
             .build();
 
-    Method method = RoundConstraintValidationRule.class.getDeclaredMethod("raceOf", Hero.class);
-    method.setAccessible(true);
-
-    assertThatCode(() -> method.invoke(rule, hero)).doesNotThrowAnyException();
-    assertThat(method.invoke(rule, hero)).isNull();
+    assertThat(rule.raceOf(hero)).isNull();
   }
 
+  @SuppressWarnings("NullAway")
   private static RoundSpec roundSpecWithNullAllowedValues() {
-    try {
-      Constructor<RoundSpec> constructor =
-          RoundSpec.class.getDeclaredConstructor(
-              String.class,
-              int.class,
-              int.class,
-              Map.class,
-              Map.class,
-              List.class,
-              Map.class,
-              String.class,
-              List.class,
-              List.class,
-              List.class,
-              List.class,
-              List.class);
-      return constructor.newInstance(
-          "Round", 1, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic", null, null, null, null,
-          null);
-    } catch (ReflectiveOperationException e) {
-      throw new IllegalStateException("Failed to create round spec for coverage test", e);
-    }
+    return new RoundSpec(
+        "Round", 1, 50, Map.of(), Map.of(), List.of(), Map.of(), "Basic", null, null, null, null,
+        null);
   }
 }

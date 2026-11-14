@@ -3,7 +3,6 @@ package org.barcelonajug.superherobattlearena.domain.json;
 import java.util.List;
 import java.util.Map;
 
-/** Represents the specification and constraints for a round. */
 public record RoundSpec(
     String description,
     int teamSize,
