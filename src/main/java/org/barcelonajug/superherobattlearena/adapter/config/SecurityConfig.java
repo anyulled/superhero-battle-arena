@@ -66,8 +66,6 @@ public class SecurityConfig {
                       .ignoringRequestMatchers("/api/**", "/swagger-ui/**"));
 
       return http.build();
-    } catch (RuntimeException e) {
-      throw e;
     } catch (Exception e) {
       throw new IllegalStateException("Failed to configure security filter chain", e);
     }

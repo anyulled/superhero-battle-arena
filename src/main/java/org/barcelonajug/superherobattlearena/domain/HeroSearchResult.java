@@ -10,6 +10,9 @@ public record HeroSearchResult(
     int pageSize,
     boolean hasNext,
     boolean hasPrevious) {
+  private static final int MIN_PAGE_SIZE = 1;
+  private static final int DEFAULT_PAGE_SIZE = 20;
+
   public HeroSearchResult {
     if (heroes == null) {
       heroes = List.of();
@@ -23,8 +26,8 @@ public record HeroSearchResult(
     if (currentPage < 0) {
       currentPage = 0;
     }
-    if (pageSize < 1) {
-      pageSize = 20;
+    if (pageSize < MIN_PAGE_SIZE) {
+      pageSize = DEFAULT_PAGE_SIZE;
     }
   }
 

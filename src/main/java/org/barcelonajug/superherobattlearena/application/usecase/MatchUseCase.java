@@ -46,6 +46,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class MatchUseCase {
   private static final Logger log = getLogger(MatchUseCase.class);
+  private static final int ROUND_ONE = 1;
+  private static final int SINGLE_MATCH = 1;
+  private static final int SEMIFINAL_MATCH_COUNT = 2;
 
   private final SubmissionRepositoryPort submissionRepository;
   private final MatchRepositoryPort matchRepository;
@@ -123,7 +126,7 @@ public class MatchUseCase {
               .collect(toMap(Submission::getTeamId, Function.identity(), (s1, s2) -> s1));
 
       List<Match> matchesToSave;
-      if (roundNo == 1) {
+      if (roundNo == ROUND_ONE) {
         matchesToSave =
             createRoundOneMatches(sessionId, round, sessionTeams, roundSubmissions, submissionMap);
       } else {
@@ -168,13 +171,7 @@ public class MatchUseCase {
 
     for (UUID teamId : teamIds) {
       if (!submissionMap.containsKey(teamId)) {
-        eliminationRepository.save(
-            new Elimination(
-                teamId,
-                sessionId,
-                1,
-                EliminationReason.NO_SUBMISSION,
-                OffsetDateTime.now(ZoneOffset.UTC)));
+        recordNoSubmissionElimination(teamId, sessionId, ROUND_ONE);
       }
     }
 
@@ -190,7 +187,7 @@ public class MatchUseCase {
 
     int numMatches = teamCount / 2;
     MatchType matchType;
-    if (numMatches == 1) {
+    if (numMatches == SINGLE_MATCH) {
       matchType = MatchType.FINAL;
     } else {
       matchType = MatchType.KNOCKOUT;
@@ -238,11 +235,11 @@ public class MatchUseCase {
     sortedPrev.sort(
         Comparator.comparingInt(m -> m.getBracketPosition() != null ? m.getBracketPosition() : 0));
 
-    if (sortedPrev.size() == 2) {
+    if (sortedPrev.size() == SEMIFINAL_MATCH_COUNT) {
       return createFinalsStageMatches(sessionId, roundNo, sortedPrev, submissionMap);
     }
 
-    if (sortedPrev.size() == 1) {
+    if (sortedPrev.size() == SINGLE_MATCH) {
       throw new IllegalStateException("Tournament already completed at round " + (roundNo - 1));
     }
 
@@ -268,13 +265,7 @@ public class MatchUseCase {
     List<UUID> allFinalsTeams = List.of(winner0, winner1, loser0, loser1);
     for (UUID teamId : allFinalsTeams) {
       if (!submissionMap.containsKey(teamId)) {
-        eliminationRepository.save(
-            new Elimination(
-                teamId,
-                sessionId,
-                roundNo,
-                EliminationReason.NO_SUBMISSION,
-                OffsetDateTime.now(ZoneOffset.UTC)));
+        recordNoSubmissionElimination(teamId, sessionId, roundNo);
       }
     }
 
@@ -296,13 +287,7 @@ public class MatchUseCase {
     for (Match prev : prevMatches) {
       UUID winner = winnerOf(prev);
       if (!submissionMap.containsKey(winner)) {
-        eliminationRepository.save(
-            new Elimination(
-                winner,
-                sessionId,
-                roundNo,
-                EliminationReason.NO_SUBMISSION,
-                OffsetDateTime.now(ZoneOffset.UTC)));
+        recordNoSubmissionElimination(winner, sessionId, roundNo);
       }
     }
 
@@ -380,6 +365,16 @@ public class MatchUseCase {
     return match.getMatchId();
   }
 
+  private void recordNoSubmissionElimination(UUID teamId, UUID sessionId, int roundNo) {
+    eliminationRepository.save(
+        new Elimination(
+            teamId,
+            sessionId,
+            roundNo,
+            EliminationReason.NO_SUBMISSION,
+            OffsetDateTime.now(ZoneOffset.UTC)));
+  }
+
   /**
    * Runs a pending match and persists its result, elimination, events, and hero usage. Returns the
    * winner identifier or DRAW; rejects matches that are no longer pending.
@@ -390,27 +385,7 @@ public class MatchUseCase {
 
     try {
       log.info("Starting match execution - matchId={}", matchId);
-
-      Match match =
-          matchRepository
-              .findById(matchId)
-              .orElseThrow(
-                  () -> {
-                    log.error("Match not found - matchId={}", matchId);
-                    return new IllegalArgumentException("Match not found");
-                  });
-
-      MDC.put("roundNo", match.getRoundNo().toString());
-      log.debug(
-          "Match details - teamA={}, teamB={}, roundNo={}",
-          match.getTeamA(),
-          match.getTeamB(),
-          match.getRoundNo());
-
-      if (match.getStatus() != MatchStatus.PENDING) {
-        log.warn("Match already processed - matchId={}, status={}", matchId, match.getStatus());
-        throw new IllegalStateException("Match already run or running");
-      }
+      Match match = findPendingMatch(matchId);
 
       Optional<Submission> subA =
           submissionRepository.findByTeamIdAndRoundNo(match.getTeamA(), match.getRoundNo());
@@ -426,18 +401,6 @@ public class MatchUseCase {
         throw new IllegalStateException("Submissions missing for one or both teams");
       }
 
-      log.debug("Building battle teams with fatigue applied");
-      List<Hero> teamAHeroes =
-          buildBattleTeam(
-              match.getTeamA(),
-              Objects.requireNonNull(subA.get().getSubmissionJson()),
-              match.getRoundNo());
-      List<Hero> teamBHeroes =
-          buildBattleTeam(
-              match.getTeamB(),
-              Objects.requireNonNull(subB.get().getSubmissionJson()),
-              match.getRoundNo());
-
       UUID sessionId =
           Objects.requireNonNull(match.getSessionId(), "Match session ID cannot be null");
       Round round =
@@ -446,43 +409,10 @@ public class MatchUseCase {
               .orElseThrow(
                   () -> new IllegalArgumentException("Round not found: " + match.getRoundNo()));
 
-      log.debug("Delegating to battle engine for simulation");
       SimulationResult result =
-          battleEngineUseCase.simulate(
-              matchId,
-              teamAHeroes,
-              teamBHeroes,
-              Objects.requireNonNullElse(round.getSeed(), 0L),
-              match.getTeamA(),
-              match.getTeamB(),
-              Objects.requireNonNull(round.getSpecJson()));
+          executeBattleSimulation(matchId, match, subA.get(), subB.get(), round);
 
-      match.setStatus(MatchStatus.COMPLETED);
-      match.setWinnerTeam(result.winnerTeamId());
-      match.setResultJson(
-          new MatchResult(
-              result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW",
-              result.totalTurns(),
-              0));
-      matchRepository.save(match);
-      recordEliminationOnMatchEnd(match);
-
-      log.debug("Persisting {} match events", result.events().size());
-      List<MatchEvent> eventsToSave =
-          IntStream.range(0, result.events().size())
-              .mapToObj(i -> new MatchEvent(matchId, i + 1, result.events().get(i)))
-              .toList();
-      matchEventRepository.saveAll(eventsToSave);
-
-      log.debug("Recording hero usage for both teams");
-      updateHeroUsage(
-          match.getTeamA(),
-          match.getRoundNo(),
-          Objects.requireNonNull(subA.get().getSubmissionJson()).heroIds());
-      updateHeroUsage(
-          match.getTeamB(),
-          match.getRoundNo(),
-          Objects.requireNonNull(subB.get().getSubmissionJson()).heroIds());
+      persistMatchOutcome(matchId, match, result, subA.get(), subB.get());
       String resultStr;
 
       if (result.winnerTeamId() != null) {
@@ -492,16 +422,7 @@ public class MatchUseCase {
       }
       long duration = System.currentTimeMillis() - startTime;
 
-      List<Match> remainingPending =
-          matchRepository.findPendingMatches(match.getRoundNo(), sessionId);
-      if (remainingPending.isEmpty()) {
-        round.setStatus(RoundStatus.CLOSED);
-        roundRepository.save(round);
-        log.info(
-            "Closed round {} for session {} as all matches are completed",
-            match.getRoundNo(),
-            sessionId);
-      }
+      closeRoundIfCompleted(match, round, sessionId);
 
       log.info(
           "Match execution completed - matchId={}, result={}, duration={}ms",
@@ -513,6 +434,94 @@ public class MatchUseCase {
     } finally {
       MDC.remove("matchId");
       MDC.remove("roundNo");
+    }
+  }
+
+  private Match findPendingMatch(UUID matchId) {
+    Match match =
+        matchRepository
+            .findById(matchId)
+            .orElseThrow(
+                () -> {
+                  log.error("Match not found - matchId={}", matchId);
+                  return new IllegalArgumentException("Match not found");
+                });
+
+    MDC.put("roundNo", match.getRoundNo().toString());
+    log.debug(
+        "Match details - teamA={}, teamB={}, roundNo={}",
+        match.getTeamA(),
+        match.getTeamB(),
+        match.getRoundNo());
+
+    if (match.getStatus() != MatchStatus.PENDING) {
+      log.warn("Match already processed - matchId={}, status={}", matchId, match.getStatus());
+      throw new IllegalStateException("Match already run or running");
+    }
+    return match;
+  }
+
+  private SimulationResult executeBattleSimulation(
+      UUID matchId, Match match, Submission subA, Submission subB, Round round) {
+    log.debug("Building battle teams with fatigue applied");
+    List<Hero> teamAHeroes =
+        buildBattleTeam(
+            match.getTeamA(), Objects.requireNonNull(subA.getSubmissionJson()), match.getRoundNo());
+    List<Hero> teamBHeroes =
+        buildBattleTeam(
+            match.getTeamB(), Objects.requireNonNull(subB.getSubmissionJson()), match.getRoundNo());
+
+    log.debug("Delegating to battle engine for simulation");
+    return battleEngineUseCase.simulate(
+        matchId,
+        teamAHeroes,
+        teamBHeroes,
+        Objects.requireNonNullElse(round.getSeed(), 0L),
+        match.getTeamA(),
+        match.getTeamB(),
+        Objects.requireNonNull(round.getSpecJson()));
+  }
+
+  private void persistMatchOutcome(
+      UUID matchId, Match match, SimulationResult result, Submission subA, Submission subB) {
+    match.setStatus(MatchStatus.COMPLETED);
+    match.setWinnerTeam(result.winnerTeamId());
+    match.setResultJson(
+        new MatchResult(
+            result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW",
+            result.totalTurns(),
+            0));
+    matchRepository.save(match);
+    recordEliminationOnMatchEnd(match);
+
+    log.debug("Persisting {} match events", result.events().size());
+    List<MatchEvent> eventsToSave =
+        IntStream.range(0, result.events().size())
+            .mapToObj(i -> new MatchEvent(matchId, i + 1, result.events().get(i)))
+            .toList();
+    matchEventRepository.saveAll(eventsToSave);
+
+    log.debug("Recording hero usage for both teams");
+    updateHeroUsage(
+        match.getTeamA(),
+        match.getRoundNo(),
+        Objects.requireNonNull(subA.getSubmissionJson()).heroIds());
+    updateHeroUsage(
+        match.getTeamB(),
+        match.getRoundNo(),
+        Objects.requireNonNull(subB.getSubmissionJson()).heroIds());
+  }
+
+  private void closeRoundIfCompleted(Match match, Round round, UUID sessionId) {
+    List<Match> remainingPending =
+        matchRepository.findPendingMatches(match.getRoundNo(), sessionId);
+    if (remainingPending.isEmpty()) {
+      round.setStatus(RoundStatus.CLOSED);
+      roundRepository.save(round);
+      log.info(
+          "Closed round {} for session {} as all matches are completed",
+          match.getRoundNo(),
+          sessionId);
     }
   }
 

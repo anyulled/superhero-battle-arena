@@ -181,20 +181,7 @@ public class AdminUseCase {
     final long startTime = System.currentTimeMillis();
     MDC.put(ROUND_NO_KEY, roundNo.toString());
 
-    // Determine effective sessionId
-    final UUID sessionId;
-    if (sessionIdOrNull == null) {
-      final Optional<Match> anyMatch =
-          matchRepository.findAll().stream()
-              .filter(m -> m.getRoundNo().equals(roundNo))
-              .filter(m -> m.getStatus() == MatchStatus.PENDING)
-              .findFirst();
-
-      sessionId = anyMatch.map(Match::getSessionId).orElse(null);
-    } else {
-      sessionId = sessionIdOrNull;
-    }
-
+    final UUID sessionId = resolveSessionId(sessionIdOrNull, roundNo);
     if (sessionId != null) {
       MDC.put(SESSION_ID_KEY, sessionId.toString());
     }
@@ -206,22 +193,10 @@ public class AdminUseCase {
         log.warn(
             "No session context found for runAllBattles roundNo={}. Assuming nothing to run.",
             roundNo);
-        final Map<String, Object> result = new HashMap<>();
-        result.put("matchIds", new ArrayList<>());
-        result.put("winners", new HashMap<>());
-        result.put("total", 0);
-        result.put("successCount", 0);
-        return result;
+        return emptyBatchResult();
       }
 
-      // Filter matches using the effective sessionId
-      final List<Match> pendingMatches =
-          matchRepository.findAll().stream()
-              .filter(m -> m.getRoundNo().equals(roundNo))
-              .filter(m -> m.getStatus() == MatchStatus.PENDING)
-              .filter(m -> sessionId.equals(m.getSessionId()))
-              .toList();
-
+      final List<Match> pendingMatches = findPendingMatchesForSession(roundNo, sessionId);
       log.info("Found {} pending matches for round {}", pendingMatches.size(), roundNo);
 
       final List<UUID> matchIds = new ArrayList<>();
@@ -241,15 +216,7 @@ public class AdminUseCase {
       }
 
       final long duration = System.currentTimeMillis() - startTime;
-
-      final List<Match> roundMatches =
-          matchRepository.findByRoundNoAndSessionId(roundNo, sessionId);
-      final List<Match> remainingPending = matchRepository.findPendingMatches(roundNo, sessionId);
-      if (!roundMatches.isEmpty() && remainingPending.isEmpty()) {
-        round.setStatus(RoundStatus.CLOSED);
-        roundRepository.save(round);
-        log.info("Closed round {} for session {} as all matches are completed", roundNo, sessionId);
-      }
+      closeRoundIfCompleted(round, roundNo, sessionId);
 
       log.info(
           "Batch battle execution completed - roundNo={}, total={}, successful={}, failed={}, duration={}ms",
@@ -259,16 +226,66 @@ public class AdminUseCase {
           pendingMatches.size() - successCount,
           duration);
 
-      final Map<String, Object> result = new HashMap<>();
-      result.put("matchIds", matchIds);
-      result.put("winners", winners);
-      result.put("total", pendingMatches.size());
-      result.put("successCount", successCount);
-      result.put("durationMs", duration);
-      return result;
+      return buildBatchResult(matchIds, winners, pendingMatches.size(), successCount, duration);
     } finally {
       MDC.remove(ROUND_NO_KEY);
       MDC.remove(SESSION_ID_KEY);
+    }
+  }
+
+  private Map<String, Object> emptyBatchResult() {
+    final Map<String, Object> result = new HashMap<>();
+    result.put("matchIds", new ArrayList<>());
+    result.put("winners", new HashMap<>());
+    result.put("total", 0);
+    result.put("successCount", 0);
+    return result;
+  }
+
+  private Map<String, Object> buildBatchResult(
+      final List<UUID> matchIds,
+      final Map<UUID, UUID> winners,
+      final int total,
+      final int successCount,
+      final long duration) {
+    final Map<String, Object> result = new HashMap<>();
+    result.put("matchIds", matchIds);
+    result.put("winners", winners);
+    result.put("total", total);
+    result.put("successCount", successCount);
+    result.put("durationMs", duration);
+    return result;
+  }
+
+  private List<Match> findPendingMatchesForSession(final Integer roundNo, final UUID sessionId) {
+    return matchRepository.findAll().stream()
+        .filter(m -> m.getRoundNo().equals(roundNo))
+        .filter(m -> m.getStatus() == MatchStatus.PENDING)
+        .filter(m -> sessionId.equals(m.getSessionId()))
+        .toList();
+  }
+
+  private @Nullable UUID resolveSessionId(
+      @Nullable final UUID sessionIdOrNull, final Integer roundNo) {
+    if (sessionIdOrNull != null) {
+      return sessionIdOrNull;
+    }
+    return matchRepository.findAll().stream()
+        .filter(m -> m.getRoundNo().equals(roundNo))
+        .filter(m -> m.getStatus() == MatchStatus.PENDING)
+        .findFirst()
+        .map(Match::getSessionId)
+        .orElse(null);
+  }
+
+  private void closeRoundIfCompleted(
+      final Round round, final Integer roundNo, final UUID sessionId) {
+    final List<Match> roundMatches = matchRepository.findByRoundNoAndSessionId(roundNo, sessionId);
+    final List<Match> remainingPending = matchRepository.findPendingMatches(roundNo, sessionId);
+    if (!roundMatches.isEmpty() && remainingPending.isEmpty()) {
+      round.setStatus(RoundStatus.CLOSED);
+      roundRepository.save(round);
+      log.info("Closed round {} for session {} as all matches are completed", roundNo, sessionId);
     }
   }
 
@@ -299,57 +316,65 @@ public class AdminUseCase {
           continue;
         }
 
-        final List<Hero> teamAHeroes =
-            matchUseCase.getBattleTeam(
-                match.getTeamA(),
-                requireNonNull(subA.get().getSubmissionJson()),
-                match.getRoundNo());
-        final List<Hero> teamBHeroes =
-            matchUseCase.getBattleTeam(
-                match.getTeamB(),
-                requireNonNull(subB.get().getSubmissionJson()),
-                match.getRoundNo());
-
-        final SimulationResult result =
-            battleEngineUseCase.simulate(
-                match.getMatchId(),
-                teamAHeroes,
-                teamBHeroes,
-                requireNonNullElse(round.getSeed(), 0L),
-                match.getTeamA(),
-                match.getTeamB(),
-                requireNonNull(round.getSpecJson()));
-
-        match.setStatus(MatchStatus.COMPLETED);
-        match.setWinnerTeam(result.winnerTeamId());
-        match.setResultJson(
-            new MatchResult(
-                result.winnerTeamId() != null ? result.winnerTeamId().toString() : "DRAW",
-                result.totalTurns(),
-                0));
-        matchRepository.save(match);
-        recordEliminationOnMatchEnd(match);
-
-        final AtomicInteger seq = new AtomicInteger(1);
-        final List<MatchEvent> matchEvents =
-            result.events().stream()
-                .map(evt -> new MatchEvent(match.getMatchId(), seq.getAndIncrement(), evt))
-                .toList();
-        matchEventRepository.saveAll(matchEvents);
-
-        teamHeroUsageMap.put(
-            match.getTeamA(), requireNonNull(subA.get().getSubmissionJson()).heroIds());
-        teamHeroUsageMap.put(
-            match.getTeamB(), requireNonNull(subB.get().getSubmissionJson()).heroIds());
-
-        matchIds.add(match.getMatchId());
-        winners.put(match.getMatchId(), result.winnerTeamId());
+        simulateAndSaveMatch(
+            match, round, subA.get(), subB.get(), matchIds, winners, teamHeroUsageMap);
         successCount++;
       } catch (final RuntimeException e) {
         log.error("Error simulating match {}: {}", match.getMatchId(), e.getMessage(), e);
       }
     }
     return successCount;
+  }
+
+  private void simulateAndSaveMatch(
+      final Match match,
+      final Round round,
+      final Submission subA,
+      final Submission subB,
+      final List<UUID> matchIds,
+      final Map<UUID, UUID> winners,
+      final Map<UUID, List<Integer>> teamHeroUsageMap) {
+    final List<Hero> teamAHeroes =
+        matchUseCase.getBattleTeam(
+            match.getTeamA(), requireNonNull(subA.getSubmissionJson()), match.getRoundNo());
+    final List<Hero> teamBHeroes =
+        matchUseCase.getBattleTeam(
+            match.getTeamB(), requireNonNull(subB.getSubmissionJson()), match.getRoundNo());
+
+    final SimulationResult result =
+        battleEngineUseCase.simulate(
+            match.getMatchId(),
+            teamAHeroes,
+            teamBHeroes,
+            requireNonNullElse(round.getSeed(), 0L),
+            match.getTeamA(),
+            match.getTeamB(),
+            requireNonNull(round.getSpecJson()));
+
+    match.setStatus(MatchStatus.COMPLETED);
+    match.setWinnerTeam(result.winnerTeamId());
+    String winnerStr;
+    if (result.winnerTeamId() != null) {
+      winnerStr = result.winnerTeamId().toString();
+    } else {
+      winnerStr = "DRAW";
+    }
+    match.setResultJson(new MatchResult(winnerStr, result.totalTurns(), 0));
+    matchRepository.save(match);
+    recordEliminationOnMatchEnd(match);
+
+    final AtomicInteger seq = new AtomicInteger(1);
+    final List<MatchEvent> matchEvents =
+        result.events().stream()
+            .map(evt -> new MatchEvent(match.getMatchId(), seq.getAndIncrement(), evt))
+            .toList();
+    matchEventRepository.saveAll(matchEvents);
+
+    teamHeroUsageMap.put(match.getTeamA(), requireNonNull(subA.getSubmissionJson()).heroIds());
+    teamHeroUsageMap.put(match.getTeamB(), requireNonNull(subB.getSubmissionJson()).heroIds());
+
+    matchIds.add(match.getMatchId());
+    winners.put(match.getMatchId(), result.winnerTeamId());
   }
 
   /**
