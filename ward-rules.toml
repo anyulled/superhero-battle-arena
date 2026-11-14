@@ -31,6 +31,17 @@ exclude = [
   "java.throws-method-throws-clause-basic-exception",
   "java.signature-declare-throws-exception",
 
+  # JUnit 5 vs JUnit 4 / legacy test false positives (project uses JUnit Jupiter, ArchUnit, jqwik)
+  "java.j-unit4-set-up-not-run",
+  "java.j-unit4-tear-down-not-run",
+  "java.j-unit4-test-not-run",
+  "java.j-unit4-suites-should-use-suite-annotation",
+  "java.j-unit4-class-annotation-non-static",
+  "java.j-unit3-test-not-run",
+  "java.j-unit-spelling",
+  "java.j-unit-static-suite",
+  "java.test-class-without-test-cases",
+
   # CLI / script utility rules (System.out, System.exit, and missing packages in scripts/)
   "java.system-println",
   "java.dm-exit",
