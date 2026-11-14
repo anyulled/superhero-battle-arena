@@ -51,36 +51,43 @@ import picocli.CommandLine.Option;
 class InitFixture implements Callable<Integer> {
     private static final String DEFAULT_BASE_URL = "http://localhost:8080";
     private static final String DEFAULT_HEROES_FILE = "src/main/resources/all-superheroes.json";
-    private static final int DEFAULT_TEAM_COUNT = 20;
+    private static final String DEFAULT_TEAM_COUNT_STR = "20";
+    private static final String DEFAULT_TEAM_SIZE_STR = "5";
     private static final int DEFAULT_TEAM_SIZE = 5;
+    private static final String DEFAULT_BUDGET_CAP_STR = "1000";
     private static final int DEFAULT_BUDGET_CAP = 1000;
     private static final String DEFAULT_MAP_TYPE = "ARENA_1";
+    private static final int MIN_REQUIRED_TEAMS = 2;
+    private static final int SINGLE_ROLE_COUNT = 1;
+    private static final int HTTP_OK = 200;
+    private static final int HTTP_BAD_REQUEST = 400;
+    private static final int HTTP_NOT_FOUND = 404;
+    private static final int HTTP_INTERNAL_ERROR = 500;
     private static final Logger logger = LoggerFactory.getLogger(InitFixture.class);
-    private static final List<String> DEFAULT_TEAM_NAMES =
-            List.of(
-                    "Cosmic Defenders",
-                    "Shadow Warriors",
-                    "Quantum Squad",
-                    "Mystic Alliance",
-                    "Tech Titans",
-                    "Emerald Knights",
-                    "Thunder Legion",
-                    "Phantom Force",
-                    "Velocity Vanguard",
-                    "Crimson Crusaders",
-                    "Arctic Avengers",
-                    "Inferno Brigade",
-                    "Stealth Syndicate",
-                    "Psionic Protectors",
-                    "Aquatic Armada",
-                    "Savage Squad",
-                    "Celestial Champions",
-                    "Dark Dimension",
-                    "Speedster Alliance",
-                    "Ultimate Warriors"
-            );
-    private static final List<String> STRATEGIES =
-            List.of("AGGRESSIVE", "DEFENSIVE", "BALANCED");
+    private static final TypeReference<List<UUID>> UUID_LIST_TYPE = new TypeReference<>() {};
+    private static final String[] DEFAULT_TEAM_NAMES = {
+        "Cosmic Defenders",
+        "Shadow Warriors",
+        "Quantum Squad",
+        "Mystic Alliance",
+        "Tech Titans",
+        "Emerald Knights",
+        "Thunder Legion",
+        "Phantom Force",
+        "Velocity Vanguard",
+        "Crimson Crusaders",
+        "Arctic Avengers",
+        "Inferno Brigade",
+        "Stealth Syndicate",
+        "Psionic Protectors",
+        "Aquatic Armada",
+        "Savage Squad",
+        "Celestial Champions",
+        "Dark Dimension",
+        "Speedster Alliance",
+        "Ultimate Warriors"
+    };
+    private static final String[] STRATEGIES = {"AGGRESSIVE", "DEFENSIVE", "BALANCED"};
 
     @Option(names = {"-s", "--session-id"}, description = "Session ID to create or verify")
     private UUID sessionId;
@@ -94,7 +101,7 @@ class InitFixture implements Callable<Integer> {
     @Option(
             names = {"-t", "--teams"},
             description = "Number of teams to register or target",
-            defaultValue = "" + DEFAULT_TEAM_COUNT
+            defaultValue = DEFAULT_TEAM_COUNT_STR
     )
     private int teamCount;
 
@@ -163,14 +170,14 @@ class InitFixture implements Callable<Integer> {
     @Option(
             names = {"--team-size"},
             description = "Round team size",
-            defaultValue = "" + DEFAULT_TEAM_SIZE
+            defaultValue = DEFAULT_TEAM_SIZE_STR
     )
     private int teamSize;
 
     @Option(
             names = {"--budget-cap"},
             description = "Round budget cap",
-            defaultValue = "" + DEFAULT_BUDGET_CAP
+            defaultValue = DEFAULT_BUDGET_CAP_STR
     )
     private int budgetCap;
 
@@ -489,8 +496,7 @@ class InitFixture implements Callable<Integer> {
             }
 
             UUID teamId = registerTeam(config);
-            TeamState created = new TeamState(teamId, config.name());
-            managedTeams.add(created);
+            managedTeams.add(toTeamState(teamId, config.name()));
             logger.info(
                     "[{}/{}] Registered '{}' ({})",
                     index + 1,
@@ -503,10 +509,14 @@ class InitFixture implements Callable<Integer> {
         return managedTeams;
     }
 
+    private static TeamState toTeamState(UUID teamId, String name) {
+        return new TeamState(teamId, name);
+    }
+
     private TeamConfig createTeamConfig(int index) {
         String name =
-                index < DEFAULT_TEAM_NAMES.size()
-                        ? DEFAULT_TEAM_NAMES.get(index)
+                index < DEFAULT_TEAM_NAMES.length
+                        ? DEFAULT_TEAM_NAMES[index]
                         : faker.team().name() + " " + (index + 1);
         int memberCount = faker.number().numberBetween(2, 6);
         List<String> members = generateUniqueMembers(memberCount);
@@ -558,8 +568,8 @@ class InitFixture implements Callable<Integer> {
         List<HeroProfile> heroes = loadHeroes();
         Set<Integer> globallyUsedHeroIds = new HashSet<>();
 
-        for (int index = 0; index < teams.size(); index++) {
-            TeamState team = teams.get(index);
+        int index = 0;
+        for (TeamState team : teams) {
             Optional<SubmissionState> existingSubmission = getSubmission(team.teamId());
             if (existingSubmission.isPresent()) {
                 globallyUsedHeroIds.addAll(existingSubmission.get().heroIds());
@@ -569,10 +579,11 @@ class InitFixture implements Callable<Integer> {
                         teams.size(),
                         team.name()
                 );
+                index++;
                 continue;
             }
 
-            String strategy = STRATEGIES.get(index % STRATEGIES.size());
+            String strategy = STRATEGIES[index % STRATEGIES.length];
             List<Integer> heroIds =
                     buildRosterForTeam(team, heroes, globallyUsedHeroIds)
                             .stream()
@@ -589,6 +600,7 @@ class InitFixture implements Callable<Integer> {
                     team.name(),
                     strategy
             );
+            index++;
         }
     }
 
@@ -685,15 +697,15 @@ class InitFixture implements Callable<Integer> {
                 shuffledCandidates.size()
         );
 
-        return findValidRoster(shuffledCandidates, 0, new ArrayList<>(), new HashMap<>(), 0);
+        HeroProfile[] candidatesArray = shuffledCandidates.toArray(new HeroProfile[0]);
+        return findValidRoster(candidatesArray, 0, new ArrayList<>(), new HashMap<>(), 0);
     }
 
     private Optional<List<HeroProfile>> findValidRoster(
-            List<HeroProfile> candidates,
+            HeroProfile[] candidates,
             int startIndex,
             List<HeroProfile> selectedHeroes,
-            Map<String,
-            Integer> roleCounts,
+            Map<String, Integer> roleCounts,
             int totalCost
     ) {
         if (selectedHeroes.size() == activeRoundSpec.teamSize()) {
@@ -702,8 +714,8 @@ class InitFixture implements Callable<Integer> {
                     : Optional.empty();
         }
 
-        for (int index = startIndex; index < candidates.size(); index++) {
-            HeroProfile candidate = candidates.get(index);
+        for (int index = startIndex; index < candidates.length; index++) {
+            HeroProfile candidate = candidates[index];
             int updatedCost = totalCost + candidate.cost();
             if (updatedCost > activeRoundSpec.budgetCap()) {
                 continue;
@@ -728,8 +740,8 @@ class InitFixture implements Callable<Integer> {
                 return result;
             }
 
-            selectedHeroes.remove(selectedHeroes.size() - 1);
-            if (updatedRoleCount == 1) {
+            selectedHeroes.removeLast();
+            if (updatedRoleCount == SINGLE_ROLE_COUNT) {
                 roleCounts.remove(normalizedRole);
             } else {
                 roleCounts.put(normalizedRole, updatedRoleCount - 1);
@@ -763,13 +775,13 @@ class InitFixture implements Callable<Integer> {
                         )
                         .build();
 
-        sendExpecting(request, 200, "Failed to submit roster for team " + teamId);
+        sendExpecting(request, HTTP_OK, "Failed to submit roster for team " + teamId);
     }
 
     private void autoMatch(List<TeamState> teams) throws Exception {
         printHeader("Auto-Matching Teams");
 
-        if (teams.size() < 2) {
+        if (teams.size() < MIN_REQUIRED_TEAMS) {
             logger.warn("Need at least two teams to auto-match.");
             return;
         }
@@ -789,8 +801,8 @@ class InitFixture implements Callable<Integer> {
                         .POST(HttpRequest.BodyPublishers.noBody())
                         .build();
 
-        HttpResponse<String> response = sendExpecting(request, 200, "Failed to auto-match teams");
-        List<UUID> matchIds = objectMapper.readValue(response.body(), new TypeReference<>() {});
+        HttpResponse<String> response = sendExpecting(request, HTTP_OK, "Failed to auto-match teams");
+        List<UUID> matchIds = objectMapper.readValue(response.body(), UUID_LIST_TYPE);
         logger.info("Auto-match returned {} match(es)", matchIds.size());
     }
 
@@ -840,8 +852,8 @@ class InitFixture implements Callable<Integer> {
                         URI.create(baseUrl + "/api/teams/heroes")
                 ).GET().build();
         HttpResponse<String> response =
-                sendWithLogging(request, Set.of(200, 401, 403, 404, 429, 500, 502, 503, 504));
-        if (response.statusCode() != 200) {
+                sendWithLogging(request, Set.of(HTTP_OK, 401, 403, HTTP_NOT_FOUND, 429, HTTP_INTERNAL_ERROR, 502, 503, 504));
+        if (response.statusCode() != HTTP_OK) {
             logger.warn(
                     "Falling back to {} because /api/teams/heroes returned status {}",
                     heroesFile,
@@ -933,12 +945,12 @@ class InitFixture implements Callable<Integer> {
                         .GET()
                         .build();
 
-        HttpResponse<String> response = sendWithLogging(request, Set.of(200, 404));
-        if (response.statusCode() == 404) {
+        HttpResponse<String> response = sendWithLogging(request, Set.of(HTTP_OK, HTTP_NOT_FOUND));
+        if (response.statusCode() == HTTP_NOT_FOUND) {
             logger.debug("No existing submission for team {} in round {}", teamId, activeRoundNo);
             return Optional.empty();
         }
-        if (response.statusCode() != 200) {
+        if (response.statusCode() != HTTP_OK) {
             throw failure(
                     "Failed to retrieve submission for team " + teamId,
                     response.statusCode(),
@@ -1104,7 +1116,7 @@ class InitFixture implements Callable<Integer> {
             int statusCode = response.statusCode();
             if (expectedStatuses.contains(statusCode)) {
                 logger.debug("HTTP {} {} -> {}", request.method(), request.uri(), statusCode);
-            } else if (statusCode >= 500) {
+            } else if (statusCode >= HTTP_INTERNAL_ERROR) {
                 logger.error(
                         "HTTP {} {} -> {} {}",
                         request.method(),
@@ -1112,7 +1124,7 @@ class InitFixture implements Callable<Integer> {
                         statusCode,
                         formatProblem(response.body())
                 );
-            } else if (statusCode >= 400) {
+            } else if (statusCode >= HTTP_BAD_REQUEST) {
                 logger.warn(
                         "HTTP {} {} -> {} {}",
                         request.method(),
@@ -1174,7 +1186,6 @@ class InitFixture implements Callable<Integer> {
         logger.info("=========================================");
     }
 
-    /** Runs the sixteen-team tournament through the championship and third-place matches. */
     private void runWorldCupTournament() throws Exception {
         printHeader("Starting World Cup Championship Tournament (October 27th Hackathon)");
 
@@ -1194,51 +1205,52 @@ class InitFixture implements Callable<Integer> {
         }
         List<TeamState> currentTeams = new ArrayList<>(allTeams.subList(0, targetTeamCount));
 
-        Map<String, Object> r1Spec = new LinkedHashMap<>();
-        r1Spec.put("description", "Stage 1: Initial Round (Classified Teams)");
-        r1Spec.put("teamSize", 5);
-        r1Spec.put("budgetCap", 1200);
-        r1Spec.put("mapType", DEFAULT_MAP_TYPE);
-        r1Spec.put("allowedRoles", List.of());
-        r1Spec.put("allowedAlignments", List.of());
-
-        executeTournamentRound(1, r1Spec, currentTeams);
-        List<MatchState> r1Matches = fetchMatchesForRound(1);
-        currentTeams = extractWinners(r1Matches, currentTeams);
+        Map<String, Object> r1Spec =
+                createStageSpec("Stage 1: Initial Round (Classified Teams)", 5, 1200, DEFAULT_MAP_TYPE);
+        currentTeams = advanceStageWinners(1, r1Spec, currentTeams);
         logger.info("Stage 1 complete. {} winners advance to Quarter Finals.", currentTeams.size());
 
-        Map<String, Object> r2Spec = new LinkedHashMap<>();
-        r2Spec.put("description", "Stage 2: Quarter Finals (8 Teams)");
-        r2Spec.put("teamSize", 4);
-        r2Spec.put("budgetCap", 1000);
-        r2Spec.put("mapType", "ARENA_2");
-        r2Spec.put("allowedRoles", List.of());
-        r2Spec.put("allowedAlignments", List.of());
-
-        executeTournamentRound(2, r2Spec, currentTeams);
-        List<MatchState> r2Matches = fetchMatchesForRound(2);
-        currentTeams = extractWinners(r2Matches, currentTeams);
+        Map<String, Object> r2Spec =
+                createStageSpec("Stage 2: Quarter Finals (8 Teams)", 4, 1000, "ARENA_2");
+        currentTeams = advanceStageWinners(2, r2Spec, currentTeams);
         logger.info(
                 "Stage 2 complete. {} winners advance to Semifinals (Prize Winners locked!).",
                 currentTeams.size()
         );
 
-        Map<String, Object> r3Spec = new LinkedHashMap<>();
-        r3Spec.put("description", "Stage 3: Semifinals (Top 4 Prize Winners)");
-        r3Spec.put("teamSize", 3);
-        r3Spec.put("budgetCap", 800);
-        r3Spec.put("mapType", "CITY");
-        r3Spec.put("allowedRoles", List.of());
-        r3Spec.put("allowedAlignments", List.of());
-
+        Map<String, Object> r3Spec =
+                createStageSpec("Stage 3: Semifinals (Top 4 Prize Winners)", 3, 800, "CITY");
         executeTournamentRound(3, r3Spec, currentTeams);
         List<MatchState> r3Matches = fetchMatchesForRound(3);
 
+        executeWorldCupFinals(r3Matches, allTeams);
+    }
+
+    private Map<String, Object> createStageSpec(
+            String description, int teamSize, int budgetCap, String mapType) {
+        Map<String, Object> spec = new LinkedHashMap<>();
+        spec.put("description", description);
+        spec.put("teamSize", teamSize);
+        spec.put("budgetCap", budgetCap);
+        spec.put("mapType", mapType);
+        spec.put("allowedRoles", List.of());
+        spec.put("allowedAlignments", List.of());
+        return spec;
+    }
+
+    private List<TeamState> advanceStageWinners(
+            int roundNo, Map<String, Object> spec, List<TeamState> teams) throws Exception {
+        executeTournamentRound(roundNo, spec, teams);
+        List<MatchState> matches = fetchMatchesForRound(roundNo);
+        return extractWinners(matches, teams);
+    }
+
+    private void executeWorldCupFinals(List<MatchState> r3Matches, List<TeamState> allTeams)
+            throws Exception {
         List<TeamState> sfWinners = new ArrayList<>();
         List<TeamState> sfLosers = new ArrayList<>();
-        Map<UUID, TeamState> teamMap = allTeams.stream().collect(
-                Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a)
-        );
+        Map<UUID, TeamState> teamMap =
+                allTeams.stream().collect(Collectors.toMap(TeamState::teamId, t -> t, (a, b) -> a));
 
         for (MatchState m : r3Matches) {
             if (m.winnerTeam() != null) {
@@ -1250,14 +1262,8 @@ class InitFixture implements Callable<Integer> {
 
         logger.info("Semifinals complete: 2 Finalists and 2 Bronze contenders identified.");
 
-        Map<String, Object> r4Spec = new LinkedHashMap<>();
-        r4Spec.put("description", "Stage 4: Grand Final & 3rd Place Match");
-        r4Spec.put("teamSize", 3);
-        r4Spec.put("budgetCap", 700);
-        r4Spec.put("mapType", "COLOSSEUM");
-        r4Spec.put("allowedRoles", List.of());
-        r4Spec.put("allowedAlignments", List.of());
-
+        Map<String, Object> r4Spec =
+                createStageSpec("Stage 4: Grand Final & 3rd Place Match", 3, 700, "COLOSSEUM");
         createCustomRound(4, r4Spec);
         List<TeamState> r4Teams = new ArrayList<>();
         r4Teams.addAll(sfWinners);
