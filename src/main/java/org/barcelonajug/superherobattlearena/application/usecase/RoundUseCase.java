@@ -63,76 +63,75 @@ public class RoundUseCase {
     MDC.put("teamId", teamId.toString());
 
     try {
-      log.info(
-          "Submitting team - teamId={}, roundNo={}, heroes={}",
-          teamId,
-          roundNo,
-          draft.heroIds().size());
-
-      // Validate team exists and identify session
-      Team team =
-          teamRepository
-              .findById(teamId)
-              .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
-
-      // Validate round exists for this session
-      // Team is record -> accessors are name(), sessionId()
-      Optional<Round> round = roundRepository.findBySessionIdAndRoundNo(team.sessionId(), roundNo);
-      if (round.isEmpty()) {
-        throw new IllegalArgumentException(
-            "Round " + roundNo + " does not exist in session " + team.sessionId());
-      }
-
-      if (team.sessionId() != null
-          && eliminationRepository.isEliminated(team.sessionId(), teamId)) {
-        log.warn("Eliminated team attempted submission - teamId={}, roundNo={}", teamId, roundNo);
-        throw new TeamEliminatedException(teamId, roundNo);
-      }
-
-      if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
-        log.warn("Team already submitted - teamId={}, roundNo={}", teamId, roundNo);
-        throw new IllegalStateException(
-            "Team " + teamId + " already submitted for round " + roundNo);
-      }
-
-      RoundSpec spec = round.get().getSpecJson();
-      int requiredTeamSize = 5;
-      if (spec != null) {
-        int teamSize = spec.teamSize();
-        if (teamSize > 0) {
-          requiredTeamSize = teamSize;
-        }
-      }
-      if (draft.heroIds().size() != requiredTeamSize) {
-        log.error(
-            "Invalid team size - teamId={}, roundNo={}, size={}, required={}",
-            teamId,
-            roundNo,
-            draft.heroIds().size(),
-            requiredTeamSize);
-        throw new IllegalArgumentException(
-            "Team must have exactly " + requiredTeamSize + " heroes");
-      }
-
-      Submission submission =
-          Submission.builder()
-              .teamId(teamId)
-              .roundNo(roundNo)
-              .submissionJson(draft)
-              .accepted(true)
-              .submittedAt(OffsetDateTime.now(ZoneOffset.UTC))
-              .build();
-
-      submissionRepository.save(submission);
-      log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
-    } catch (IllegalArgumentException | IllegalStateException e) {
-      throw e;
-    } catch (RuntimeException e) {
-      throw new IllegalStateException(
-          String.format("Team submission failed - teamId=%s, roundNo=%d", teamId, roundNo), e);
+      executeTeamSubmission(roundNo, teamId, draft);
     } finally {
       MDC.remove("roundNo");
       MDC.remove("teamId");
+    }
+  }
+
+  private void executeTeamSubmission(Integer roundNo, UUID teamId, DraftSubmission draft) {
+    log.info(
+        "Submitting team - teamId={}, roundNo={}, heroes={}",
+        teamId,
+        roundNo,
+        draft.heroIds().size());
+
+    Team team =
+        teamRepository
+            .findById(teamId)
+            .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+
+    Round round =
+        roundRepository
+            .findBySessionIdAndRoundNo(team.sessionId(), roundNo)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Round " + roundNo + " does not exist in session " + team.sessionId()));
+
+    if (team.sessionId() != null && eliminationRepository.isEliminated(team.sessionId(), teamId)) {
+      log.warn("Eliminated team attempted submission - teamId={}, roundNo={}", teamId, roundNo);
+      throw new TeamEliminatedException(teamId, roundNo);
+    }
+
+    if (submissionRepository.findByTeamIdAndRoundNo(teamId, roundNo).isPresent()) {
+      log.warn("Team already submitted - teamId={}, roundNo={}", teamId, roundNo);
+      throw new IllegalStateException("Team " + teamId + " already submitted for round " + roundNo);
+    }
+
+    validateTeamSize(draft, round, teamId, roundNo);
+
+    Submission submission =
+        Submission.builder()
+            .teamId(teamId)
+            .roundNo(roundNo)
+            .submissionJson(draft)
+            .accepted(true)
+            .submittedAt(OffsetDateTime.now(ZoneOffset.UTC))
+            .build();
+
+    submissionRepository.save(submission);
+    log.info("Team submission successful - teamId={}, roundNo={}", teamId, roundNo);
+  }
+
+  private void validateTeamSize(DraftSubmission draft, Round round, UUID teamId, Integer roundNo) {
+    RoundSpec spec = round.getSpecJson();
+    int requiredTeamSize = 5;
+    if (spec != null) {
+      int teamSize = spec.teamSize();
+      if (teamSize > 0) {
+        requiredTeamSize = teamSize;
+      }
+    }
+    if (draft.heroIds().size() != requiredTeamSize) {
+      log.error(
+          "Invalid team size - teamId={}, roundNo={}, size={}, required={}",
+          teamId,
+          roundNo,
+          draft.heroIds().size(),
+          requiredTeamSize);
+      throw new IllegalArgumentException("Team must have exactly " + requiredTeamSize + " heroes");
     }
   }
 

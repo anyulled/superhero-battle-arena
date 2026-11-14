@@ -21,6 +21,7 @@ public class BattleEngineUseCase {
   private static final Logger log = LoggerFactory.getLogger(BattleEngineUseCase.class);
   private static final int MAX_TURNS = 50;
   private static final double DAMAGE_DEF_FACTOR = 0.6;
+  private static final int SINGLE_TARGET = 1;
 
   /**
    * Simulates a battle using randomness seeded by the round and match. Battles still undecided
@@ -50,11 +51,8 @@ public class BattleEngineUseCase {
           teamBHeroes.size());
 
       Random random = new Random(roundSeed + matchId.hashCode());
-
-      List<BattleHeroUseCase> allHeroes = new ArrayList<>();
-      teamAHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamAId)));
-      teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
-
+      List<BattleHeroUseCase> allHeroes =
+          initBattleHeroes(teamAHeroes, teamBHeroes, teamAId, teamBId);
       List<MatchEventSnapshot> events = new ArrayList<>();
       AtomicLong logicalTime = new AtomicLong(0);
 
@@ -62,8 +60,6 @@ public class BattleEngineUseCase {
 
       int turn = 0;
       UUID winnerId = null;
-
-      sortHeroesBySpeed(allHeroes);
 
       while (turn < MAX_TURNS && winnerId == null) {
         turn++;
@@ -95,6 +91,15 @@ public class BattleEngineUseCase {
     } finally {
       MDC.remove("matchId");
     }
+  }
+
+  private List<BattleHeroUseCase> initBattleHeroes(
+      List<Hero> teamAHeroes, List<Hero> teamBHeroes, UUID teamAId, UUID teamBId) {
+    List<BattleHeroUseCase> allHeroes = new ArrayList<>();
+    teamAHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamAId)));
+    teamBHeroes.forEach(h -> allHeroes.add(new BattleHeroUseCase(h, teamBId)));
+    sortHeroesBySpeed(allHeroes);
+    return allHeroes;
   }
 
   private @Nullable UUID executeTurn(
@@ -243,7 +248,7 @@ public class BattleEngineUseCase {
     List<BattleHeroUseCase> lowestHpTargets =
         targets.stream().filter(h -> h.currentHp == minHp).toList();
 
-    if (lowestHpTargets.size() == 1) {
+    if (lowestHpTargets.size() == SINGLE_TARGET) {
       return lowestHpTargets.getFirst();
     }
 
@@ -336,17 +341,17 @@ public class BattleEngineUseCase {
     UUID teamId;
     int currentHp;
 
-    public BattleHeroUseCase(Hero hero, UUID teamId) {
+    BattleHeroUseCase(Hero hero, UUID teamId) {
       this.hero = hero;
       this.teamId = teamId;
       this.currentHp = hero.powerstats().durability();
     }
 
-    public boolean isAlive() {
+    boolean isAlive() {
       return currentHp > 0;
     }
 
-    public String getUniqueId() {
+    String getUniqueId() {
       return teamId.toString() + "_" + hero.id();
     }
   }

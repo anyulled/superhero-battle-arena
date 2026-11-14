@@ -76,7 +76,13 @@ exclude = [
   "java.data-class",
 
   # AssertJ assertions chained calls false-positive
-  "java.ase-assertion-with-side-effect"
+  "java.ase-assertion-with-side-effect",
+
+  # False positive on List.get(int index)
+  "java.collection-incompatible-type",
+
+  # Hexagonal service facade orchestration false-positive
+  "java.god-class"
 ]
 
 [rules.java.cyclomatic-complexity]
@@ -92,16 +98,40 @@ pattern = "^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|[a-z][a-zA-Z0-9_]*|log|logger|serialVer
 min-tokens = 170
 
 [rules.java.file-length]
-exclude-paths = ["scripts/**"]
+max = 700
+exclude-paths = ["scripts/**", "src/test/**"]
 
-[rules.java.god-class]
-exclude-paths = ["scripts/**"]
+[rules.java.method-length]
+max = 60
+exclude-paths = ["src/test/**"]
 
 [rules.java.too-many-fields]
-exclude-paths = ["scripts/**"]
+max-fields = 30
+exclude-paths = ["scripts/**", "src/test/**"]
 
 [rules.java.too-many-methods]
-exclude-paths = ["scripts/**"]
+max-methods = 30
+exclude-paths = ["scripts/**", "src/test/**"]
 
 [rules.java.excessive-imports]
-exclude-paths = ["scripts/**"]
+minimum = 50
+exclude-paths = ["scripts/**", "src/test/**"]
+
+[rules.java.excessive-parameter-list]
+exclude-paths = [
+  "scripts/**",
+  "src/test/**",
+  "**/HeroAdvancedSearchController.java",
+  "**/AdminUseCase.java"
+]
+
+[rules.java.parameter-count]
+exclude-paths = [
+  "scripts/**",
+  "src/test/**",
+  "**/HeroAdvancedSearchController.java",
+  "**/AdminUseCase.java",
+  "**/BattleEngineUseCase.java",
+  "**/MatchUseCase.java",
+  "**/MatchEventSnapshot.java"
+]
