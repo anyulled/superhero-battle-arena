@@ -90,3 +90,18 @@ pattern = "^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|[a-z][a-zA-Z0-9_]*|log|logger|serialVer
 
 [rules.java.duplicate-code]
 min-tokens = 170
+
+[rules.java.file-length]
+exclude-paths = ["scripts/**"]
+
+[rules.java.god-class]
+exclude-paths = ["scripts/**"]
+
+[rules.java.too-many-fields]
+exclude-paths = ["scripts/**"]
+
+[rules.java.too-many-methods]
+exclude-paths = ["scripts/**"]
+
+[rules.java.excessive-imports]
+exclude-paths = ["scripts/**"]
