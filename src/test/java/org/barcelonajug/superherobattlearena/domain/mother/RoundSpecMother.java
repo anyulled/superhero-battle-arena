@@ -8,9 +8,7 @@ import java.util.Map;
 import org.barcelonajug.superherobattlearena.domain.json.RoundSpec;
 
 public final class RoundSpecMother {
-  private RoundSpecMother() {
-    // Prevent instantiation
-  }
+  private RoundSpecMother() {}
 
   public static RoundSpec aStandardRoundSpec() {
     return new RoundSpec(

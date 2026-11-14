@@ -55,7 +55,6 @@ class MatchUseCaseTest {
   private EliminationRepositoryPort eliminationRepository;
   private MatchUseCase matchUseCase;
 
-  /** Creates the match use case with isolated dependencies and a default seeded round. */
   @BeforeEach
   void setUp() {
     submissionRepository = mock(SubmissionRepositoryPort.class);
@@ -103,7 +102,6 @@ class MatchUseCaseTest {
     verify(matchRepository).saveAll(anyList());
   }
 
-  /** Verifies that repeated auto-matching returns existing matches without saving duplicates. */
   @Test
   void autoMatch_shouldBeIdempotent_whenCalledMultipleTimes() {
     UUID sessionId = UUID.randomUUID();
@@ -131,7 +129,6 @@ class MatchUseCaseTest {
     verify(matchRepository, times(1)).saveAll(anyList());
   }
 
-  /** Verifies that a first-round field whose size is not a power of two is rejected. */
   @Test
   void autoMatch_shouldThrow_whenTeamCountIsNotPowerOfTwo() {
     UUID sessionId = UUID.randomUUID();
@@ -147,7 +144,6 @@ class MatchUseCaseTest {
         .hasMessageContaining("power of two");
   }
 
-  /** Verifies final and third-place pairings and positions from two completed semifinals. */
   @Test
   void autoMatch_shouldCreateFinalAndThirdPlaceMatches_whenFourTeamsInFinalStage() {
     UUID sessionId = UUID.randomUUID();
@@ -216,26 +212,28 @@ class MatchUseCaseTest {
     assertThat(thirdPlace.getBracketPosition()).isEqualTo(1);
   }
 
-  /** Creates four completed matches with ordered bracket positions and the supplied winners. */
   private List<Match> createFourCompletedMatches(UUID sessionId, int roundNo, List<UUID> winners) {
     List<Match> matches = new ArrayList<>();
-    for (int i = 0; i < 4; i++) {
+    int index = 0;
+    for (UUID winner : winners) {
       matches.add(
           Match.builder()
               .matchId(UUID.randomUUID())
               .sessionId(sessionId)
               .roundNo(roundNo)
-              .teamA(winners.get(i))
+              .teamA(winner)
               .teamB(UUID.randomUUID())
               .status(MatchStatus.COMPLETED)
-              .winnerTeam(winners.get(i))
-              .bracketPosition(i)
+              .winnerTeam(winner)
+              .bracketPosition(index)
               .build());
+      index++;
     }
     return matches;
   }
 
-  private record Round2KnockoutFixture(UUID sessionId, int roundNo, List<UUID> winners) {}
+  private record Round2KnockoutFixture(
+      UUID sessionId, int roundNo, UUID w0, UUID w1, UUID w2, UUID w3) {}
 
   private Round2KnockoutFixture setupRound2KnockoutWinners() {
     UUID sessionId = UUID.randomUUID();
@@ -249,7 +247,7 @@ class MatchUseCaseTest {
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of());
     when(matchRepository.findByRoundNoAndSessionId(1, sessionId))
         .thenReturn(createFourCompletedMatches(sessionId, 1, winners));
-    return new Round2KnockoutFixture(sessionId, roundNo, winners);
+    return new Round2KnockoutFixture(sessionId, roundNo, w0, w1, w2, w3);
   }
 
   private List<Match> executeAutoMatchAndCapture(Round2KnockoutFixture fixture) {
@@ -260,67 +258,62 @@ class MatchUseCaseTest {
     return captor.getValue();
   }
 
-  /** Verifies that adjacent winners advance to pending knockout matches in bracket order. */
   @Test
   void autoMatch_round2_knockout_with8Teams_shouldPairWinners() {
     Round2KnockoutFixture fixture = setupRound2KnockoutWinners();
-    List<UUID> winners = fixture.winners();
 
     List<Submission> submissions =
         List.of(
-            Submission.builder().teamId(winners.get(0)).roundNo(fixture.roundNo()).build(),
-            Submission.builder().teamId(winners.get(1)).roundNo(fixture.roundNo()).build(),
-            Submission.builder().teamId(winners.get(2)).roundNo(fixture.roundNo()).build(),
-            Submission.builder().teamId(winners.get(3)).roundNo(fixture.roundNo()).build());
+            Submission.builder().teamId(fixture.w0()).roundNo(fixture.roundNo()).build(),
+            Submission.builder().teamId(fixture.w1()).roundNo(fixture.roundNo()).build(),
+            Submission.builder().teamId(fixture.w2()).roundNo(fixture.roundNo()).build(),
+            Submission.builder().teamId(fixture.w3()).roundNo(fixture.roundNo()).build());
     when(submissionRepository.findByRoundNo(fixture.roundNo())).thenReturn(submissions);
 
     List<Match> created = executeAutoMatchAndCapture(fixture);
 
     Match k0 = created.get(0);
-    assertThat(k0.getTeamA()).isEqualTo(winners.get(0));
-    assertThat(k0.getTeamB()).isEqualTo(winners.get(1));
+    assertThat(k0.getTeamA()).isEqualTo(fixture.w0());
+    assertThat(k0.getTeamB()).isEqualTo(fixture.w1());
     assertThat(k0.getMatchType()).isEqualTo(MatchType.KNOCKOUT);
     assertThat(k0.getBracketPosition()).isEqualTo(0);
     assertThat(k0.getStatus()).isEqualTo(MatchStatus.PENDING);
 
     Match k1 = created.get(1);
-    assertThat(k1.getTeamA()).isEqualTo(winners.get(2));
-    assertThat(k1.getTeamB()).isEqualTo(winners.get(3));
+    assertThat(k1.getTeamA()).isEqualTo(fixture.w2());
+    assertThat(k1.getTeamB()).isEqualTo(fixture.w3());
     assertThat(k1.getMatchType()).isEqualTo(MatchType.KNOCKOUT);
     assertThat(k1.getBracketPosition()).isEqualTo(1);
     assertThat(k1.getStatus()).isEqualTo(MatchStatus.PENDING);
   }
 
-  /** Verifies that missing submissions yield walkover winners and elimination records. */
   @Test
   void autoMatch_round2_walkovers_shouldHandleMissingSubmissions() {
     Round2KnockoutFixture fixture = setupRound2KnockoutWinners();
-    List<UUID> winners = fixture.winners();
 
     List<Submission> submissions =
         List.of(
-            Submission.builder().teamId(winners.get(0)).roundNo(fixture.roundNo()).build(),
-            Submission.builder().teamId(winners.get(3)).roundNo(fixture.roundNo()).build());
+            Submission.builder().teamId(fixture.w0()).roundNo(fixture.roundNo()).build(),
+            Submission.builder().teamId(fixture.w3()).roundNo(fixture.roundNo()).build());
     when(submissionRepository.findByRoundNo(fixture.roundNo())).thenReturn(submissions);
 
     List<Match> created = executeAutoMatchAndCapture(fixture);
 
     Match k0 = created.get(0);
-    assertThat(k0.getTeamA()).isEqualTo(winners.get(0));
-    assertThat(k0.getTeamB()).isEqualTo(winners.get(1));
+    assertThat(k0.getTeamA()).isEqualTo(fixture.w0());
+    assertThat(k0.getTeamB()).isEqualTo(fixture.w1());
     assertThat(k0.getStatus()).isEqualTo(MatchStatus.COMPLETED);
-    assertThat(k0.getWinnerTeam()).isEqualTo(winners.get(0));
+    assertThat(k0.getWinnerTeam()).isEqualTo(fixture.w0());
 
     Match k1 = created.get(1);
-    assertThat(k1.getTeamA()).isEqualTo(winners.get(2));
-    assertThat(k1.getTeamB()).isEqualTo(winners.get(3));
+    assertThat(k1.getTeamA()).isEqualTo(fixture.w2());
+    assertThat(k1.getTeamB()).isEqualTo(fixture.w3());
     assertThat(k1.getStatus()).isEqualTo(MatchStatus.COMPLETED);
-    assertThat(k1.getWinnerTeam()).isEqualTo(winners.get(3));
+    assertThat(k1.getWinnerTeam()).isEqualTo(fixture.w3());
 
     verify(eliminationRepository, times(2)).save(any(Elimination.class));
   }
 
-  /** Verifies that matches are cancelled when neither advancing team submitted a squad. */
   @Test
   void autoMatch_round2_walkover_bothMissingSubmissions_shouldCancelMatch() {
     Round2KnockoutFixture fixture = setupRound2KnockoutWinners();
@@ -333,7 +326,6 @@ class MatchUseCaseTest {
     assertThat(created.get(1).getStatus()).isEqualTo(MatchStatus.CANCELLED);
   }
 
-  /** Verifies that auto-matching rejects a missing previous round. */
   @Test
   void autoMatch_round2_shouldThrow_whenPreviousMatchesEmpty() {
     UUID sessionId = UUID.randomUUID();
@@ -347,7 +339,6 @@ class MatchUseCaseTest {
         .hasMessageContaining("Previous round matches not found for round 1");
   }
 
-  /** Verifies that auto-matching rejects unfinished previous matches. */
   @Test
   void autoMatch_round2_shouldThrow_whenPreviousMatchesNotAllCompleted() {
     UUID sessionId = UUID.randomUUID();
@@ -371,7 +362,6 @@ class MatchUseCaseTest {
         .hasMessageContaining("Previous round matches must be completed");
   }
 
-  /** Verifies that auto-matching rejects progression after a single completed final. */
   @Test
   void autoMatch_round3_shouldThrow_whenTournamentAlreadyCompleted() {
     UUID sessionId = UUID.randomUUID();
@@ -396,7 +386,6 @@ class MatchUseCaseTest {
         .hasMessageContaining("Tournament already completed");
   }
 
-  /** Verifies that an odd first-round team count is rejected. */
   @Test
   void autoMatch_round1_withOddOrZeroTeams_shouldThrow() {
     UUID sessionId = UUID.randomUUID();
@@ -431,7 +420,6 @@ class MatchUseCaseTest {
         .hasMessageContaining("power of two");
   }
 
-  /** Verifies that two teams with no round seed produce a final resolved by walkover. */
   @Test
   void autoMatch_round1_withTwoTeams_andNullSeed_shouldCreateFinalMatch() {
     UUID sessionId = UUID.randomUUID();
@@ -499,18 +487,15 @@ class MatchUseCaseTest {
         .thenReturn(List.of(mockHero));
   }
 
-  /** Verifies that running a match persists its simulation result and events. */
   @Test
   void runMatch_shouldExecuteSimulationAndSaveResult() {
-    // Given
     UUID matchId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
     Integer roundNo = 1;
 
-    Match match =
-        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
+    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo);
 
     Submission subA = createSubmission(teamA, roundNo);
     Submission subB = createSubmission(teamB, roundNo);
@@ -521,14 +506,10 @@ class MatchUseCaseTest {
 
     mockStandardSimulation(match, round, subA, subB);
     when(matchRepository.findByRoundNoAndSessionId(roundNo, sessionId)).thenReturn(List.of(match));
-
-    // Initial call for pending matches returns empty to trigger round closing
     when(matchRepository.findPendingMatches(roundNo, sessionId)).thenReturn(List.of());
 
-    // When
     String result = matchUseCase.runMatch(matchId);
 
-    // Then
     assertThat(result).isEqualTo(teamA.toString());
     verify(matchRepository).save(match);
     verify(matchEventRepository).saveAll(any());
@@ -540,15 +521,13 @@ class MatchUseCaseTest {
 
   @Test
   void runMatch_shouldHandleDraw() {
-    // Given
     UUID matchId = UUID.randomUUID();
     UUID sessionId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
     Integer roundNo = 1;
 
-    Match match =
-        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
+    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, roundNo))
@@ -561,26 +540,21 @@ class MatchUseCaseTest {
     when(roundRepository.findBySessionIdAndRoundNo(sessionId, roundNo))
         .thenReturn(Optional.of(round));
 
-    // Simulation result with null winnerTeamId = DRAW
     SimulationResult simResult = new SimulationResult(null, 10, List.of());
     when(battleEngineUseCase.simulate(any(), any(), any(), anyLong(), any(), any(), any()))
         .thenReturn(simResult);
 
-    // Mock heroes for buildBattleTeam
     Hero mockHero = mock(Hero.class);
     when(rosterUseCase.getHeroes(any())).thenReturn(List.of(mockHero));
     when(mockHero.id()).thenReturn(1);
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenReturn(List.of(mockHero));
 
-    // When
     String result = matchUseCase.runMatch(matchId);
 
-    // Then
     assertThat(result).isEqualTo("DRAW");
   }
 
-  /** Verifies that running a semifinal preserves the losing team for third place. */
   @Test
   void runMatch_shouldNotEliminateLoser_whenSemifinalMatch() {
     UUID matchId = UUID.randomUUID();
@@ -589,18 +563,12 @@ class MatchUseCaseTest {
     UUID teamB = UUID.randomUUID();
     Integer roundNo = 1;
 
-    Match match =
-        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
+    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo);
     match.setMatchType(MatchType.KNOCKOUT);
 
     Match match2 =
         MatchMother.aMatch(
-            UUID.randomUUID(),
-            sessionId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            roundNo,
-            MatchStatus.PENDING);
+            UUID.randomUUID(), sessionId, UUID.randomUUID(), UUID.randomUUID(), roundNo);
     match2.setMatchType(MatchType.KNOCKOUT);
 
     Submission subA = createSubmission(teamA, roundNo);
@@ -625,13 +593,7 @@ class MatchUseCaseTest {
   void runMatch_shouldThrowException_whenSubmissionsMissing() {
     UUID matchId = UUID.randomUUID();
     Match match =
-        MatchMother.aMatch(
-            matchId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            1,
-            MatchStatus.PENDING);
+        MatchMother.aMatch(matchId, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(Optional.empty());
@@ -650,8 +612,7 @@ class MatchUseCaseTest {
     UUID teamB = UUID.randomUUID();
     Integer roundNo = 1;
 
-    Match match =
-        MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo, MatchStatus.PENDING);
+    Match match = MatchMother.aMatch(matchId, sessionId, teamA, teamB, roundNo);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(any(), anyInt()))
@@ -673,13 +634,10 @@ class MatchUseCaseTest {
     when(fatigueUseCase.applyFatigue(any(UUID.class), anyList(), anyInt()))
         .thenReturn(List.of(mockHero));
 
-    // One more pending match exists
     when(matchRepository.findPendingMatches(roundNo, sessionId)).thenReturn(List.of(new Match()));
 
-    // When
     matchUseCase.runMatch(matchId);
 
-    // Then
     assertThat(round.getStatus()).isEqualTo(RoundStatus.OPEN);
   }
 
@@ -697,13 +655,8 @@ class MatchUseCaseTest {
   void runMatch_shouldThrowException_whenMatchAlreadyProcessed() {
     UUID matchId = UUID.randomUUID();
     Match match =
-        MatchMother.aMatch(
-            matchId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            1,
-            MatchStatus.COMPLETED);
+        MatchMother.aMatch(matchId, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1);
+    match.setStatus(MatchStatus.COMPLETED);
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
 
     assertThatThrownBy(() -> matchUseCase.runMatch(matchId))
@@ -738,17 +691,10 @@ class MatchUseCaseTest {
   void runMatchResult_shouldDelegateToRunMatch() {
     UUID matchId = UUID.randomUUID();
     Match match =
-        MatchMother.aMatch(
-            matchId,
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            UUID.randomUUID(),
-            1,
-            MatchStatus.COMPLETED);
+        MatchMother.aMatch(matchId, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), 1);
+    match.setStatus(MatchStatus.COMPLETED);
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
 
-    // This will throw IllegalStateException because it's already COMPLETED, but
-    // proves delegation
     assertThatThrownBy(() -> matchUseCase.runMatchResult(match))
         .isInstanceOf(IllegalStateException.class);
   }
@@ -797,8 +743,7 @@ class MatchUseCaseTest {
     UUID matchId = UUID.randomUUID();
     UUID teamA = UUID.randomUUID();
     UUID teamB = UUID.randomUUID();
-    Match match =
-        MatchMother.aMatch(matchId, UUID.randomUUID(), teamA, teamB, 1, MatchStatus.PENDING);
+    Match match = MatchMother.aMatch(matchId, UUID.randomUUID(), teamA, teamB, 1);
 
     when(matchRepository.findById(matchId)).thenReturn(Optional.of(match));
     when(submissionRepository.findByTeamIdAndRoundNo(teamA, 1))

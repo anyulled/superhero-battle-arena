@@ -5,9 +5,7 @@ import org.barcelonajug.superherobattlearena.domain.Match;
 import org.barcelonajug.superherobattlearena.domain.MatchStatus;
 
 public final class MatchMother {
-  private MatchMother() {
-    // Prevent instantiation
-  }
+  private MatchMother() {}
 
   public static Match aPendingMatch(UUID sessionId, int roundNo, UUID teamA, UUID teamB) {
     return Match.builder()
@@ -34,14 +32,14 @@ public final class MatchMother {
   }
 
   public static Match aMatch(
-      UUID matchId, UUID sessionId, UUID teamA, UUID teamB, Integer roundNo, MatchStatus status) {
+      UUID matchId, UUID sessionId, UUID teamA, UUID teamB, Integer roundNo) {
     return Match.builder()
         .matchId(matchId)
         .sessionId(sessionId)
         .roundNo(roundNo)
         .teamA(teamA)
         .teamB(teamB)
-        .status(status)
+        .status(MatchStatus.PENDING)
         .build();
   }
 }

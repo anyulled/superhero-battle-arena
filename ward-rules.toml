@@ -73,7 +73,10 @@ exclude = [
   "java.custom-import-order",
 
   # Hexagonal Architecture: JPA entities in adapter.out.persistence are database mapping models
-  "java.data-class"
+  "java.data-class",
+
+  # AssertJ assertions chained calls false-positive
+  "java.ase-assertion-with-side-effect"
 ]
 
 [rules.java.cyclomatic-complexity]

@@ -11,12 +11,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.hateoas.PagedModel;
 
 class HeroSearchResultAssemblerTest {
-  private HeroModelAssembler heroModelAssembler;
   private HeroSearchResultAssembler assembler;
 
   @BeforeEach
   void setUp() {
-    heroModelAssembler = new HeroModelAssembler();
+    HeroModelAssembler heroModelAssembler = new HeroModelAssembler();
     assembler = new HeroSearchResultAssembler(heroModelAssembler);
   }
 

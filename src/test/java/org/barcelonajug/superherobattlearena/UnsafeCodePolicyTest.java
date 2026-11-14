@@ -17,7 +17,8 @@ import java.lang.reflect.Method;
     packages = "org.barcelonajug.superherobattlearena",
     importOptions = ImportOption.DoNotIncludeTests.class)
 public class UnsafeCodePolicyTest {
-  /** No native methods allowed */
+  private UnsafeCodePolicyTest() {}
+
   @ArchTest
   static final ArchRule no_native_methods =
       methods()
@@ -25,7 +26,6 @@ public class UnsafeCodePolicyTest {
           .notHaveModifier(JavaModifier.NATIVE)
           .as("Native methods are strictly forbidden.");
 
-  /** No usage of sun.misc.Unsafe */
   @ArchTest
   static final ArchRule no_usage_of_sun_misc_unsafe =
       noClasses()
@@ -34,7 +34,6 @@ public class UnsafeCodePolicyTest {
           .resideInAnyPackage("sun.misc..")
           .as("Using sun.misc.Unsafe is strictly forbidden.");
 
-  /** No bypassing visibility with reflection */
   @ArchTest
   static final ArchRule no_bypassing_visibility_with_reflection =
       noClasses()

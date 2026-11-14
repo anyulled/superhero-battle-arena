@@ -39,14 +39,14 @@ public class RoundConstraintValidationRule implements ValidationRule {
             });
   }
 
-  private @Nullable String genderOf(Hero hero) {
+  @Nullable String genderOf(Hero hero) {
     if (hero.appearance() != null) {
       return hero.appearance().gender();
     }
     return null;
   }
 
-  private @Nullable String raceOf(Hero hero) {
+  @Nullable String raceOf(Hero hero) {
     if (hero.appearance() != null) {
       return hero.appearance().race();
     }

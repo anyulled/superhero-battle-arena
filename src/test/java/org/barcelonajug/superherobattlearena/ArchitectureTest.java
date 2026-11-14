@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
     packages = "org.barcelonajug.superherobattlearena",
     importOptions = ImportOption.DoNotIncludeTests.class)
 public class ArchitectureTest {
+  private ArchitectureTest() {}
+
   private static final String DOMAIN = "org.barcelonajug.superherobattlearena.domain..";
   private static final String APPLICATION = "org.barcelonajug.superherobattlearena.application..";
   private static final String ADAPTER = "org.barcelonajug.superherobattlearena.adapter..";
