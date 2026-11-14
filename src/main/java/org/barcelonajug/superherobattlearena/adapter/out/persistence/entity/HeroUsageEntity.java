@@ -38,6 +38,8 @@ public class HeroUsageEntity {
   private BigDecimal multiplier;
 
   public static class HeroUsageId implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @SuppressWarnings("NullAway.Init")
     private UUID teamId;
 
@@ -51,9 +53,6 @@ public class HeroUsageEntity {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
       if (!(o instanceof HeroUsageId that)) {
         return false;
       }

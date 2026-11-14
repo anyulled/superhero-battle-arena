@@ -69,7 +69,9 @@ public class SuperheroSearchQuery {
     SearchJoins joins = createJoins(root, criteria, JoinType.INNER);
 
     List<Predicate> predicates = buildPredicates(cb, root, joins, criteria);
-    applyPredicates(query, predicates);
+    if (!predicates.isEmpty()) {
+      query.where(predicates.toArray(new Predicate[0]));
+    }
     query.orderBy(buildOrder(cb, root, joins, criteria));
 
     long totalElements = countTotalElements(cb, criteria);
@@ -80,7 +82,7 @@ public class SuperheroSearchQuery {
             .setMaxResults(criteria.size())
             .getResultList();
 
-    int totalPages = calculateTotalPages(totalElements, criteria.size());
+    int totalPages = (int) Math.ceil((double) totalElements / criteria.size());
 
     return new SearchResultPage(entities, totalElements, totalPages);
   }
@@ -91,7 +93,9 @@ public class SuperheroSearchQuery {
     SearchJoins joins = createJoins(countRoot, criteria, JoinType.INNER);
 
     List<Predicate> predicates = buildPredicates(cb, countRoot, joins, criteria);
-    applyPredicates(countQuery, predicates);
+    if (!predicates.isEmpty()) {
+      countQuery.where(predicates.toArray(new Predicate[0]));
+    }
     countQuery.select(cb.count(countRoot));
 
     return entityManager.createQuery(countQuery).getSingleResult();
@@ -102,22 +106,14 @@ public class SuperheroSearchQuery {
     Join<SuperheroEntity, SuperheroPowerStatsEntity> powerStatsJoin = null;
     Join<SuperheroEntity, SuperheroAppearanceEntity> appearanceJoin = null;
 
-    if (needsPowerStatsJoin(criteria)) {
+    if (criteria.hasCostRange() || criteria.hasPowerStatsFilter()) {
       powerStatsJoin = root.join(POWER_STATS_PATH, joinType);
     }
-    if (needsAppearanceJoin(criteria)) {
+    if (criteria.hasGenderFilter() || criteria.hasRaceFilter()) {
       appearanceJoin = root.join(APPEARANCE_PATH, joinType);
     }
 
     return new SearchJoins(powerStatsJoin, appearanceJoin);
-  }
-
-  private boolean needsPowerStatsJoin(HeroSearchCriteria criteria) {
-    return criteria.hasCostRange() || criteria.hasPowerStatsFilter();
-  }
-
-  private boolean needsAppearanceJoin(HeroSearchCriteria criteria) {
-    return criteria.hasGenderFilter() || criteria.hasRaceFilter();
   }
 
   private List<Predicate> buildPredicates(
@@ -146,7 +142,14 @@ public class SuperheroSearchQuery {
     }
     Join<SuperheroEntity, SuperheroAppearanceEntity> appearanceJoin = joins.appearanceJoin();
     if (appearanceJoin != null) {
-      addAppearancePredicates(cb, appearanceJoin, predicates, criteria);
+      addStringPredicate(
+          cb,
+          predicates,
+          appearanceJoin.get(GENDER_PATH),
+          criteria.gender(),
+          criteria.hasGenderFilter());
+      addStringPredicate(
+          cb, predicates, appearanceJoin.get(RACE_PATH), criteria.race(), criteria.hasRaceFilter());
     }
 
     return predicates;
@@ -212,21 +215,6 @@ public class SuperheroSearchQuery {
         criteria.maxCombat());
   }
 
-  private void addAppearancePredicates(
-      CriteriaBuilder cb,
-      Join<SuperheroEntity, SuperheroAppearanceEntity> appearanceJoin,
-      List<Predicate> predicates,
-      HeroSearchCriteria criteria) {
-    addStringPredicate(
-        cb,
-        predicates,
-        appearanceJoin.get(GENDER_PATH),
-        criteria.gender(),
-        criteria.hasGenderFilter());
-    addStringPredicate(
-        cb, predicates, appearanceJoin.get(RACE_PATH), criteria.race(), criteria.hasRaceFilter());
-  }
-
   private void addRangePredicate(
       CriteriaBuilder cb,
       List<Predicate> predicates,
@@ -238,12 +226,6 @@ public class SuperheroSearchQuery {
     }
     if (max != null) {
       predicates.add(cb.lessThanOrEqualTo(path, Objects.requireNonNull(max)));
-    }
-  }
-
-  private void applyPredicates(CriteriaQuery<?> query, List<Predicate> predicates) {
-    if (!predicates.isEmpty()) {
-      query.where(predicates.toArray(new Predicate[0]));
     }
   }
 
@@ -276,10 +258,6 @@ public class SuperheroSearchQuery {
       return cb.asc(root.get(sortBy));
     }
     return cb.desc(root.get(sortBy));
-  }
-
-  private int calculateTotalPages(long totalElements, int pageSize) {
-    return (int) Math.ceil((double) totalElements / pageSize);
   }
 
   private record SearchJoins(

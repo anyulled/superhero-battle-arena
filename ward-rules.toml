@@ -59,7 +59,10 @@ exclude = [
   "java.preserve-stack-trace",
   "java.abstract-class-without-abstract-method",
   "java.overload-methods-declaration-order",
-  "java.custom-import-order"
+  "java.custom-import-order",
+
+  # Hexagonal Architecture: JPA entities in adapter.out.persistence are database mapping models
+  "java.data-class"
 ]
 
 [rules.java.cyclomatic-complexity]
