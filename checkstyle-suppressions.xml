@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+          "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+          "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <suppress checks="ParameterNumber" files="HeroAdvancedSearchController\.java"/>
+    <suppress checks="ParameterNumber" files="AdminUseCase\.java"/>
+    <suppress checks="ParameterNumber" files="BattleEngineUseCase\.java"/>
+    <suppress checks="ParameterNumber" files="MatchUseCase\.java"/>
+    <suppress checks="ParameterNumber" files="MatchEventSnapshot\.java"/>
+</suppressions>

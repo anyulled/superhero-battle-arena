@@ -1,6 +1,7 @@
 package org.barcelonajug.superherobattlearena.adapter.in.web.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
@@ -141,5 +142,25 @@ class WebDtoContractTest {
         Arguments.of(options, RoundConstraintOptionsDto.from(options)),
         Arguments.of(start, MatchEventSnapshotDto.from(start)),
         Arguments.of(hit, MatchEventSnapshotDto.from(hit)));
+  }
+
+  @Test
+  void shouldRejectNullFieldsWhenConvertingDraftSubmissionDtoToDomain() throws Exception {
+    DraftSubmissionDto missingFields = objectMapper.readValue("{}", DraftSubmissionDto.class);
+    DraftSubmissionDto nullHeroElement =
+        objectMapper.readValue(
+            "{\"heroIds\":[1,null],\"strategy\":\"ATTACK\"}", DraftSubmissionDto.class);
+    DraftSubmissionDto missingStrategy =
+        objectMapper.readValue("{\"heroIds\":[1]}", DraftSubmissionDto.class);
+
+    assertThatThrownBy(missingFields::toDomain)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("heroIds");
+    assertThatThrownBy(nullHeroElement::toDomain)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("heroIds");
+    assertThatThrownBy(missingStrategy::toDomain)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("strategy");
   }
 }

@@ -8,7 +8,35 @@
     <property name="severity" value="error"/>
     <property name="fileExtensions" value="java, xml, properties"/>
 
+    <module name="FileLength">
+        <property name="max" value="700"/>
+    </module>
+
     <module name="TreeWalker">
+        <module name="MethodLength">
+            <property name="max" value="60"/>
+            <property name="countEmpty" value="true"/>
+        </module>
+
+        <module name="CyclomaticComplexity">
+            <property name="max" value="20"/>
+        </module>
+
+        <module name="ParameterNumber">
+            <property name="max" value="5"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
+        </module>
+
+        <module name="ConstantName">
+            <property name="format" value="^([A-Z][A-Z0-9]*(_[A-Z0-9]+)*|[a-z][a-zA-Z0-9_]*|log|logger|serialVersionUID|serialPersistentFields)$"/>
+        </module>
+
+        <module name="NeedBraces"/>
+        <module name="RedundantModifier"/>
+        <module name="EmptyCatchBlock"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="EqualsAvoidNull"/>
+
         <module name="RegexpSinglelineJava">
             <property name="id" value="noFullyQualifiedNames"/>
             <property name="format" value="^(?!\s*(import|package) ).*\b(org\.barcelonajug\.superherobattlearena|org\.mockito|java\.util|java\.math|java\.time)\.([a-z0-9]+\.)*[A-Z][a-zA-Z0-9]*\b.*"/>

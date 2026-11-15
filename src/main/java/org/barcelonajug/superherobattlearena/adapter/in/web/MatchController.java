@@ -68,12 +68,11 @@ public class MatchController {
       summary = "Stream match events",
       description = "Streams events for a match using Server-Sent Events (SSE).")
   @GetMapping("/{matchId}/events/stream")
-  @SuppressWarnings("FutureReturnValueIgnored")
   public SseEmitter streamEvents(
       @Parameter(description = "ID of the match to stream", required = true) @PathVariable
           UUID matchId) {
     SseEmitter emitter = new SseEmitter(600_000L);
-    executor.submit(
+    executor.execute(
         () -> {
           try {
             List<MatchEvent> events = matchUseCase.getMatchEventEntities(matchId);

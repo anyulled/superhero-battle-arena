@@ -2,6 +2,7 @@ package org.barcelonajug.superherobattlearena.adapter.in.web.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
+import java.util.Objects;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
 
 @Schema(
@@ -23,6 +24,12 @@ public record DraftSubmissionDto(
   }
 
   public DraftSubmission toDomain() {
+    if (heroIds == null || heroIds.stream().anyMatch(Objects::isNull)) {
+      throw new IllegalArgumentException("heroIds must not be null or contain null elements");
+    }
+    if (strategy == null) {
+      throw new IllegalArgumentException("strategy must not be null");
+    }
     return new DraftSubmission(heroIds, strategy);
   }
 }
