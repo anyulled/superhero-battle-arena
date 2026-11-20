@@ -347,16 +347,18 @@
         <version>3.11.0</version>
         <configuration>
           <java>
-            <googleJavaFormat/>
             <shortenFullyQualifiedTypes/>
-            <importOrder/>
-            <removeUnusedImports/>
             <cleanthat>
               <mutators>
                 <mutator>SafeAndConsensual</mutator>
                 <mutator>SafeButNotConsensual</mutator>
               </mutators>
             </cleanthat>
+            <googleJavaFormat>
+              <version>2.0.0</version>
+            </googleJavaFormat>
+            <importOrder/>
+            <removeUnusedImports/>
           </java>
           <pom>
             <sortPom>

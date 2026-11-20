@@ -35,21 +35,20 @@ class FatigueUseCasePerformanceTest {
     int teamSize = 5;
     List<Hero> heroes =
         IntStream.range(0, teamSize)
-            .mapToObj(
-                i ->
-                    new Hero(
-                        i,
-                        "Hero" + i,
-                        "hero-" + i,
-                        new Hero.PowerStats(100, 10, 10, 10, 10, 10),
-                        "Fighter",
-                        10,
-                        "good",
-                        "Marvel",
-                        null,
-                        null,
-                        emptyList(),
-                        new Hero.Images(null, null, null, null)))
+            .mapToObj(i ->
+                new Hero(
+                    i,
+                    "Hero" + i,
+                    "hero-" + i,
+                    new Hero.PowerStats(100, 10, 10, 10, 10, 10),
+                    "Fighter",
+                    10,
+                    "good",
+                    "Marvel",
+                    null,
+                    null,
+                    emptyList(),
+                    new Hero.Images(null, null, null, null)))
             .toList();
 
     when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());
@@ -67,21 +66,20 @@ class FatigueUseCasePerformanceTest {
     int teamSize = 5;
     List<Hero> heroes =
         IntStream.range(0, teamSize)
-            .mapToObj(
-                i ->
-                    new Hero(
-                        i,
-                        "Hero" + i,
-                        "hero-" + i,
-                        new Hero.PowerStats(100, 10, 10, 10, 10, 10),
-                        "Fighter",
-                        10,
-                        "good",
-                        "Marvel",
-                        null,
-                        null,
-                        emptyList(),
-                        new Hero.Images(null, null, null, null)))
+            .mapToObj(i ->
+                new Hero(
+                    i,
+                    "Hero" + i,
+                    "hero-" + i,
+                    new Hero.PowerStats(100, 10, 10, 10, 10, 10),
+                    "Fighter",
+                    10,
+                    "good",
+                    "Marvel",
+                    null,
+                    null,
+                    emptyList(),
+                    new Hero.Images(null, null, null, null)))
             .toList();
 
     when(heroUsageRepository.findByTeamIdAndRoundNo(any(), anyInt())).thenReturn(emptyList());

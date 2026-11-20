@@ -69,10 +69,9 @@ class RoundUseCaseTest {
     void shouldThrow_whenTeamNotFound() {
       given(teamRepository.findById(TEAM_ID)).willReturn(Optional.empty());
 
-      assertThatThrownBy(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+      assertThatThrownBy(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("Team not found");
     }
@@ -82,10 +81,9 @@ class RoundUseCaseTest {
       given(roundRepository.findBySessionIdAndRoundNo(SESSION_ID, ROUND_NO))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+      assertThatThrownBy(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("does not exist in session");
     }
@@ -98,10 +96,9 @@ class RoundUseCaseTest {
           .willReturn(Optional.of(round));
       given(eliminationRepository.isEliminated(SESSION_ID, TEAM_ID)).willReturn(true);
 
-      assertThatThrownBy(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+      assertThatThrownBy(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(TeamEliminatedException.class)
           .hasMessageContaining("has been eliminated");
     }
@@ -114,10 +111,9 @@ class RoundUseCaseTest {
       given(submissionRepository.findByTeamIdAndRoundNo(TEAM_ID, ROUND_NO))
           .willReturn(Optional.of(Submission.builder().build()));
 
-      assertThatThrownBy(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+      assertThatThrownBy(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalStateException.class)
           .hasMessageContaining("already submitted");
     }
@@ -130,10 +126,9 @@ class RoundUseCaseTest {
       given(submissionRepository.findByTeamIdAndRoundNo(TEAM_ID, ROUND_NO))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2), "ATTACK")))
+      assertThatThrownBy(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("exactly 3 heroes");
     }
@@ -146,10 +141,9 @@ class RoundUseCaseTest {
       given(submissionRepository.findByTeamIdAndRoundNo(TEAM_ID, ROUND_NO))
           .willReturn(Optional.empty());
 
-      assertThatCode(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+      assertThatCode(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .doesNotThrowAnyException();
 
       then(submissionRepository).should().save(any(Submission.class));
@@ -163,10 +157,9 @@ class RoundUseCaseTest {
       given(submissionRepository.findByTeamIdAndRoundNo(TEAM_ID, ROUND_NO))
           .willReturn(Optional.empty());
 
-      assertThatThrownBy(
-              () ->
-                  roundUseCase.submitTeam(
-                      ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
+      assertThatThrownBy(() ->
+              roundUseCase.submitTeam(
+                  ROUND_NO, TEAM_ID, new DraftSubmission(List.of(1, 2, 3), "ATTACK")))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("exactly 5 heroes");
     }

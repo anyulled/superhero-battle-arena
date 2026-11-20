@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -126,7 +127,7 @@ class MatchUseCaseTest {
     List<UUID> secondCallMatchIds = matchUseCase.autoMatch(sessionId, roundNo);
 
     assertThat(secondCallMatchIds).hasSize(2);
-    verify(matchRepository, times(1)).saveAll(anyList());
+    verify(matchRepository).saveAll(anyList());
   }
 
   @Test
@@ -200,7 +201,7 @@ class MatchUseCaseTest {
         created.stream().filter(m -> m.getMatchType() == MatchType.FINAL).findFirst().orElseThrow();
     assertThat(grandFinal.getTeamA()).isEqualTo(team1);
     assertThat(grandFinal.getTeamB()).isEqualTo(team3);
-    assertThat(grandFinal.getBracketPosition()).isEqualTo(0);
+    assertThat(grandFinal.getBracketPosition()).isZero();
 
     Match thirdPlace =
         created.stream()
@@ -209,7 +210,7 @@ class MatchUseCaseTest {
             .orElseThrow();
     assertThat(thirdPlace.getTeamA()).isEqualTo(team2);
     assertThat(thirdPlace.getTeamB()).isEqualTo(team4);
-    assertThat(thirdPlace.getBracketPosition()).isEqualTo(1);
+    assertThat(thirdPlace.getBracketPosition()).isOne();
   }
 
   private List<Match> createFourCompletedMatches(UUID sessionId, int roundNo, List<UUID> winners) {
@@ -272,18 +273,18 @@ class MatchUseCaseTest {
 
     List<Match> created = executeAutoMatchAndCapture(fixture);
 
-    Match k0 = created.get(0);
+    Match k0 = created.getFirst();
     assertThat(k0.getTeamA()).isEqualTo(fixture.w0());
     assertThat(k0.getTeamB()).isEqualTo(fixture.w1());
     assertThat(k0.getMatchType()).isEqualTo(MatchType.KNOCKOUT);
-    assertThat(k0.getBracketPosition()).isEqualTo(0);
+    assertThat(k0.getBracketPosition()).isZero();
     assertThat(k0.getStatus()).isEqualTo(MatchStatus.PENDING);
 
     Match k1 = created.get(1);
     assertThat(k1.getTeamA()).isEqualTo(fixture.w2());
     assertThat(k1.getTeamB()).isEqualTo(fixture.w3());
     assertThat(k1.getMatchType()).isEqualTo(MatchType.KNOCKOUT);
-    assertThat(k1.getBracketPosition()).isEqualTo(1);
+    assertThat(k1.getBracketPosition()).isOne();
     assertThat(k1.getStatus()).isEqualTo(MatchStatus.PENDING);
   }
 
@@ -299,7 +300,7 @@ class MatchUseCaseTest {
 
     List<Match> created = executeAutoMatchAndCapture(fixture);
 
-    Match k0 = created.get(0);
+    Match k0 = created.getFirst();
     assertThat(k0.getTeamA()).isEqualTo(fixture.w0());
     assertThat(k0.getTeamB()).isEqualTo(fixture.w1());
     assertThat(k0.getStatus()).isEqualTo(MatchStatus.COMPLETED);
@@ -322,7 +323,7 @@ class MatchUseCaseTest {
 
     List<Match> created = executeAutoMatchAndCapture(fixture);
 
-    assertThat(created.get(0).getStatus()).isEqualTo(MatchStatus.CANCELLED);
+    assertThat(created.getFirst().getStatus()).isEqualTo(MatchStatus.CANCELLED);
     assertThat(created.get(1).getStatus()).isEqualTo(MatchStatus.CANCELLED);
   }
 
@@ -448,10 +449,10 @@ class MatchUseCaseTest {
     ArgumentCaptor<List<Match>> captor = ArgumentCaptor.forClass(List.class);
     verify(matchRepository).saveAll(captor.capture());
     List<Match> created = captor.getValue();
-    assertThat(created.get(0).getMatchType()).isEqualTo(MatchType.FINAL);
-    assertThat(created.get(0).getBracketPosition()).isEqualTo(0);
-    assertThat(created.get(0).getStatus()).isEqualTo(MatchStatus.COMPLETED);
-    assertThat(created.get(0).getWinnerTeam()).isEqualTo(t1Id);
+    assertThat(created.getFirst().getMatchType()).isEqualTo(MatchType.FINAL);
+    assertThat(created.getFirst().getBracketPosition()).isZero();
+    assertThat(created.getFirst().getStatus()).isEqualTo(MatchStatus.COMPLETED);
+    assertThat(created.getFirst().getWinnerTeam()).isEqualTo(t1Id);
     verify(eliminationRepository).save(any(Elimination.class));
   }
 
@@ -586,7 +587,7 @@ class MatchUseCaseTest {
     String result = matchUseCase.runMatch(matchId);
 
     assertThat(result).isEqualTo(teamA.toString());
-    verify(eliminationRepository, times(0)).save(any(Elimination.class));
+    verify(eliminationRepository, never()).save(any(Elimination.class));
   }
 
   @Test

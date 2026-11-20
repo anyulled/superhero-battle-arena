@@ -1,12 +1,13 @@
 package org.barcelonajug.superherobattlearena.application.usecase;
 
+import static java.util.Collections.shuffle;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.barcelonajug.superherobattlearena.application.port.out.EliminationRepositoryPort;
 import org.barcelonajug.superherobattlearena.application.port.out.MatchEventRepositoryPort;
@@ -107,14 +107,12 @@ public class MatchUseCase {
       Round round =
           roundRepository
               .findBySessionIdAndRoundNo(sessionId, roundNo)
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Round " + roundNo + " does not exist in session " + sessionId));
+              .orElseThrow(() ->
+                  new IllegalArgumentException(
+                      "Round " + roundNo + " does not exist in session " + sessionId));
 
       List<Team> sessionTeams = teamRepository.findBySessionId(sessionId);
-      Set<UUID> sessionTeamIds =
-          sessionTeams.stream().map(Team::teamId).collect(Collectors.toSet());
+      Set<UUID> sessionTeamIds = sessionTeams.stream().map(Team::teamId).collect(toSet());
 
       List<Submission> roundSubmissions =
           submissionRepository.findByRoundNo(roundNo).stream()
@@ -183,7 +181,7 @@ public class MatchUseCase {
     } else {
       seed = 0L;
     }
-    Collections.shuffle(shuffled, new Random(seed));
+    shuffle(shuffled, new Random(seed));
 
     int numMatches = teamCount / 2;
     MatchType matchType;
@@ -222,10 +220,8 @@ public class MatchUseCase {
 
     boolean allCompleted =
         prevMatches.stream()
-            .allMatch(
-                m ->
-                    m.getStatus() == MatchStatus.COMPLETED
-                        || m.getStatus() == MatchStatus.CANCELLED);
+            .allMatch(m ->
+                m.getStatus() == MatchStatus.COMPLETED || m.getStatus() == MatchStatus.CANCELLED);
     if (!allCompleted) {
       throw new IllegalStateException(
           "Previous round matches must be completed before auto-matching round " + roundNo);
@@ -441,11 +437,10 @@ public class MatchUseCase {
     Match match =
         matchRepository
             .findById(matchId)
-            .orElseThrow(
-                () -> {
-                  log.error("Match not found - matchId={}", matchId);
-                  return new IllegalArgumentException("Match not found");
-                });
+            .orElseThrow(() -> {
+              log.error("Match not found - matchId={}", matchId);
+              return new IllegalArgumentException("Match not found");
+            });
 
     MDC.put("roundNo", match.getRoundNo().toString());
     log.debug(
@@ -568,11 +563,10 @@ public class MatchUseCase {
 
     List<Hero> orderedHeroes =
         submission.heroIds().stream()
-            .map(
-                id ->
-                    Optional.ofNullable(heroMap.get(id))
-                        .orElseThrow(
-                            () -> new IllegalArgumentException("Hero not found in roster: " + id)))
+            .map(id ->
+                Optional.ofNullable(heroMap.get(id))
+                    .orElseThrow(
+                        () -> new IllegalArgumentException("Hero not found in roster: " + id)))
             .toList();
     return fatigueUseCase.applyFatigue(teamId, orderedHeroes, roundNo);
   }
