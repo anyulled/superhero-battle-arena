@@ -17,10 +17,9 @@ public class BannedTagValidationRule implements ValidationRule {
           .flatMap(hero -> hero.tags().stream().map(tag -> Map.entry(hero, tag)))
           .filter(entry -> roundSpec.bannedTags().contains(entry.getValue()))
           .findFirst()
-          .ifPresent(
-              entry -> {
-                throw new BannedTagException(entry.getKey().name(), entry.getValue());
-              });
+          .ifPresent(entry -> {
+            throw new BannedTagException(entry.getKey().name(), entry.getValue());
+          });
     }
   }
 }

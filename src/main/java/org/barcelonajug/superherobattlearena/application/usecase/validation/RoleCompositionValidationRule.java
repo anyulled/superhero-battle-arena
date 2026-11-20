@@ -26,11 +26,9 @@ public class RoleCompositionValidationRule implements ValidationRule {
       roundSpec.requiredRoles().entrySet().stream()
           .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0L) < entry.getValue())
           .findFirst()
-          .ifPresent(
-              entry -> {
-                throw RoleCompositionException.missingRequiredRole(
-                    entry.getKey(), entry.getValue());
-              });
+          .ifPresent(entry -> {
+            throw RoleCompositionException.missingRequiredRole(entry.getKey(), entry.getValue());
+          });
     }
   }
 
@@ -39,10 +37,9 @@ public class RoleCompositionValidationRule implements ValidationRule {
       roundSpec.maxSameRole().entrySet().stream()
           .filter(entry -> roleCounts.getOrDefault(entry.getKey(), 0L) > entry.getValue())
           .findFirst()
-          .ifPresent(
-              entry -> {
-                throw RoleCompositionException.tooManyOfRole(entry.getKey(), entry.getValue());
-              });
+          .ifPresent(entry -> {
+            throw RoleCompositionException.tooManyOfRole(entry.getKey(), entry.getValue());
+          });
     }
   }
 }

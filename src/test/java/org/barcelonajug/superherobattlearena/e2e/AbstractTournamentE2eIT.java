@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
+import net.datafaker.Faker;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.CreateRoundRequest;
 import org.barcelonajug.superherobattlearena.adapter.in.web.dto.RoundSpecDto;
 import org.barcelonajug.superherobattlearena.domain.json.DraftSubmission;
@@ -32,7 +33,7 @@ abstract class AbstractTournamentE2eIT extends AbstractPostgresTestContainerConf
   @Autowired protected MockMvc mockMvc;
 
   protected final ObjectMapper objectMapper = new ObjectMapper();
-  protected final net.datafaker.Faker faker = new net.datafaker.Faker();
+  protected final Faker faker = new Faker();
 
   protected UUID registerRandomTeam(UUID sessionId) throws Exception {
     return registerTeam(

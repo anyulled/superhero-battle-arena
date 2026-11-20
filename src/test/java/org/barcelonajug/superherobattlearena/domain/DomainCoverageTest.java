@@ -140,10 +140,10 @@ class DomainCoverageTest {
     match.setBracketPosition(0);
     assertThat(match.getMatchType()).isEqualTo(MatchType.FINAL);
     assertThat(match.getBracketPosition()).isZero();
-    assertThat(match.loserTeam()).contains(teamA);
+    assertThat(match.loserTeam()).hasValue(teamA);
 
     match.setWinnerTeam(teamB.equals(match.getTeamA()) ? match.getTeamB() : match.getTeamA());
-    assertThat(match.loserTeam()).contains(teamB);
+    assertThat(match.loserTeam()).hasValue(teamB);
 
     match.setWinnerTeam(null);
     assertThat(match.loserTeam()).isEmpty();

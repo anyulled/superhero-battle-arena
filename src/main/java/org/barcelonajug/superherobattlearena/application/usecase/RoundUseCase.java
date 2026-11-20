@@ -85,10 +85,9 @@ public class RoundUseCase {
     Round round =
         roundRepository
             .findBySessionIdAndRoundNo(team.sessionId(), roundNo)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Round " + roundNo + " does not exist in session " + team.sessionId()));
+            .orElseThrow(() ->
+                new IllegalArgumentException(
+                    "Round " + roundNo + " does not exist in session " + team.sessionId()));
 
     if (team.sessionId() != null && eliminationRepository.isEliminated(team.sessionId(), teamId)) {
       log.warn("Eliminated team attempted submission - teamId={}, roundNo={}", teamId, roundNo);
